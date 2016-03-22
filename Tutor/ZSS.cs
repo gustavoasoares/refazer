@@ -1,46 +1,82 @@
 ﻿using System;
+using System.CodeDom;
 using System.Collections.Generic;
 using System.Linq;
-using System.Runtime.InteropServices;
-using System.Security.Cryptography;
-using System.Text;
-using System.Threading.Tasks;
 using IronPython.Compiler.Ast;
-using IronPython.Modules;
-using Microsoft.Scripting.Utils;
-using Microsoft.SqlServer.Server;
 
 namespace Tutor
 {
-    public class Zss
+    /// <summary>
+    /// Class that implements the Zhang and Shasha algoritm for tree edit distance
+    /// Reference: http://research.cs.queensu.ca/TechReports/Reports/1995-372.pdf
+    /// </summary>
+    public abstract class Zss<T>
     {
-        public Zss(IronPython.Compiler.Ast.Node t1, IronPython.Compiler.Ast.Node t2)
+        /// <summary>
+        /// ASTs in some representation T of the programs before and after the change
+        /// </summary>
+        protected T PreviousTree, CurrentTree; 
+
+        /// <summary>
+        /// AST of the previous and the current programs wrapped in the ZssNode class
+        /// </summary>
+        protected List<ZssNode<T>> A, B;
+        /// <summary>
+        /// list of vertices of previous and current trees sorted by postorder traversal. 
+        /// Each vertice is represented by an interger. 
+        /// </summary>
+        protected int[] T1, T2;
+        /// <summary>
+        /// the leftmost leaf descendant of the subtree rooted at i
+        /// </summary>
+        private int[] _l1,_l2;
+        /// <summary>
+        /// keyroots of the asts before and after the change
+        /// </summary>
+        private List<Int32> _k1, _k2;
+        /// <summary>
+        /// dynamic programming table with the edit distances as Tuple. The first item is the cost
+        /// the second item is the list of edit operations 
+        /// </summary>
+        private Tuple<int, List<String>>[,] _treedists;
+
+        /// <summary>
+        /// Create an object to compute the edit distance given two trees
+        /// </summary>
+        /// <param name="previousTree">Tree before the change</param>
+        /// <param name="currentTree">Tree after the change</param>
+        protected Zss(T previousTree, T currentTree)
         {
-            var walker = new PostOrderWalker();
-            walker.Nodes = new List<Node>();
-            t1.Walk(walker);
-            A = walker.Nodes;
-            T1 = Enumerable.Range(1, A.Count).ToArray();
-            walker.Nodes = new List<Node>();
-            t2.Walk(walker);
-            B = walker.Nodes;
-            T2 = Enumerable.Range(1, B.Count).ToArray();
-            l1 = ComputeL(T1, A);
-            l2 = ComputeL(T2, B);
-            K1 = ComputeK(T1, l1);
-            K2 = ComputeK(T2, l2);
+            PreviousTree = previousTree;
+            CurrentTree = currentTree;
         }
 
+
+        /// <summary>
+        /// Abstract method that wraps the given trees into the ZssNode class and generate 
+        /// the list of vertices of the trees
+        /// </summary>
+        /// <param name="t1">Tree before the change</param>
+        /// <param name="t2">Tree after the change</param>
+        protected abstract void GenerateNodes(T t1, T t2);
+
+        /// <summary>
+        /// Generate keyroots of tree T , K(T) = { k E T | !e k' > k with l(k') = l(k) }        /// </summary>
+        /// <param name="tree">list of vertices of the tree sorted in post order</param>
+        /// <param name="l">the leftmost leaf descendant of the subtree rooted at i</param>
+        /// <returns></returns>
         private List<Int32> ComputeK(int[] tree,  
             int[] l)
         {
             var result = new List<Int32>();
-            for (int i = 0; i < tree.Length; i++)
+            //for each vertice, checks if the keyroot condition is valid. If so, add it
+            //to the keyroot list
+            for (var i = 0; i < tree.Length; i++)
             {
                 var isKeyRoot = true;
                 if (i < tree.Length - 1)
                 {
-                    for (int j = i + 1; j < tree.Length; j++)
+                    for (var j = i + 1; j < tree.Length; j++)
                     {
                         if (l[tree[i]] == l[tree[j]])
                             isKeyRoot = false;
@@ -52,78 +88,74 @@ namespace Tutor
             return result;
         }
 
-        private int[] ComputeL(int[] t1, List<Node>  tree)
+        /// <summary>
+        /// Compute the list l, where l(i) is the leftmost leaf descendant of the subtree rooted at i
+        /// </summary>
+        /// <param name="t1">tree sorted in post order</param>
+        /// <param name="tree">actual tree to get the left most descendant for each i</param>
+        /// <returns></returns>
+        private int[] ComputeL(int[] t1, List<ZssNode<T>>  tree)
         {
             var result = new int[t1.Length+1];
             result[0] = 0;
-            var walker = new PostOrderWalker();
             foreach (var node in t1)
             {
-                walker.Nodes = new List<Node>();
-                tree[node-1].PythonNode.Walk(walker);
-                if (walker.Nodes.Count == 0)
-                    throw new Exception("list should not be empty");
-                result[node] = tree.IndexOf(walker.Nodes.First()) + 1;
+                var currentNode = tree[node-1];
+                result[node] = tree.IndexOf(currentNode.GetLeftMostDescendant()) + 1;
             }
             return result;
         }
 
-        List<Node> A;
-        List<Node> B;
-        private int[] T1;
-        private int[] T2;
-        private int[] l1;
-        private int[] l2;
-        private List<Int32> K1;
-        private List<Int32> K2;
-        private Tuple<int, List<String>>[,] treedists;
-
-        public int Compute()
+       /// <summary>
+       /// Compute the tree edit distance
+       /// </summary>
+       /// <returns>Returns a tuple. The first item is the cost. The second item is the 
+       /// sequence of edit operations</returns>
+        public Tuple<int,List<String>>  Compute()
         {
-            treedists = new Tuple<int, List<String>>[T1.Length + 1, T2.Length + 1];
-            treedists[0, 0] = Tuple.Create(0,new List<string>());
+            GenerateNodes(PreviousTree, CurrentTree);
+            _l1 = ComputeL(T1, A);
+            _l2 = ComputeL(T2, B);
+            _k1 = ComputeK(T1, _l1);
+            _k2 = ComputeK(T2, _l2);
+
+            _treedists = new Tuple<int, List<String>>[T1.Length + 1, T2.Length + 1];
+            _treedists[0, 0] = Tuple.Create(0,new List<string>());
                  
-            foreach (var x in K1)
+            foreach (var x in _k1)
             {
-                foreach (var y in K2)
+                foreach (var y in _k2)
                 {
                     Treedists(x, y);
                 }
             }
-            var edits = treedists[T1.Length, T2.Length].Item2;
-            foreach (var edit in edits)
-            {
-                Console.Out.WriteLine(edit);
-            }
-            return treedists[T1.Length,T2.Length].Item1;
+            
+            return _treedists[T1.Length,T2.Length];
         }
 
         private void Treedists(int i, int j)
         {
-            var m = i - l1[i] + 2;
-            var n = j - l2[j] + 2;
+            var m = i - _l1[i] + 2;
+            var n = j - _l2[j] + 2;
 
             var fd = new Tuple<int,List<string>>[m, n];
             fd[0, 0] = Tuple.Create(0, new List<string>());
-            var ioff = l1[i] - 1;
-            var joff = l2[j] - 1;
+            var ioff = _l1[i] - 1;
+            var joff = _l2[j] - 1;
 
             for (int x = 1; x < m; x++)
             {
-                //cost to delete a node is 1
+                //cost to delete a ZssNode is 1
                 var edits = new List<string>(fd[x - 1, 0].Item2);
-                edits.Add("delete node: " + x);
+                edits.Add("delete ZssNode: " + x);
                 fd[x, 0] = Tuple.Create(fd[x - 1, 0].Item1 + 1, edits); 
             }
             for (int y = 1; y < n; y++)
             {
                 var node = B[y - 1 + joff];
-                var parent = node.PythonNode.Parent;
-                var parentName = (parent == null) ? "" : parent.NodeName;
-
                 var edits = new List<string>(fd[0, y - 1].Item2);
-                edits.Add("insert node: " + node);
-                //cost do add a node is 1
+                edits.Add("insert ZssNode: " + node);
+                //cost do add a ZssNode is 1
                 fd[0, y] = Tuple.Create(fd[0, y - 1].Item1 + 1, edits);
             }
 
@@ -131,7 +163,7 @@ namespace Tutor
             {
                 for (int y = 1; y < n; y++)
                 {
-                    if (l1[i] == l1[x + ioff] && l2[j] == l2[y + joff])
+                    if (_l1[i] == _l1[x + ioff] && _l2[j] == _l2[y + joff])
                     {
                         var value = Math.Min(Math.Min(fd[x - 1, y].Item1 + 1, //cost to remove is 1
                             fd[x, y - 1].Item1 + 1), //cost to insert is 1
@@ -141,54 +173,47 @@ namespace Tutor
                         if (value == fd[x - 1, y].Item1 + 1)
                         {
                             var node = A[x - 1];
-                            var parent = node.PythonNode.Parent;
-                            var parentName = (parent == null) ? "" : parent.ToString();
-                            edits = new List<string>(fd[x - 1, y].Item2) {"remove node: " + node};
+                            edits = new List<string>(fd[x - 1, y].Item2) {"remove ZssNode: " + node};
                         } else if (value == fd[x, y - 1].Item1 + 1)
                         {
                             var node = B[y - 1 + joff];
-                            var parent = node.PythonNode.Parent;
-                            var parentName = (parent == null) ? "" : parent.NodeName;
-                            edits = new List<string>(fd[x, y - 1].Item2) {"insert node: " + node};
+                            edits = new List<string>(fd[x, y - 1].Item2) {"insert ZssNode: " + node};
                         }
                         else
                         {
                             edits = new List<string>(fd[x - 1, y - 1].Item2); 
                             if (CostUpdate(A[x + ioff - 1], B[y + joff - 1]) > 0)
                             {
-                                edits.Add("update node: " + A[x + ioff - 1] + " to: " + B[y + joff - 1]);
+                                edits.Add("update ZssNode: " + A[x + ioff - 1] + " to: " + B[y + joff - 1]);
                             }
                         }
 
                         fd[x, y] = Tuple.Create(value, edits);
-                        treedists[x + ioff, y + joff] = fd[x, y];
+                        _treedists[x + ioff, y + joff] = fd[x, y];
                     }
                     else
                     {
-                        var p = l1[x + ioff] - 1 - ioff;
-                        var q = l2[y + joff] - 1 - joff;
+                        var p = _l1[x + ioff] - 1 - ioff;
+                        var q = _l2[y + joff] - 1 - joff;
 
-                        var value = Math.Min(fd[p, q].Item1 + treedists[x + ioff, y + joff].Item1, 
+                        var value = Math.Min(fd[p, q].Item1 + _treedists[x + ioff, y + joff].Item1, 
                                 Math.Min(fd[x - 1, y].Item1 + 1, fd[x, y - 1].Item1 + 1));
 
                         List<string> edits;
-                        if (value == fd[p, q].Item1 + treedists[x + ioff, y + joff].Item1)
+                        if (value == fd[p, q].Item1 + _treedists[x + ioff, y + joff].Item1)
                         {
                             edits = new List<string>(fd[p, q].Item2);
-                            edits.AddRange(treedists[x + ioff, y + joff].Item2);
+                            edits.AddRange(_treedists[x + ioff, y + joff].Item2);
                         }
                         else if (value == fd[x - 1, y].Item1 + 1)
                         {
                             edits = new List<string>(fd[x - 1, y].Item2);
-                            edits.Add("delete node: " + A[x - 1]);
+                            edits.Add("delete ZssNode: " + A[x - 1]);
                         }
                         else
                         {
-                            var node = B[y - 1 + joff];
-                            var parent = node.PythonNode.Parent;
-                            var parentName = (parent == null) ? "" : parent.NodeName;
                             edits = new List<string>(fd[x, y - 1].Item2);
-                            edits.Add("insert node: " + B[y - 1]);
+                            edits.Add("insert ZssNode: " + B[y - 1]);
                         }
                         fd[x, y] = Tuple.Create(value, edits);
                     }
@@ -196,67 +221,106 @@ namespace Tutor
             }
         }
 
-        private int CostUpdate(Node node, Node node1)
+        private int CostUpdate(ZssNode<T> zssNode, ZssNode<T> node1)
         {
-            return (node.Similar(node1)) ? 0 : 1;
+            return (zssNode.Similar(node1)) ? 0 : 1;
         }
     }
 
-    public class Node
+    public class PythonZss : Zss<Node>
+    {
+        public PythonZss(Node previousTree, Node currentTree)
+            : base(previousTree,currentTree)
+        {
+        }
+
+        protected override void GenerateNodes(Node t1, Node t2)
+        {
+            var walker = new PostOrderWalker();
+            walker.Nodes = new List<ZssNode<Node>>();
+            t1.Walk(walker);
+            A = walker.Nodes;
+            T1 = Enumerable.Range(1, A.Count).ToArray();
+            walker.Nodes = new List<ZssNode<Node>>();
+            t2.Walk(walker);
+            B = walker.Nodes;
+            T2 = Enumerable.Range(1, B.Count).ToArray();
+        }
+    }
+
+
+    public abstract class ZssNode<T>
     {
         public string Label { set; get; }
 
-        public IronPython.Compiler.Ast.Node PythonNode { set; get; }
+        public T InternalNode { set; get; }
 
-        protected bool Equals(Node other)
+        public abstract bool Similar(ZssNode<T> other);
+
+        public abstract ZssNode<T> GetLeftMostDescendant();
+    }
+
+
+    class PythonZssNode : ZssNode<Node>
+    {
+        protected bool Equals(PythonZssNode other)
         {
-            return string.Equals(Label, other.Label) && Equals(PythonNode, other.PythonNode);
+            return string.Equals(Label, other.Label) && Equals(InternalNode, other.InternalNode);
         }
 
         public override bool Equals(object obj)
         {
             if (ReferenceEquals(null, obj)) return false;
             if (ReferenceEquals(this, obj)) return true;
-            if (obj.GetType() != this.GetType()) return false;
-            return Equals((Node) obj);
+            if (obj.GetType() != GetType()) return false;
+            return Equals((PythonZssNode)obj);
         }
 
+        public override ZssNode<Node> GetLeftMostDescendant()
+        {
+            var walker = new PostOrderWalker();
+            walker.Nodes = new List<ZssNode<Node>>();
+            InternalNode.Walk(walker);
+            if (walker.Nodes.Count == 0)
+                throw new Exception("list should not be empty");
+            return walker.Nodes.First();
+        }
 
         public override string ToString()
         {
-            return PythonNode.NodeName + "-" +  Label;
+            return InternalNode.NodeName + "-" + Label;
         }
 
         public override int GetHashCode()
         {
             unchecked
             {
-                return ((Label != null ? Label.GetHashCode() : 0)*397) ^ (PythonNode != null ? PythonNode.GetHashCode() : 0);
+                return ((Label != null ? Label.GetHashCode() : 0) * 397) ^ (InternalNode != null ? InternalNode.GetHashCode() : 0);
             }
         }
 
-        public bool Similar(Node node1)
+        public override bool Similar(ZssNode<Node> node1)
         {
-            return this.ToString().Equals(node1.ToString());
+            return ToString().Equals(node1.ToString());
         }
     }
 
     class PostOrderWalker : PythonWalker
     {
-        public List<Node> Nodes {set; get;}
+        public List<ZssNode<Node>> Nodes {set; get;}
 
 
         /// <summary>
-        /// Wraps an IronPython node to a Node with a label related to specific properties of each node
+        /// Wraps an IronPython ZssNode to a ZssNode with a label related to specific properties of each ZssNode
         /// </summary>
         /// <param name="label"></param>
         /// <param name="node"></param>
-        private void AddNode(string label, IronPython.Compiler.Ast.Node node)
+        private void AddNode(string label, Node node)
         {
-            Nodes.Add(new Node()
+            Nodes.Add(new PythonZssNode()
             {
                 Label = label,
-                PythonNode = node
+                InternalNode = node
             });
         }
 

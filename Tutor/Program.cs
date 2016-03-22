@@ -21,9 +21,15 @@ namespace Tutor
             var py = Python.CreateEngine();
             var ast1 = ParseFile(@"C:\Users\Gustavo\Box Sync\pesquisa\tutor\hw02-sp16\example_before.py", py);
             var ast2 = ParseFile(@"C:\Users\Gustavo\Box Sync\pesquisa\tutor\hw02-sp16\example_after.py", py);
-            var zss = new Zss(ast1,ast2);
+            var zss = new PythonZss(ast1,ast2);
 
-            Console.Out.WriteLine(zss.Compute());
+            var result = zss.Compute();
+            Console.Out.WriteLine(result.Item1);
+            var edits = result.Item2;
+            foreach (var edit in edits)
+            {
+                Console.Out.WriteLine(edit);
+            }
             Console.ReadKey();
         }
 
