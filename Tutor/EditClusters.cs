@@ -1,22 +1,21 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.IO;
 using System.Linq;
-using System.Management.Instrumentation;
-using System.Security.Cryptography;
-using System.Text;
-using System.Threading.Tasks;
+using IronPython;
+using IronPython.Compiler;
+using IronPython.Compiler.Ast;
+using IronPython.Hosting;
+using Microsoft.Scripting;
+using Microsoft.Scripting.Hosting;
+using Microsoft.Scripting.Hosting.Providers;
+using Microsoft.Scripting.Runtime;
 
 namespace Tutor
 {
+    //todo: add documentation
     internal class EditClusters
     {
-        private const string Path = @"C:\Users\Gustavo\Box Sync\pesquisa\tutor\hw02-sp16\editClusters\";
-
-        private const string LogFile = 
-            "C:/Users/Gustavo/Box Sync/pesquisa/tutor/hw02-sp16/editClusters.json";
-        private const string LogTable =
-           "C:/Users/Gustavo/Box Sync/pesquisa/tutor/hw02-sp16/editClusterTable.csv";
+        private ScriptEngine py = Python.CreateEngine();
 
         internal List<EditCluster> Clusters { set; get; }
 
@@ -25,7 +24,7 @@ namespace Tutor
             Clusters = new List<EditCluster>();
         }
 
-        internal void Add(HashSet<String> edits, Classifier.Question question, string testcase, 
+        internal void Add(HashSet<String> edits, TestBasedCluster.Question question, string testcase, 
             int size, List<Mistake> mistakes)
         {
             if (HasCluster(edits))
@@ -41,7 +40,7 @@ namespace Tutor
                 var cluster = new EditCluster()
                 {
                     Edits = edits,
-                    Questions = new HashSet<Classifier.Question>() {question},
+                    Questions = new HashSet<TestBasedCluster.Question>() {question},
                     TestCases = new HashSet<string>() {testcase} ,
                     Size = size,
                     Mistakes = new List<Mistake>()
@@ -61,78 +60,74 @@ namespace Tutor
             return Clusters.Any(cluster => cluster.Edits.SetEquals(edits));
         }
 
-        public void LogInfo()
+        public Dictionary<HashSet<string>, List<Mistake>> ClassifyMistakesByEditDistance(List<Mistake> mistakes,
+           TestBasedCluster.Question question)
         {
-            var items = from item in Clusters
-                orderby item.Size descending
-                select item;
+            var result = new Dictionary<HashSet<string>, List<Mistake>>(new SetComparer<string>());
 
-            var table = new StringBuilder();
-            table.Append("Edits, Size, MultipleQuestions, MultipleTestCases");
-            var log = new StringBuilder();
-            var counter = 1;
-            foreach (var cluster in items)
+            foreach (var mistake in mistakes)
             {
-                table.Append(Environment.NewLine);
-                table.Append(cluster.Edits.Count);
-                table.Append(Classifier.CsvSeparator);
-                table.Append(cluster.Size);
-                table.Append(Classifier.CsvSeparator);
-                table.Append(cluster.Questions.Count > 1);
-                table.Append(Classifier.CsvSeparator);
-                table.Append(cluster.TestCases.Count > 1);
-                log.Append(Environment.NewLine);
-                log.Append(counter++ + "===================================");
-                log.Append(Environment.NewLine);
-                log.Append("SIZE: " + cluster.Size);
-                log.Append(Environment.NewLine);
-                log.Append("QUESTIONS: " + cluster.Questions.Count);
-                log.Append(Environment.NewLine);
-                log.Append("TEST_CASES: " + cluster.TestCases.Count);
-                log.Append(Environment.NewLine);
-                log.Append("EDITS:");
-                foreach (var edit in cluster.Edits)
+                try
                 {
-                    log.Append(Environment.NewLine);
-                    log.Append(edit);
+
+                    var ast1 = ParseContent(mistake.before);
+                    var ast2 = ParseContent(mistake.after);
+                    var zss = new PythonZss(ast1, ast2);
+
+                    var editDistance = zss.Compute();
+                    if (result.ContainsKey(editDistance.Item2))
+                    {
+                        result[editDistance.Item2].Add(mistake);
+                    }
+                    else
+                    {
+                        var newMistakeList = new List<Mistake>() { mistake };
+                        result.Add(editDistance.Item2, newMistakeList);
+                    }
                 }
-
-                log.Append(Environment.NewLine);
-                log.Append("\tMISTAKES:");
-                log.Append(Environment.NewLine);
-                log.Append("\tBEFORE:");
-                log.Append(Environment.NewLine);
-                log.Append(cluster.Mistakes.FirstOrDefault().before);
-                log.Append(Environment.NewLine);
-                log.Append("\tAFTER:");
-                log.Append(Environment.NewLine);
-                log.Append(cluster.Mistakes.FirstOrDefault().after);
-
-                var mistakes = new StringBuilder();
-                mistakes.Append( "\tMISTAKES:");
-                foreach (var mistake in cluster.Mistakes)
+                catch (SyntaxErrorException)
                 {
-                    mistakes.Append(Environment.NewLine);
-                    mistakes.Append("\tBEFORE:");
-                    mistakes.Append(Environment.NewLine);
-                    mistakes.Append(mistake.before);
-                    mistakes.Append(Environment.NewLine);
-                    mistakes.Append("\tAFTER:");
-                    mistakes.Append(Environment.NewLine);
-                    mistakes.Append(mistake.after);
+                    var syntaxError = "syntax error";
+                    var synTaxErrorSet = new HashSet<string>() { syntaxError };
+                    if (result.ContainsKey(synTaxErrorSet))
+                    {
+                        result[synTaxErrorSet].Add(mistake);
+                    }
+                    else
+                    {
+                        result.Add(synTaxErrorSet, new List<Mistake>() { mistake });
+                    }
                 }
-                var fileName = Path + "editCluster" + (counter-1) +".txt";
-                File.WriteAllText(fileName, mistakes.ToString());
             }
-            File.WriteAllText(LogFile, log.ToString());
-            File.WriteAllText(LogTable, table.ToString());
+            return result;
         }
+
+        private PythonAst ParseFile(string path, ScriptEngine py)
+        {
+            var src = HostingHelpers.GetSourceUnit(py.CreateScriptSourceFromFile(path));
+            return Parse(src);
+        }
+
+        private PythonAst ParseContent(string content)
+        {
+            var src = HostingHelpers.GetSourceUnit(py.CreateScriptSourceFromString(content));
+            return Parse(src);
+        }
+
+        private PythonAst Parse(SourceUnit src)
+        {
+            var pylc = HostingHelpers.GetLanguageContext(py);
+            var parser = Parser.CreateParser(new CompilerContext(src, pylc.GetCompilerOptions(), ErrorSink.Default),
+                (PythonOptions)pylc.Options);
+            return parser.ParseFile(true);
+        }
+
     }
 
     internal class EditCluster
     {
         internal HashSet<String> Edits { set; get; }
-        internal HashSet<Classifier.Question> Questions { set; get; }
+        internal HashSet<TestBasedCluster.Question> Questions { set; get; }
 
         internal HashSet<String> TestCases { set; get; } 
 
