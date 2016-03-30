@@ -38,7 +38,7 @@ namespace Tutor
         /// dynamic programming table with the edit distances as Tuple. The first item is the cost
         /// the second item is the list of edit operations 
         /// </summary>
-        private Tuple<int, List<String>>[,] _treedists;
+        private Tuple<int, HashSet<String>>[,] _treedists;
 
         /// <summary>
         /// Create an object to compute the edit distance given two trees
@@ -61,7 +61,8 @@ namespace Tutor
         protected abstract void GenerateNodes(T t1, T t2);
 
         /// <summary>
-        /// Generate keyroots of tree T , K(T) = { k E T | !e k' > k with l(k') = l(k) }        /// </summary>
+        /// Generate keyroots of tree T , K(T) = { k E T | !e k' > k with l(k') = l(k) }
+        /// </summary>
         /// <param name="tree">list of vertices of the tree sorted in post order</param>
         /// <param name="l">the leftmost leaf descendant of the subtree rooted at i</param>
         /// <returns></returns>
@@ -111,7 +112,7 @@ namespace Tutor
        /// </summary>
        /// <returns>Returns a tuple. The first item is the cost. The second item is the 
        /// sequence of edit operations</returns>
-        public Tuple<int,List<String>>  Compute()
+        public Tuple<int, HashSet<String>>  Compute()
         {
             GenerateNodes(PreviousTree, CurrentTree);
             _l1 = ComputeL(T1, A);
@@ -119,8 +120,8 @@ namespace Tutor
             _k1 = ComputeK(T1, _l1);
             _k2 = ComputeK(T2, _l2);
 
-            _treedists = new Tuple<int, List<String>>[T1.Length + 1, T2.Length + 1];
-            _treedists[0, 0] = Tuple.Create(0,new List<string>());
+            _treedists = new Tuple<int, HashSet<String>>[T1.Length + 1, T2.Length + 1];
+            _treedists[0, 0] = Tuple.Create(0,new HashSet<string>());
                  
             foreach (var x in _k1)
             {
@@ -138,23 +139,23 @@ namespace Tutor
             var m = i - _l1[i] + 2;
             var n = j - _l2[j] + 2;
 
-            var fd = new Tuple<int,List<string>>[m, n];
-            fd[0, 0] = Tuple.Create(0, new List<string>());
+            var fd = new Tuple<int, HashSet<string>>[m, n];
+            fd[0, 0] = Tuple.Create(0, new HashSet<string>());
             var ioff = _l1[i] - 1;
             var joff = _l2[j] - 1;
 
             for (int x = 1; x < m; x++)
             {
                 //cost to delete a ZssNode is 1
-                var edits = new List<string>(fd[x - 1, 0].Item2);
-                edits.Add("delete ZssNode: " + x);
+                var edits = new HashSet<string>(fd[x - 1, 0].Item2);
+                edits.Add("delete: " + x);
                 fd[x, 0] = Tuple.Create(fd[x - 1, 0].Item1 + 1, edits); 
             }
             for (int y = 1; y < n; y++)
             {
                 var node = B[y - 1 + joff];
-                var edits = new List<string>(fd[0, y - 1].Item2);
-                edits.Add("insert ZssNode: " + node);
+                var edits = new HashSet<string>(fd[0, y - 1].Item2);
+                edits.Add("insert: " + node.AbstractType());
                 //cost do add a ZssNode is 1
                 fd[0, y] = Tuple.Create(fd[0, y - 1].Item1 + 1, edits);
             }
@@ -169,22 +170,22 @@ namespace Tutor
                             fd[x, y - 1].Item1 + 1), //cost to insert is 1
                             fd[x-1,y-1].Item1 + CostUpdate(A[x+ioff-1], B[y+joff-1])); //cost to update depends
 
-                        List<string> edits;
+                        HashSet<string> edits;
                         if (value == fd[x - 1, y].Item1 + 1)
                         {
                             var node = A[x - 1];
-                            edits = new List<string>(fd[x - 1, y].Item2) {"remove ZssNode: " + node};
+                            edits = new HashSet<string>(fd[x - 1, y].Item2) {"remove: " + node};
                         } else if (value == fd[x, y - 1].Item1 + 1)
                         {
                             var node = B[y - 1 + joff];
-                            edits = new List<string>(fd[x, y - 1].Item2) {"insert ZssNode: " + node};
+                            edits = new HashSet<string>(fd[x, y - 1].Item2) {"insert: " + node};
                         }
                         else
                         {
-                            edits = new List<string>(fd[x - 1, y - 1].Item2); 
+                            edits = new HashSet<string>(fd[x - 1, y - 1].Item2); 
                             if (CostUpdate(A[x + ioff - 1], B[y + joff - 1]) > 0)
                             {
-                                edits.Add("update ZssNode: " + A[x + ioff - 1] + " to: " + B[y + joff - 1]);
+                                edits.Add("update: " + A[x + ioff - 1] + " to: " + B[y + joff - 1]);
                             }
                         }
 
@@ -199,21 +200,21 @@ namespace Tutor
                         var value = Math.Min(fd[p, q].Item1 + _treedists[x + ioff, y + joff].Item1, 
                                 Math.Min(fd[x - 1, y].Item1 + 1, fd[x, y - 1].Item1 + 1));
 
-                        List<string> edits;
+                        HashSet<string> edits;
                         if (value == fd[p, q].Item1 + _treedists[x + ioff, y + joff].Item1)
                         {
-                            edits = new List<string>(fd[p, q].Item2);
-                            edits.AddRange(_treedists[x + ioff, y + joff].Item2);
+                            edits = new HashSet<string>(fd[p, q].Item2);
+                            edits.UnionWith(_treedists[x + ioff, y + joff].Item2);
                         }
                         else if (value == fd[x - 1, y].Item1 + 1)
                         {
-                            edits = new List<string>(fd[x - 1, y].Item2);
-                            edits.Add("delete ZssNode: " + A[x - 1]);
+                            edits = new HashSet<string>(fd[x - 1, y].Item2);
+                            edits.Add("delete: " + A[x - 1]);
                         }
                         else
                         {
-                            edits = new List<string>(fd[x, y - 1].Item2);
-                            edits.Add("insert ZssNode: " + B[y - 1]);
+                            edits = new HashSet<string>(fd[x, y - 1].Item2);
+                            edits.Add("insert: " + B[y - 1]);
                         }
                         fd[x, y] = Tuple.Create(value, edits);
                     }
@@ -258,6 +259,8 @@ namespace Tutor
         public abstract bool Similar(ZssNode<T> other);
 
         public abstract ZssNode<T> GetLeftMostDescendant();
+
+        public abstract string AbstractType();
     }
 
 
@@ -284,6 +287,11 @@ namespace Tutor
             if (walker.Nodes.Count == 0)
                 throw new Exception("list should not be empty");
             return walker.Nodes.First();
+        }
+
+        public override string AbstractType()
+        {
+            return InternalNode.NodeName;
         }
 
         public override string ToString()
