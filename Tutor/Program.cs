@@ -20,16 +20,10 @@ namespace Tutor
 {
     class Program
     {
-      
-
         static void Main(string[] args)
         {
             var report = new Report();
             report.GenerateReport();           
         }
-
-      
     }
-
-   
 }

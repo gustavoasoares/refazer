@@ -79,10 +79,12 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="TestBasedCluster.cs" />
     <Compile Include="Cluster.cs" />
     <Compile Include="EditClusters.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="Report.cs" />
     <Compile Include="Zss.cs" />
   </ItemGroup>
   <ItemGroup>

@@ -8,18 +8,22 @@ namespace Tutor
 {
     class Report
     {
+        /// <summary>
+        /// Constants for writing log files
+        /// </summary>
+        private const string LogFolder = "C:/Users/Gustavo/Box Sync/pesquisa/tutor/hw02-sp16/";
         public const string CsvSeparator = ", ";
-        private const string Table1Path = @"C:\Users\Gustavo\Box Sync\pesquisa\tutor\hw02-sp16\table1.csv";
-        private const string Table2Path = @"C:\Users\Gustavo\Box Sync\pesquisa\tutor\hw02-sp16\table2.csv";
-        private const string Table3Path = @"C:\Users\Gustavo\Box Sync\pesquisa\tutor\hw02-sp16\table3.csv";
-        private const string LogEditClusters = @"C:\Users\Gustavo\Box Sync\pesquisa\tutor\hw02-sp16\logEditClusters.txt";
-
-        private const string Path = @"C:\Users\Gustavo\Box Sync\pesquisa\tutor\hw02-sp16\editClusters\";
-
+        private const string Table1Path = LogFolder + "table1.csv";
+        private const string Table2Path = LogFolder + "table2.csv";
+        private const string Table3Path = LogFolder +  "table3.csv";
+        private const string LogEditClusters = LogFolder + "logEditClusters.txt";
+        private const string Path = LogFolder + "editClusters/";
         private const string LogFile =
-            "C:/Users/Gustavo/Box Sync/pesquisa/tutor/hw02-sp16/editClusters.json";
+            LogFolder + "editClusters.json";
         private const string LogTable =
-           "C:/Users/Gustavo/Box Sync/pesquisa/tutor/hw02-sp16/editClusterTable.csv";
+           LogFolder + "editClusterTable.csv";
+
+        private const string ImportFolder = "C:/Users/Gustavo/Box Sync/pesquisa/tutor/hw02-sp16/";
 
         private readonly TestBasedCluster _testBasedCluster = new TestBasedCluster();
         private readonly EditClusters _editClusters = new EditClusters();
@@ -41,20 +45,20 @@ namespace Tutor
         {
             //todo: create a class Question to represent quetions
             var product = new Tuple<TestBasedCluster.Question, string>(TestBasedCluster.Question.Product,
-                "C:/Users/Gustavo/Box Sync/pesquisa/tutor/hw02-sp16/mistake_pairs_product_complete.json");
+                ImportFolder + "mistake_pairs_product_complete.json");
             var countChange = new Tuple<TestBasedCluster.Question, string>(TestBasedCluster.Question.CountChange,
-                "C:/Users/Gustavo/Box Sync/pesquisa/tutor/hw02-sp16/mistake_pairs_count_change_complete.json");
+                ImportFolder + "mistake_pairs_count_change_complete.json");
             var accumulate = new Tuple<TestBasedCluster.Question, string>(TestBasedCluster.Question.Accumulate,
-                "C:/Users/Gustavo/Box Sync/pesquisa/tutor/hw02-sp16/mistake_pairs_accumulate_complete.json");
+                ImportFolder + "mistake_pairs_accumulate_complete.json");
             var summationUsingAccumulate =
                 new Tuple<TestBasedCluster.Question, string>(TestBasedCluster.Question.SummationUsingAccumulate,
-                    "C:/Users/Gustavo/Box Sync/pesquisa/tutor/hw02-sp16/mistake_pairs_summation_using_accumulate_complete.json");
+                    ImportFolder + "mistake_pairs_summation_using_accumulate_complete.json");
 
             var filteredAccumulate = new Tuple<TestBasedCluster.Question, string>(TestBasedCluster.Question.FilteredAccumulate,
-                "C:/Users/Gustavo/Box Sync/pesquisa/tutor/hw02-sp16/mistake_pairs_filtered_accumulate_complete.json");
+                ImportFolder + "mistake_pairs_filtered_accumulate_complete.json");
 
             var repeted = new Tuple<TestBasedCluster.Question, string>(TestBasedCluster.Question.Repeated,
-                "C:/Users/Gustavo/Box Sync/pesquisa/tutor/hw02-sp16/mistake_pairs_repeated_complete.json");
+                ImportFolder + "mistake_pairs_repeated_complete.json");
 
             var questionLogs = new[]
             {
@@ -116,7 +120,7 @@ namespace Tutor
                 }
 
                 var seriazedCluster = JsonConvert.SerializeObject(items, Formatting.Indented);
-                File.WriteAllText("C:/Users/Gustavo/Box Sync/pesquisa/tutor/hw02-sp16/" + cluster.Key.ToString() + ".json", seriazedCluster);
+                File.WriteAllText(LogFolder + cluster.Key.ToString() + ".json", seriazedCluster);
             }
             File.WriteAllText(Table2Path, csvFile.ToString());
         }
@@ -251,7 +255,5 @@ namespace Tutor
             File.WriteAllText(LogFile, log.ToString());
             File.WriteAllText(LogTable, table.ToString());
         }
-
-
     }
 }
