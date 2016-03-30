@@ -24,31 +24,11 @@ namespace Tutor
 
         static void Main(string[] args)
         {
-
-            var submissions = JsonConvert.DeserializeObject<List<Mistake>>                                                                                                                                                      
-                (File.ReadAllText("C:/Users/Gustavo/Box Sync/pesquisa/tutor/hw02-sp16/" +
-                                                             "mistake_pairs_count_change_complete.json", Encoding.ASCII));
-
             var classifier = new Classifier();
             classifier.GenerateQuestionClusterTable();
             classifier.GenerateTable2();
             classifier.GenerateTable3();
 
-
-            //var i = 30;
-            //Console.Out.WriteLine(classifier.Clusters.Keys.ToArray()[i]);
-            //var current = classifier.Clusters.Values.ToArray()[i];
-
-            //var clusters = classifier.ClassifyMistakesByEditDistance(current, Classifier.Question.CountChange);
-            //Console.Out.WriteLine("Number of different changes: " + clusters.Count);
-            //foreach (var cluster in clusters)
-            //{
-            //    Console.Out.WriteLine("===================== Cluster size: "  + cluster.Value.Count + "=======================");
-            //    foreach (var edit in cluster.Key)
-            //    {
-            //        Console.Out.WriteLine(edit);
-            //    }
-            //}
             Console.ReadKey();
         }
 
