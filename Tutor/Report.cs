@@ -39,6 +39,8 @@ namespace Tutor
             GenerateQuestionClusterTable();
             LogTestBasedClustersPerQuestion();
             GenerateTable3();
+            LogEditsClusterInfo();
+
         }
 
         private static Tuple<TestBasedCluster.Question, string>[] CreateQuestionList()
@@ -186,10 +188,9 @@ namespace Tutor
             }
             File.WriteAllText(LogEditClusters, logEditDistance.ToString());
             File.WriteAllText(Table3Path, csvFile.ToString());
-            LogInfo();
         }
 
-        public void LogInfo()
+        public void LogEditsClusterInfo()
         {
             var items = from item in _editClusters.Clusters
                         orderby item.Size descending

@@ -79,6 +79,8 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Edits.cs" />
+    <Compile Include="EditsLearner.cs" />
     <Compile Include="TestBasedCluster.cs" />
     <Compile Include="Cluster.cs" />
     <Compile Include="EditClusters.cs" />
