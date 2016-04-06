@@ -32,179 +32,94 @@ namespace Tutor
         }
 
 
-        public PythonAst Run(PythonAst ast)
+        public List<PythonAst> Run(PythonAst ast)
         {
+            var result = new List<PythonAst>();
             if (match.HasMatch(ast))
             {
-                return update.Run(ast, match.MatchResult) as PythonAst;
+                result.AddRange(match.MatchResult[1].Select(node => update.Run(ast, node) as PythonAst));
             }
-            return null;
+            return result;
         }
     }
 
     public class Match
     {
+        private PythonNode _template;
 
         public string NodeType { set; get; }
         public List<string> Children { set; get; }
 
-        public MatchResult MatchResult { get; set; }
-        public BindingInfo BindingInfo { get; set; }
+        public Dictionary<int, List<Node>> MatchResult { get; private set; }
 
-        public Match(string nodeType, List<string> children, BindingInfo bindingInfo)
+        public Match(PythonNode template)
         {
-            BindingInfo = bindingInfo;
-            NodeType = nodeType;
-            this.Children = children;
+            this._template = template;
         }
 
-        public void Run(Node code)
+        public bool Run(Node code)
         {
-            MatchResult = new MatchResult();
-            var walker = new Walker { Match = this };
-            code.Walk(walker);
-            MatchResult.Anchor = walker.MatchedNode;
-            if (walker.Target != null)
-                MatchResult.Bindings = new List<Node>() {walker.Target};
+            var checkTemplateWaker = new CheckTemplateWalker(_template);
+            code.Walk(checkTemplateWaker);
+            MatchResult = checkTemplateWaker.MatchResult;
+            return checkTemplateWaker.HasMatch;
         }
 
         public bool HasMatch(PythonAst ast)
         {
-            Run(ast);
-            return MatchResult != null && MatchResult.Anchor != null;
+            return Run(ast);
         }
 
-        //todo add the other overriden methods
-        //todo, this cannot be a walker, it must be a visit expression becasue the walker does not stop when
-        //finds the pattern
-        class Walker : PythonWalker
+        class CheckTemplateWalker : PythonWalker
         {
-            private bool _continue = true; 
-            public Match Match { set; get; }
+            private readonly PythonNode _template;
 
-            public Node MatchedNode { set; get; }
+            public Dictionary<int, List<Node>> MatchResult { get; }
 
-            public Node Target { get; set; }
+            public bool HasMatch { get; private set; }
 
-            public override bool Walk(AssignmentStatement node)
+            public CheckTemplateWalker(PythonNode template)
             {
-                if (!_continue) return true;
-
-                if (Match.NodeType != node.NodeName)
-                    return true;
-
-                var nodes = new List<string>() { Match.NodeType };
-                nodes.AddRange(Match.Children);
-                var subWalker = new SubTreeWalker(nodes, Match.BindingInfo);
-                node.Walk(subWalker);
-                if (subWalker.Target == null) return true;
-                Target = subWalker.Target;
-                MatchedNode = node;
-                _continue = false;
-
-                return true;
+                HasMatch = false;
+                _template = template;
+                MatchResult = new Dictionary<int, List<Node>>();
             }
 
             public override bool Walk(BinaryExpression node)
             {
-                if (!_continue) return true;
-
-                if (Match.NodeType != node.NodeName)
-                    return true;
-
-                var nodes = new List<string>() { Match.NodeType };
-                nodes.AddRange(Match.Children);
-                var subWalker = new SubTreeWalker(nodes, Match.BindingInfo);
-                node.Walk(subWalker);
-                if (subWalker.Target == null) return true;
-                Target = subWalker.Target;
-                MatchedNode = node;
-                _continue = false;
-                return false;
+                return CheckTemplate(node);
             }
-
-        }
-
-        //todo add the other overriden methods
-        class SubTreeWalker : PythonWalker
-        {
-            private bool _continue = true;
-
-            private int _index;
-
-            private int _value;
-            public List<string> Children { get; }
-
-            public Node Target { set; get; } 
-
-            public SubTreeWalker(List<string> children, BindingInfo bindingInfo)
-            {
-                _index = bindingInfo.BindingIndex;
-                _value = bindingInfo.BindingValue;
-                this.Children = children;
-            }
-
             public override bool Walk(AssignmentStatement node)
             {
-                if (!_continue) return false;
-                return CheckSimilarity(node);
+                return CheckTemplate(node);
             }
 
             public override bool Walk(TupleExpression node)
             {
-                if (!_continue) return false;
-                return CheckSimilarity(node);
+                return CheckTemplate(node);
             }
 
-            public override bool Walk(NameExpression node)
+            private bool CheckTemplate(Node node)
             {
-                if (!_continue) return false;
-
-                return CheckSimilarity(node);
-            }
-
-            public override bool Walk(ConstantExpression node)
-            {
-                if (!_continue) return false;
-
-                return CheckSimilarity(node);
-            }
-
-            public override bool Walk(BinaryExpression node)
-            {
-                return CheckSimilarity(node);
-            }
-
-            private bool CheckSimilarity(Node node)
-            {
-                if (node.NodeName.Equals(Children.First()))
+                var result = _template.Match(node);
+                if (result.Item1)
                 {
-                    if (_index == 0 && node is ConstantExpression)
+                    HasMatch = true;
+                    foreach (var keyValuePair in result.Item2)
                     {
-                        var literal = node as ConstantExpression;
-                        if ((int)literal.Value == _value)
-                            Target = node;
+                        if (MatchResult.ContainsKey(keyValuePair.Key))
+                        {
+                            MatchResult[keyValuePair.Key].Add(keyValuePair.Value);
+                        }
+                        else
+                        {
+                            MatchResult.Add(keyValuePair.Key, new List<Node>() {keyValuePair.Value});
+                        }
                     }
-                    _index--;
-                    Children.RemoveAt(0);
-                    return true;
+                    return false;
                 }
-                _continue = false;
                 return false;
             }
         }
-    }
-
-
-    public class BindingInfo
-    {
-        public int BindingIndex { set; get; }
-
-        public int BindingValue { set; get; }
-    }
-    public class MatchResult
-    {
-        public Node Anchor { set; get; }
-        public List<Node> Bindings { set; get; }
     }
 }

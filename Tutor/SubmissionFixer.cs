@@ -24,32 +24,36 @@ namespace Tutor
 
             foreach (var editsProgram in fixes)
             {
-                var newAst = editsProgram.Run(ast);
-                if (newAst == null)
+                var newAsts = editsProgram.Run(ast);
+                if (newAsts.Count == 0)
                     continue;
+
                 var unparser = new Unparser();
-                var newCode = unparser.Unparse(newAst);
-
-                Console.Out.WriteLine("===================");
-                Console.Out.WriteLine("Fixed:");
-                Console.Out.WriteLine(newCode);
-
-                var isFixed = true;
-                foreach (var test in tests)
+                foreach (var newAst in newAsts)
                 {
-                    var script = newCode + Environment.NewLine + test.Key;
-                    try
+                    var newCode = unparser.Unparse(newAst);
+
+                    Console.Out.WriteLine("===================");
+                    Console.Out.WriteLine("Fixed:");
+                    Console.Out.WriteLine(newCode);
+
+                    var isFixed = true;
+                    foreach (var test in tests)
                     {
-                        var result = ASTHelper.Run(script);
-                        if (result != test.Value)
+                        var script = newCode + Environment.NewLine + test.Key;
+                        try
+                        {
+                            var result = ASTHelper.Run(script);
+                            if (result != test.Value)
+                                isFixed = false;
+                        }
+                        catch (Exception)
+                        {
                             isFixed = false;
+                        }
                     }
-                    catch (Exception)
-                    {
-                        isFixed = false;
-                    }
+                    if (isFixed) return true;
                 }
-                if (isFixed) return true;
             }
             return false;
         }

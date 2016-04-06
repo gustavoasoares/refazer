@@ -35,11 +35,15 @@ namespace Tutor.Tests
         {
             var py = Python.CreateEngine();
             var code = ParseContent("x * a", py);
-            var children = new List<string>() { "NameExpression", "NameExpression" };
-            var m = new Match("BinaryExpression", children, new BindingInfo() {BindingIndex = 1 });
+
+            var x = new NameExpression("x");
+            var a = new NameExpression("a");
+            var multiply = new IronPython.Compiler.Ast.BinaryExpression(PythonOperator.Multiply, x, a);
+            var root = new PythonNode(multiply, true);
+            root.AddChild(new PythonNode(x, true));
+            root.AddChild(new PythonNode(a, true));
+            var m = new Match(root);
             Assert.IsTrue(m.HasMatch(code));
-            Assert.AreEqual("BinaryExpression", m.MatchResult.Anchor.NodeName);
-            Assert.AreEqual("NameExpression", m.MatchResult.Bindings.First().NodeName);
         }
 
         [TestMethod]
@@ -47,8 +51,13 @@ namespace Tutor.Tests
         {
             var py = Python.CreateEngine();
             var code = ParseContent("x * 0", py);
-            var children = new List<string>() { "NameExpression", "NameExpression" };
-            var m = new Match("BinaryExpression", children, new BindingInfo() { BindingIndex = 0 }); ;
+            var x = new NameExpression("x");
+            var a = new NameExpression("a");
+            var multiply = new IronPython.Compiler.Ast.BinaryExpression(PythonOperator.Multiply, x, a);
+            var root = new PythonNode(multiply, true);
+            root.AddChild(new PythonNode(x, true));
+            root.AddChild(new PythonNode(a, true));
+            var m = new Match(root);
             Assert.IsFalse(m.HasMatch(code));
         }
 
@@ -57,11 +66,15 @@ namespace Tutor.Tests
         {
             var py = Python.CreateEngine();
             var code = ParseContent("n == 1", py);
-            var children = new List<string>() { "NameExpression", "literal" };
-            var m = new Match("BinaryExpression", children, new BindingInfo() { BindingIndex = 2});
+            var n = new NameExpression("n");
+            var literal = new IronPython.Compiler.Ast.ConstantExpression(1);
+            var multiply = new IronPython.Compiler.Ast.BinaryExpression(PythonOperator.Equals, n, literal);
+            var root = new PythonNode(multiply, true);
+            root.AddChild(new PythonNode(n, true));
+            root.AddChild(new PythonNode(literal, true, 1));
+            var m = new Match(root);
             Assert.IsTrue(m.HasMatch(code));
-            Assert.AreEqual("BinaryExpression", m.MatchResult.Anchor.NodeName);
-            Assert.AreEqual("literal", m.MatchResult.Bindings.First().NodeName);
+            Assert.AreEqual("literal", m.MatchResult[1].First().NodeName);
         }
 
         [TestMethod]
@@ -70,20 +83,24 @@ namespace Tutor.Tests
             var py = Python.CreateEngine();
             var code = ParseContent("n == 1", py);
             code.Bind();
-            var children = new List<string>() { "NameExpression", "literal" };
-            var m = new Match("BinaryExpression", children, new BindingInfo() { BindingIndex = 2 });
+            var n = new NameExpression("n");
+            var literal = new IronPython.Compiler.Ast.ConstantExpression(1);
+            var multiply = new IronPython.Compiler.Ast.BinaryExpression(PythonOperator.Equals, n, literal);
+            var root = new PythonNode(multiply, true);
+            root.AddChild(new PythonNode(n, true));
+            root.AddChild(new PythonNode(literal, true, 1));
+            var m = new Match(root);
             Assert.IsTrue(m.HasMatch(code));
-            Assert.AreEqual("BinaryExpression", m.MatchResult.Anchor.NodeName);
 
             var newNode = new IronPython.Compiler.Ast.ConstantExpression(0);
             var update = new Update() { NewNode = newNode };
-            var newAst = update.Run(code, m.MatchResult);
+            var newAst = update.Run(code, m.MatchResult[1].First());
             var ast = newAst as PythonAst;
             var body = ast.Body as SuiteStatement;
             var stmt = body.Statements.First() as ExpressionStatement;
             var binaryExp = stmt.Expression as IronPython.Compiler.Ast.BinaryExpression;
             var constant = binaryExp.Right as IronPython.Compiler.Ast.ConstantExpression;
-            Assert.AreEqual(0,constant.Value);
+            Assert.AreEqual(0, constant.Value);
         }
 
         [TestMethod]
@@ -98,20 +115,29 @@ def accumulate(combiner, base, n, term):
         return combiner(term(n), accumulate(combiner, base, n - 1, term))";
             var ast = ParseContent(code, py);
             ast.Bind();
-            var children = new List<string>() { "NameExpression", "literal" };
-            var m = new Match("BinaryExpression", children, new BindingInfo() { BindingIndex = 2 });
+
+
+            var n = new NameExpression("n");
+            var literal = new IronPython.Compiler.Ast.ConstantExpression(1);
+            var binaryExpression = new IronPython.Compiler.Ast.BinaryExpression(PythonOperator.Equals, n, literal);
+            var root = new PythonNode(binaryExpression, true);
+            root.AddChild(new PythonNode(n, true));
+            root.AddChild(new PythonNode(literal, true, 1));
+            var m = new Match(root);
+
             Assert.IsTrue(m.HasMatch(ast));
-            Assert.AreEqual("BinaryExpression", m.MatchResult.Anchor.NodeName);
+            Assert.AreEqual("literal", m.MatchResult[1].First().NodeName);
 
             var newNode = new IronPython.Compiler.Ast.ConstantExpression(0);
-            var update = new Update() {NewNode = newNode};
-            var newAst = update.Run(ast, m.MatchResult);
+            var update = new Update() { NewNode = newNode };
+            var newAst = update.Run(ast, m.MatchResult[1].First());
+
             var expected = @"
 def accumulate(combiner, base, n, term):
-    if n == 0:
+    if n==0:
         return base
     else:
-        return combiner(term(n), accumulate(combiner, base, n - 1, term))";
+        return combiner(term(n), accumulate(combiner, base, n-1, term))";
             var actual = new Unparser().Unparse(newAst as PythonAst);
 
             Assert.AreEqual(expected, actual);
@@ -144,7 +170,7 @@ def accumulate(combiner, base, n, term):
             var py = Python.CreateEngine();
             var code = ParseContent("def identity(n) : \n    return n == 0", py);
             code.Bind();
-            Assert.AreEqual("\r\ndef identity(n):\r\n    return n == 0", new Unparser().Unparse(code));
+            Assert.AreEqual("\r\ndef identity(n):\r\n    return n==0", new Unparser().Unparse(code));
         }
 
         [TestMethod]
@@ -153,10 +179,10 @@ def accumulate(combiner, base, n, term):
             var py = Python.CreateEngine();
             var code = @"
 def accumulate(combiner, base, n, term):
-    if n == 1:
+    if n==1:
         return base
     else:
-        return combiner(term(n), accumulate(combiner, base, n - 1, term))";
+        return combiner(term(n), accumulate(combiner, base, n-1, term))";
             var ast = ParseContent(code,py);
             ast.Bind();
             var actual = new Unparser().Unparse(ast);
@@ -175,12 +201,140 @@ def product(n, term):
 
             var py = Python.CreateEngine();
 
-            var children = new List<string>() { "TupleExpression", "NameExpression", "NameExpression", "TupleExpression", "literal", "literal" };
-            var match = new Match("AssignmentStatement", children, new BindingInfo() { BindingIndex = 5 });
-
+            var total = new NameExpression("total");
+            var k = new NameExpression("k");
+            var leftTuple = new TupleExpression(true, total,k);
+            var literal1 = new IronPython.Compiler.Ast.ConstantExpression(0);
+            var literal2 = new IronPython.Compiler.Ast.ConstantExpression(1);
+            var rightTuple = new TupleExpression(true, literal1, literal2);
+            var assign = new AssignmentStatement(new IronPython.Compiler.Ast.Expression[] { leftTuple }, 
+                rightTuple);
+            var root = new PythonNode(assign, true);
+            var leftNode = new PythonNode(leftTuple, true);
+            leftNode.AddChild(new PythonNode(total,true));
+            leftNode.AddChild(new PythonNode(k,true));
+            root.AddChild(leftNode);
+            var rightNode = new PythonNode(rightTuple, true);
+            rightNode.AddChild(new PythonNode(literal1,true,1));
+            rightNode.AddChild(new PythonNode(literal2, true));
+            root.AddChild(rightNode);
+            
+            var m = new Match(root);
             var newNode = new IronPython.Compiler.Ast.ConstantExpression(1);
             var update = new Update() { NewNode = newNode };
-            var fix = new EditsProgram(match, update);
+            var fix = new EditsProgram(m, update);
+
+            var fixer = new SubmissionFixer();
+
+            var testSetup = @"def square(x):
+    return x * x
+
+def identity(x):
+    return x
+";
+            var tests = new Dictionary<String, int>
+            {
+                {testSetup + "product(3, identity)", 6},
+                {testSetup + "product(5, identity)", 120},
+                {testSetup + "product(3, square)", 36},
+                {testSetup + "product(5, square)", 14400}
+            };
+            var isFixed = fixer.Fix(program, new List<EditsProgram>() { fix }, tests);
+            Assert.AreEqual(true, isFixed);
+
+        }
+
+         [TestMethod]
+        public void TestfixProgram2()
+        {
+            var program = @"
+def product(n, term):
+    z, w = 1, 1
+    total, k = 0, 1
+    while k <= n:
+        total, k = total * term(k), k + 1
+    return total";
+
+            var py = Python.CreateEngine();
+
+            var total = new NameExpression("total");
+            var k = new NameExpression("k");
+            var leftTuple = new TupleExpression(true, total,k);
+            var literal1 = new IronPython.Compiler.Ast.ConstantExpression(0);
+            var literal2 = new IronPython.Compiler.Ast.ConstantExpression(1);
+            var rightTuple = new TupleExpression(true, literal1, literal2);
+            var assign = new AssignmentStatement(new IronPython.Compiler.Ast.Expression[] { leftTuple }, 
+                rightTuple);
+            var root = new PythonNode(assign, true);
+            var leftNode = new PythonNode(leftTuple, true);
+            leftNode.AddChild(new PythonNode(total,true));
+            leftNode.AddChild(new PythonNode(k,true));
+            root.AddChild(leftNode);
+            var rightNode = new PythonNode(rightTuple, true);
+            rightNode.AddChild(new PythonNode(literal1,false,1));
+            rightNode.AddChild(new PythonNode(literal2, true));
+            root.AddChild(rightNode);
+            
+            var m = new Match(root);
+            var newNode = new IronPython.Compiler.Ast.ConstantExpression(1);
+            var update = new Update() { NewNode = newNode };
+            var fix = new EditsProgram(m, update);
+
+            var fixer = new SubmissionFixer();
+
+            var testSetup = @"def square(x):
+    return x * x
+
+def identity(x):
+    return x
+";
+            var tests = new Dictionary<String, int>
+            {
+                {testSetup + "product(3, identity)", 6},
+                {testSetup + "product(5, identity)", 120},
+                {testSetup + "product(3, square)", 36},
+                {testSetup + "product(5, square)", 14400}
+            };
+            var isFixed = fixer.Fix(program, new List<EditsProgram>() { fix }, tests);
+            Assert.AreEqual(true, isFixed);
+
+        }
+
+        [TestMethod]
+        public void TestfixProgram3()
+        {
+            var program = @"
+def product(n, term):
+    z, w = 1, 1
+    total, k = 0, 1
+    while k <= n:
+        total, k = total * term(k), k + 1
+    return total";
+
+            var py = Python.CreateEngine();
+
+            var total = new NameExpression("total");
+            var k = new NameExpression("k");
+            var leftTuple = new TupleExpression(true, total, k);
+            var literal1 = new IronPython.Compiler.Ast.ConstantExpression(0);
+            var literal2 = new IronPython.Compiler.Ast.ConstantExpression(1);
+            var rightTuple = new TupleExpression(true, literal1, literal2);
+            var assign = new AssignmentStatement(new IronPython.Compiler.Ast.Expression[] { leftTuple },
+                rightTuple);
+            var root = new PythonNode(assign, true);
+            var leftNode = new PythonNode(leftTuple, true);
+            leftNode.AddChild(new PythonNode(total, true));
+            leftNode.AddChild(new PythonNode(k, true));
+            root.AddChild(leftNode);
+            var rightNode = new PythonNode(rightTuple, true);
+            rightNode.AddChild(new PythonNode(literal1, true, 1));
+            rightNode.AddChild(new PythonNode(literal2, true));
+            root.AddChild(rightNode);
+
+            var m = new Match(root);
+            var newNode = new IronPython.Compiler.Ast.ConstantExpression(1);
+            var update = new Update() { NewNode = newNode };
+            var fix = new EditsProgram(m, update);
 
             var fixer = new SubmissionFixer();
 

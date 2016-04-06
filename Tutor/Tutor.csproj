@@ -82,6 +82,7 @@
     <Compile Include="ASTHelper.cs" />
     <Compile Include="Operation.cs" />
     <Compile Include="EditsLearner.cs" />
+    <Compile Include="PythonNode.cs" />
     <Compile Include="SubmissionFixer.cs" />
     <Compile Include="TestBasedCluster.cs" />
     <Compile Include="Cluster.cs" />

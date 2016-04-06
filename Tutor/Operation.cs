@@ -17,16 +17,16 @@ namespace Tutor
     {
         public Node NewNode { set; get; }
 
-        public abstract Expression Run(PythonAst code, MatchResult context); 
+        public abstract Expression Run(PythonAst code, Node node); 
 
 
     }
 
     public class Update : Operation
     {
-        public override Expression Run(PythonAst code, MatchResult context)
+        public override Expression Run(PythonAst code, Node node)
         {
-            var rewriter = new UpdateRewriter(context.Bindings.First(), NewNode);
+            var rewriter = new UpdateRewriter(node, NewNode);
             return rewriter.Update(code);
         }
 
