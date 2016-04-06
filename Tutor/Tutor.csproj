@@ -79,14 +79,17 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Edits.cs" />
+    <Compile Include="ASTHelper.cs" />
+    <Compile Include="Operation.cs" />
     <Compile Include="EditsLearner.cs" />
+    <Compile Include="SubmissionFixer.cs" />
     <Compile Include="TestBasedCluster.cs" />
     <Compile Include="Cluster.cs" />
     <Compile Include="EditClusters.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Report.cs" />
+    <Compile Include="Unparser.cs" />
     <Compile Include="Zss.cs" />
   </ItemGroup>
   <ItemGroup>

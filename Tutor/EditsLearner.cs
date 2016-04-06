@@ -22,32 +22,47 @@ namespace Tutor
 
     public class EditsProgram
     {
+        private Match match;
+        private Operation update;
+
+        public EditsProgram(Match match, Operation update)
+        {
+            this.match = match;
+            this.update = update;
+        }
+
+
+        public PythonAst Run(PythonAst ast)
+        {
+            if (match.HasMatch(ast))
+            {
+                return update.Run(ast, match.MatchResult) as PythonAst;
+            }
+            return null;
+        }
     }
 
     public class Match
     {
-        private readonly Node _ast;
 
         public string NodeType { set; get; }
         public List<string> Children { set; get; }
 
         public MatchResult MatchResult { get; set; }
-        public int BindingIndex { get; set; }
+        public BindingInfo BindingInfo { get; set; }
 
-        public Match(Node code, string nodeType, List<string> children, int bindingIndex)
+        public Match(string nodeType, List<string> children, BindingInfo bindingInfo)
         {
-            BindingIndex = bindingIndex;
-            _ast = code;
+            BindingInfo = bindingInfo;
             NodeType = nodeType;
             this.Children = children;
-            Run();
         }
 
-        private void Run()
+        public void Run(Node code)
         {
             MatchResult = new MatchResult();
             var walker = new Walker { Match = this };
-            _ast.Walk(walker);
+            code.Walk(walker);
             MatchResult.Anchor = walker.MatchedNode;
             if (walker.Target != null)
                 MatchResult.Bindings = new List<Node>() {walker.Target};
@@ -55,34 +70,57 @@ namespace Tutor
 
         public bool HasMatch(PythonAst ast)
         {
+            Run(ast);
             return MatchResult != null && MatchResult.Anchor != null;
         }
 
         //todo add the other overriden methods
+        //todo, this cannot be a walker, it must be a visit expression becasue the walker does not stop when
+        //finds the pattern
         class Walker : PythonWalker
         {
+            private bool _continue = true; 
             public Match Match { set; get; }
 
             public Node MatchedNode { set; get; }
 
             public Node Target { get; set; }
 
-            public override bool Walk(BinaryExpression node)
+            public override bool Walk(AssignmentStatement node)
             {
+                if (!_continue) return true;
+
                 if (Match.NodeType != node.NodeName)
                     return true;
 
-                var nodes = new List<string>() {Match.NodeType};
+                var nodes = new List<string>() { Match.NodeType };
                 nodes.AddRange(Match.Children);
-                var subWalker = new SubTreeWalker(nodes, Match.BindingIndex);
+                var subWalker = new SubTreeWalker(nodes, Match.BindingInfo);
                 node.Walk(subWalker);
-                if (subWalker.Children.Count == 0)
-                {
-                    Target = subWalker.Target;
-                    MatchedNode = node;
-                    return false;
-                }
+                if (subWalker.Target == null) return true;
+                Target = subWalker.Target;
+                MatchedNode = node;
+                _continue = false;
+
                 return true;
+            }
+
+            public override bool Walk(BinaryExpression node)
+            {
+                if (!_continue) return true;
+
+                if (Match.NodeType != node.NodeName)
+                    return true;
+
+                var nodes = new List<string>() { Match.NodeType };
+                nodes.AddRange(Match.Children);
+                var subWalker = new SubTreeWalker(nodes, Match.BindingInfo);
+                node.Walk(subWalker);
+                if (subWalker.Target == null) return true;
+                Target = subWalker.Target;
+                MatchedNode = node;
+                _continue = false;
+                return false;
             }
 
         }
@@ -90,52 +128,80 @@ namespace Tutor
         //todo add the other overriden methods
         class SubTreeWalker : PythonWalker
         {
-            private int _bindingIndex;
+            private bool _continue = true;
+
+            private int _index;
+
+            private int _value;
             public List<string> Children { get; }
 
             public Node Target { set; get; } 
 
-            public SubTreeWalker(List<string> children, int bindingIndex)
+            public SubTreeWalker(List<string> children, BindingInfo bindingInfo)
             {
-                _bindingIndex = bindingIndex;
+                _index = bindingInfo.BindingIndex;
+                _value = bindingInfo.BindingValue;
                 this.Children = children;
+            }
+
+            public override bool Walk(AssignmentStatement node)
+            {
+                if (!_continue) return false;
+                return CheckSimilarity(node);
+            }
+
+            public override bool Walk(TupleExpression node)
+            {
+                if (!_continue) return false;
+                return CheckSimilarity(node);
             }
 
             public override bool Walk(NameExpression node)
             {
-                if (CheckSimilarity(node)) return true;
-                return false;
+                if (!_continue) return false;
+
+                return CheckSimilarity(node);
             }
 
             public override bool Walk(ConstantExpression node)
             {
-                if (CheckSimilarity(node)) return true;
-                return false;
+                if (!_continue) return false;
+
+                return CheckSimilarity(node);
             }
 
             public override bool Walk(BinaryExpression node)
             {
-                if (CheckSimilarity(node)) return true;
-                return true;
+                return CheckSimilarity(node);
             }
 
             private bool CheckSimilarity(Node node)
             {
                 if (node.NodeName.Equals(Children.First()))
                 {
-                    if (_bindingIndex == 0)
+                    if (_index == 0 && node is ConstantExpression)
                     {
-                        Target = node;
+                        var literal = node as ConstantExpression;
+                        if ((int)literal.Value == _value)
+                            Target = node;
                     }
-                    _bindingIndex--;
+                    _index--;
                     Children.RemoveAt(0);
                     return true;
                 }
+                _continue = false;
                 return false;
             }
         }
     }
 
+
+    public class BindingInfo
+    {
+        public int BindingIndex { set; get; }
+
+        public int BindingValue { set; get; }
+    }
     public class MatchResult
     {
         public Node Anchor { set; get; }

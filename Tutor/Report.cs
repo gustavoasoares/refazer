@@ -25,7 +25,7 @@ namespace Tutor
 
         private const string ImportFolder = "C:/Users/Gustavo/Box Sync/pesquisa/tutor/hw02-sp16/";
 
-        private readonly TestBasedCluster _testBasedCluster = new TestBasedCluster();
+        internal TestBasedCluster TestBasedCluster = new TestBasedCluster();
         private readonly EditClusters _editClusters = new EditClusters();
 
         /// <summary>
@@ -34,12 +34,12 @@ namespace Tutor
         public void GenerateReport()
         {
             var questionLogs = CreateQuestionList();
-            _testBasedCluster.GenerateCluster(questionLogs);
+            TestBasedCluster.GenerateCluster(questionLogs);
 
             GenerateQuestionClusterTable();
-            LogTestBasedClustersPerQuestion();
-            GenerateTable3();
-            LogEditsClusterInfo();
+           // LogTestBasedClustersPerQuestion();
+           // GenerateTable3();
+           // LogEditsClusterInfo();
 
         }
 
@@ -81,7 +81,7 @@ namespace Tutor
         {
             var csvFile = new StringBuilder();
             csvFile.Append("Question, Mistake, Cluster, Max_Cluster");
-            foreach (var cluster in _testBasedCluster.Clusters)
+            foreach (var cluster in TestBasedCluster.Clusters)
             {
                 csvFile.Append(Environment.NewLine);
                 csvFile.Append(cluster.Key);
@@ -106,7 +106,7 @@ namespace Tutor
             var csvFile = new StringBuilder();
 
             csvFile.Append("Question, Size");
-            foreach (var cluster in _testBasedCluster.Clusters)
+            foreach (var cluster in TestBasedCluster.Clusters)
             {
 
                 var items = from pair in cluster.Value
@@ -133,7 +133,7 @@ namespace Tutor
             var logEditDistance = new StringBuilder();
 
             csvFile.Append("Question, TestBasedClusterSize, EditDistanceCluster, MaxEditCluster");
-            foreach (var cluster in _testBasedCluster.Clusters)
+            foreach (var cluster in TestBasedCluster.Clusters)
             {
                 var items = from pair in cluster.Value
                             orderby pair.Value.Count descending
@@ -197,7 +197,7 @@ namespace Tutor
                         select item;
 
             var table = new StringBuilder();
-            table.Append("Edits, Size, MultipleQuestions, MultipleTestCases");
+            table.Append("Operation, Size, MultipleQuestions, MultipleTestCases");
             var log = new StringBuilder();
             var counter = 1;
             foreach (var cluster in items)
