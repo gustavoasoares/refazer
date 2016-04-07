@@ -9,7 +9,7 @@ namespace Tutor
 {
     public class SubmissionFixer
     {
-        public bool Fix(string program, List<EditsProgram> fixes, Dictionary<string, int> tests)
+        public bool Fix(string program, List<Patch> fixes, Dictionary<string, int> tests)
         {
             PythonAst ast = null;
             try

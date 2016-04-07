@@ -12,6 +12,10 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 using System.Collections.Generic;
 using System.Linq;
 using Community.CsharpSqlite;
+using Microsoft.ProgramSynthesis;
+using Microsoft.ProgramSynthesis.Compiler;
+using Microsoft.ProgramSynthesis.Learning;
+using Microsoft.ProgramSynthesis.Specifications;
 using Expression = System.Linq.Expressions.Expression;
 
 namespace Tutor.Tests
@@ -22,12 +26,23 @@ namespace Tutor.Tests
         [TestMethod]
         public void TestLearn()
         {
-            EditsLearner learner = new EditsLearner();
-            var py = Python.CreateEngine();
-            var before = ParseContent("x * a", py);
-            var after = ParseContent("term(x) * a", py);
-            var editsProgram = learner.Learn(before, after);
-            Assert.IsTrue(editsProgram != null);
+            var grammar = DSLCompiler.LoadGrammarFromFile(@"C:\Users\Gustavo\git\Tutor\Tutor\Transformation.grammar");
+
+            var astBefore = ASTHelper.ParseContent("x = 0");
+            var input = State.Create(grammar.Value.InputSymbol, astBefore);
+            var astAfter = ASTHelper.ParseContent("x = 1");
+
+            var examples = new Dictionary<State, object> { { input, astAfter } };
+            var spec = new ExampleSpec(examples);
+
+            var prose = new SynthesisEngine(grammar.Value);
+            var learned = prose.LearnGrammar(spec);
+            var first = learned.RealizedPrograms.First();
+            var output = first.Invoke(input) as IEnumerable<PythonAst>;
+            var fixedProgram = output.First();
+            var unparser = new Unparser();
+            var newCode = unparser.Unparse(fixedProgram);
+            Assert.AreEqual("\r\nx = 1",newCode);
         }
 
         [TestMethod]
@@ -93,7 +108,7 @@ namespace Tutor.Tests
             Assert.IsTrue(m.HasMatch(code));
 
             var newNode = new IronPython.Compiler.Ast.ConstantExpression(0);
-            var update = new Update() { NewNode = newNode };
+            var update = new Update(newNode, null);
             var newAst = update.Run(code, m.MatchResult[1].First());
             var ast = newAst as PythonAst;
             var body = ast.Body as SuiteStatement;
@@ -129,7 +144,7 @@ def accumulate(combiner, base, n, term):
             Assert.AreEqual("literal", m.MatchResult[1].First().NodeName);
 
             var newNode = new IronPython.Compiler.Ast.ConstantExpression(0);
-            var update = new Update() { NewNode = newNode };
+            var update = new Update(newNode, null);
             var newAst = update.Run(ast, m.MatchResult[1].First());
 
             var expected = @"
@@ -149,7 +164,7 @@ def accumulate(combiner, base, n, term):
             var py = Python.CreateEngine();
             var code = ParseContent("def identity(n) : \n    return n", py);
             code.Bind();
-            
+
             var executed = py.Execute(new Unparser().Unparse(code) + "\nidentity(2)");
             Assert.AreEqual(2, executed);
         }
@@ -183,7 +198,7 @@ def accumulate(combiner, base, n, term):
         return base
     else:
         return combiner(term(n), accumulate(combiner, base, n-1, term))";
-            var ast = ParseContent(code,py);
+            var ast = ParseContent(code, py);
             ast.Bind();
             var actual = new Unparser().Unparse(ast);
             Assert.AreEqual(code, actual);
@@ -203,26 +218,26 @@ def product(n, term):
 
             var total = new NameExpression("total");
             var k = new NameExpression("k");
-            var leftTuple = new TupleExpression(true, total,k);
+            var leftTuple = new TupleExpression(true, total, k);
             var literal1 = new IronPython.Compiler.Ast.ConstantExpression(0);
             var literal2 = new IronPython.Compiler.Ast.ConstantExpression(1);
             var rightTuple = new TupleExpression(true, literal1, literal2);
-            var assign = new AssignmentStatement(new IronPython.Compiler.Ast.Expression[] { leftTuple }, 
+            var assign = new AssignmentStatement(new IronPython.Compiler.Ast.Expression[] { leftTuple },
                 rightTuple);
             var root = new PythonNode(assign, true);
             var leftNode = new PythonNode(leftTuple, true);
-            leftNode.AddChild(new PythonNode(total,true));
-            leftNode.AddChild(new PythonNode(k,true));
+            leftNode.AddChild(new PythonNode(total, true));
+            leftNode.AddChild(new PythonNode(k, true));
             root.AddChild(leftNode);
             var rightNode = new PythonNode(rightTuple, true);
-            rightNode.AddChild(new PythonNode(literal1,true,1));
+            rightNode.AddChild(new PythonNode(literal1, true, 1));
             rightNode.AddChild(new PythonNode(literal2, true));
             root.AddChild(rightNode);
-            
+
             var m = new Match(root);
             var newNode = new IronPython.Compiler.Ast.ConstantExpression(1);
-            var update = new Update() { NewNode = newNode };
-            var fix = new EditsProgram(m, update);
+            var update = new Update(newNode, null);
+            var fix = new Patch(m, update);
 
             var fixer = new SubmissionFixer();
 
@@ -239,12 +254,12 @@ def identity(x):
                 {testSetup + "product(3, square)", 36},
                 {testSetup + "product(5, square)", 14400}
             };
-            var isFixed = fixer.Fix(program, new List<EditsProgram>() { fix }, tests);
+            var isFixed = fixer.Fix(program, new List<Patch>() { fix }, tests);
             Assert.AreEqual(true, isFixed);
 
         }
 
-         [TestMethod]
+        [TestMethod]
         public void TestfixProgram2()
         {
             var program = @"
@@ -259,26 +274,26 @@ def product(n, term):
 
             var total = new NameExpression("total");
             var k = new NameExpression("k");
-            var leftTuple = new TupleExpression(true, total,k);
+            var leftTuple = new TupleExpression(true, total, k);
             var literal1 = new IronPython.Compiler.Ast.ConstantExpression(0);
             var literal2 = new IronPython.Compiler.Ast.ConstantExpression(1);
             var rightTuple = new TupleExpression(true, literal1, literal2);
-            var assign = new AssignmentStatement(new IronPython.Compiler.Ast.Expression[] { leftTuple }, 
+            var assign = new AssignmentStatement(new IronPython.Compiler.Ast.Expression[] { leftTuple },
                 rightTuple);
             var root = new PythonNode(assign, true);
             var leftNode = new PythonNode(leftTuple, true);
-            leftNode.AddChild(new PythonNode(total,true));
-            leftNode.AddChild(new PythonNode(k,true));
+            leftNode.AddChild(new PythonNode(total, true));
+            leftNode.AddChild(new PythonNode(k, true));
             root.AddChild(leftNode);
             var rightNode = new PythonNode(rightTuple, true);
-            rightNode.AddChild(new PythonNode(literal1,false,1));
+            rightNode.AddChild(new PythonNode(literal1, false, 1));
             rightNode.AddChild(new PythonNode(literal2, true));
             root.AddChild(rightNode);
-            
+
             var m = new Match(root);
             var newNode = new IronPython.Compiler.Ast.ConstantExpression(1);
-            var update = new Update() { NewNode = newNode };
-            var fix = new EditsProgram(m, update);
+            var update = new Update(newNode,null);
+            var fix = new Patch(m, update);
 
             var fixer = new SubmissionFixer();
 
@@ -295,7 +310,7 @@ def identity(x):
                 {testSetup + "product(3, square)", 36},
                 {testSetup + "product(5, square)", 14400}
             };
-            var isFixed = fixer.Fix(program, new List<EditsProgram>() { fix }, tests);
+            var isFixed = fixer.Fix(program, new List<Patch>() { fix }, tests);
             Assert.AreEqual(true, isFixed);
 
         }
@@ -333,8 +348,8 @@ def product(n, term):
 
             var m = new Match(root);
             var newNode = new IronPython.Compiler.Ast.ConstantExpression(1);
-            var update = new Update() { NewNode = newNode };
-            var fix = new EditsProgram(m, update);
+            var update = new Update(newNode,null);
+            var fix = new Patch(m, update);
 
             var fixer = new SubmissionFixer();
 
@@ -351,7 +366,7 @@ def identity(x):
                 {testSetup + "product(3, square)", 36},
                 {testSetup + "product(5, square)", 14400}
             };
-            var isFixed = fixer.Fix(program, new List<EditsProgram>() { fix }, tests);
+            var isFixed = fixer.Fix(program, new List<Patch>() { fix }, tests);
             Assert.AreEqual(true, isFixed);
 
         }
@@ -374,7 +389,7 @@ def identity(x):
             var pylc = HostingHelpers.GetLanguageContext(py);
             var parser = Parser.CreateParser(new CompilerContext(src, pylc.GetCompilerOptions(), ErrorSink.Default),
                 (PythonOptions)pylc.Options);
-            
+
             return parser.ParseFile(true);
         }
     }

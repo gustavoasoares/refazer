@@ -38,7 +38,7 @@ namespace Tutor
         /// dynamic programming table with the edit distances as Tuple. The first item is the cost
         /// the second item is the list of edit operations 
         /// </summary>
-        private Tuple<int, HashSet<String>>[,] _treedists;
+        private Tuple<int, HashSet<Operation>>[,] _treedists;
 
         /// <summary>
         /// Create an object to compute the edit distance given two trees
@@ -112,7 +112,7 @@ namespace Tutor
        /// </summary>
        /// <returns>Returns a tuple. The first item is the cost. The second item is the 
        /// sequence of edit operations</returns>
-        public Tuple<int, HashSet<String>>  Compute()
+        public Tuple<int, HashSet<Operation>>  Compute()
         {
             GenerateNodes(PreviousTree, CurrentTree);
             _l1 = ComputeL(T1, A);
@@ -120,8 +120,9 @@ namespace Tutor
             _k1 = ComputeK(T1, _l1);
             _k2 = ComputeK(T2, _l2);
 
-            _treedists = new Tuple<int, HashSet<String>>[T1.Length + 1, T2.Length + 1];
-            _treedists[0, 0] = Tuple.Create(0,new HashSet<string>());
+            _treedists = new Tuple<int, HashSet<Operation>>[T1.Length + 1, T2.Length + 1];
+
+            _treedists[0, 0] = Tuple.Create(0,new HashSet<Operation>());
                  
             foreach (var x in _k1)
             {
@@ -139,23 +140,23 @@ namespace Tutor
             var m = i - _l1[i] + 2;
             var n = j - _l2[j] + 2;
 
-            var fd = new Tuple<int, HashSet<string>>[m, n];
-            fd[0, 0] = Tuple.Create(0, new HashSet<string>());
+            var fd = new Tuple<int, HashSet<Operation>>[m, n];
+            fd[0, 0] = Tuple.Create(0, new HashSet<Operation>());
             var ioff = _l1[i] - 1;
             var joff = _l2[j] - 1;
 
             for (int x = 1; x < m; x++)
             {
                 //cost to delete a ZssNode is 1
-                var edits = new HashSet<string>(fd[x - 1, 0].Item2);
-                edits.Add("delete: " + x);
+                var edits = new HashSet<Operation>(fd[x - 1, 0].Item2);
+                edits.Add(new Delete(A[x +ioff -1].InternalNode as Node, null));
                 fd[x, 0] = Tuple.Create(fd[x - 1, 0].Item1 + 1, edits); 
             }
             for (int y = 1; y < n; y++)
             {
                 var node = B[y - 1 + joff];
-                var edits = new HashSet<string>(fd[0, y - 1].Item2);
-                edits.Add("insert: " + node.AbstractType());
+                var edits = new HashSet<Operation>(fd[0, y - 1].Item2);
+                edits.Add(new Insert(node.InternalNode as Node, null));
                 //cost do add a ZssNode is 1
                 fd[0, y] = Tuple.Create(fd[0, y - 1].Item1 + 1, edits);
             }
@@ -168,24 +169,26 @@ namespace Tutor
                     {
                         var value = Math.Min(Math.Min(fd[x - 1, y].Item1 + 1, //cost to remove is 1
                             fd[x, y - 1].Item1 + 1), //cost to insert is 1
-                            fd[x-1,y-1].Item1 + CostUpdate(A[x+ioff-1], B[y+joff-1])); //cost to update depends
+                            fd[x-1,y-1].Item1 + CostUpdate(A[x+ioff-1], B[y+joff-1])); //cost to Operation depends
 
-                        HashSet<string> edits;
+                        HashSet<Operation> edits;
                         if (value == fd[x - 1, y].Item1 + 1)
                         {
                             var node = A[x - 1];
-                            edits = new HashSet<string>(fd[x - 1, y].Item2) {"remove: " + node};
+                            edits = new HashSet<Operation>(fd[x - 1, y].Item2) {new Delete(node.InternalNode as Node, null)};
                         } else if (value == fd[x, y - 1].Item1 + 1)
                         {
                             var node = B[y - 1 + joff];
-                            edits = new HashSet<string>(fd[x, y - 1].Item2) {"insert: " + node};
+                            edits = new HashSet<Operation>(fd[x, y - 1].Item2) { new Insert(node.InternalNode as Node, null) };
                         }
                         else
                         {
-                            edits = new HashSet<string>(fd[x - 1, y - 1].Item2); 
+                            edits = new HashSet<Operation>(fd[x - 1, y - 1].Item2); 
                             if (CostUpdate(A[x + ioff - 1], B[y + joff - 1]) > 0)
                             {
-                                edits.Add("update: " + A[x + ioff - 1] + " to: " + B[y + joff - 1]);
+                                var oldNode = A[x + ioff - 1].InternalNode as Node;
+                                var newNode = B[y + joff - 1].InternalNode as Node;
+                                edits.Add(new Update(newNode, oldNode));
                             }
                         }
 
@@ -200,21 +203,21 @@ namespace Tutor
                         var value = Math.Min(fd[p, q].Item1 + _treedists[x + ioff, y + joff].Item1, 
                                 Math.Min(fd[x - 1, y].Item1 + 1, fd[x, y - 1].Item1 + 1));
 
-                        HashSet<string> edits;
+                        HashSet<Operation> edits;
                         if (value == fd[p, q].Item1 + _treedists[x + ioff, y + joff].Item1)
                         {
-                            edits = new HashSet<string>(fd[p, q].Item2);
+                            edits = new HashSet<Operation>(fd[p, q].Item2);
                             edits.UnionWith(_treedists[x + ioff, y + joff].Item2);
                         }
                         else if (value == fd[x - 1, y].Item1 + 1)
                         {
-                            edits = new HashSet<string>(fd[x - 1, y].Item2);
-                            edits.Add("delete: " + A[x - 1]);
+                            edits = new HashSet<Operation>(fd[x - 1, y].Item2);
+                            edits.Add(new Delete(A[x - 1].InternalNode as Node, null));
                         }
                         else
                         {
-                            edits = new HashSet<string>(fd[x, y - 1].Item2);
-                            edits.Add("insert: " + B[y - 1]);
+                            edits = new HashSet<Operation>(fd[x, y - 1].Item2);
+                            edits.Add(new Insert(B[y - 1].InternalNode as Node, null));
                         }
                         fd[x, y] = Tuple.Create(value, edits);
                     }

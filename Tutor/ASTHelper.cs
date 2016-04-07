@@ -14,17 +14,17 @@ using Microsoft.Scripting.Runtime;
 
 namespace Tutor
 {
-    internal class ASTHelper
+    public class ASTHelper
     {
 
-        internal static PythonAst ParseFile(string path)
+        public static PythonAst ParseFile(string path)
         {
             var py = Python.CreateEngine();
             var src = HostingHelpers.GetSourceUnit(py.CreateScriptSourceFromFile(path));
             return Parse(src, py);
         }
 
-        internal static PythonAst ParseContent(string content)
+        public static PythonAst ParseContent(string content)
         {
             var py = Python.CreateEngine();
             var src = HostingHelpers.GetSourceUnit(py.CreateScriptSourceFromString(content));

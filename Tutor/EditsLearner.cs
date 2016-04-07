@@ -14,30 +14,30 @@ namespace Tutor
 {
     public class EditsLearner
     {
-        public EditsProgram Learn(PythonAst before, PythonAst after)
+        public List<Patch> Learn(PythonAst before, PythonAst after)
         {
             throw new NotImplementedException();
         }
     }
 
-    public class EditsProgram
+    public class Patch
     {
-        private Match match;
-        private Operation update;
+        public Match Match { get;  }
+        public Operation Operation { get; }
 
-        public EditsProgram(Match match, Operation update)
+        public Patch(Match match, Operation operation)
         {
-            this.match = match;
-            this.update = update;
+            this.Match = match;
+            this.Operation = operation;
         }
 
 
         public List<PythonAst> Run(PythonAst ast)
         {
             var result = new List<PythonAst>();
-            if (match.HasMatch(ast))
+            if (Match.HasMatch(ast))
             {
-                result.AddRange(match.MatchResult[1].Select(node => update.Run(ast, node) as PythonAst));
+                result.AddRange(Match.MatchResult[1].Select(node => Operation.Run(ast, node) as PythonAst));
             }
             return result;
         }
@@ -94,6 +94,11 @@ namespace Tutor
                 return CheckTemplate(node);
             }
 
+            public override bool Walk(ConstantExpression node)
+            {
+                return CheckTemplate(node);
+            }
+
             public override bool Walk(TupleExpression node)
             {
                 return CheckTemplate(node);
@@ -118,7 +123,7 @@ namespace Tutor
                     }
                     return false;
                 }
-                return false;
+                return true;
             }
         }
     }

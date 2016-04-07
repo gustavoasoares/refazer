@@ -1,0 +1,18 @@
+﻿reference 'Tutor.dll';
+reference 'IronPython.dll';
+
+using Tutor;
+using Tutor.Transformation;
+using IronPython.Compiler.Ast;
+
+using semantics Tutor.Transformation.Semantics;
+using learners Tutor.Transformation.WitnessFunctions;
+
+language Transformation;
+
+@start IEnumerable<PythonAst> program := Apply(ast, edit, context);
+IEnumerable<Node> context := Match(ast, template);
+
+@input PythonAst ast;
+PythonNode template; 
+Operation edit;

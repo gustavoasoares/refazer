@@ -15,15 +15,48 @@ namespace Tutor
 {
     public abstract class Operation
     {
-        public Node NewNode { set; get; }
+        public  Node NewNode { get; }
+        public  Node Target { get; }
+
+        public Operation(Node newNode, Node target)
+        {
+            NewNode = newNode;
+            Target = target;
+        }
 
         public abstract Expression Run(PythonAst code, Node node); 
-
-
     }
 
+
+    public class Insert : Operation
+    {
+        public Insert(Node newNode, Node target) : base(newNode, target)
+        {
+        }
+
+        public override Expression Run(PythonAst code, Node node)
+        {
+            throw new NotImplementedException();
+        }
+    }
+
+    public class Delete : Operation
+    {
+        public Delete(Node newNode, Node target) : base(newNode, target)
+        {
+        }
+
+        public override Expression Run(PythonAst code, Node node)
+        {
+            throw new NotImplementedException();
+        }
+    }
     public class Update : Operation
     {
+        public Update(Node newNode, Node target) : base(newNode, target)
+        {
+        }
+
         public override Expression Run(PythonAst code, Node node)
         {
             var rewriter = new UpdateRewriter(node, NewNode);
