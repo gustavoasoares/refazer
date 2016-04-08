@@ -9,18 +9,21 @@ namespace Tutor
 {
     public class PythonNode
     {
-        public int EditId { get; }
+        public int EditId { get; set; }
+
+        public string Value { get; set; }
 
         public Node InnerNode { get;}
         public bool IsAbstract { get; }
-
-        public List<PythonNode> Children { get; } 
+        public List<PythonNode> Children { get; }
+        public PythonNode Parent { get; set; }
 
         public PythonNode(Node innerNode, bool isAbstract)
         {
             InnerNode = innerNode;
             IsAbstract = isAbstract;
             Children = new List<PythonNode>();
+            Value = "";
         }
 
         public PythonNode(Node innerNode, bool isAbstract, int editId) : this(innerNode, isAbstract)
@@ -31,6 +34,11 @@ namespace Tutor
         public void AddChild(PythonNode node)
         {
             Children.Add(node);
+        }
+
+        public void Walk(PythonWalker walker)
+        {
+            InnerNode.Walk(walker);
         }
 
         public Tuple<bool, Dictionary<int, Node>> Match(Node node)
@@ -73,7 +81,8 @@ namespace Tutor
                 {
                     return Tuple.Create<bool, Dictionary<int, Node>>(false, new Dictionary<int, Node>());
                 }
-            } else if (node is AssignmentStatement)
+            }
+            if (node is AssignmentStatement)
             {
                 var convertedNode = node as AssignmentStatement;
                 //if the number of expressions in the left side are different from 
@@ -99,7 +108,8 @@ namespace Tutor
                 {
                     return Tuple.Create<bool, Dictionary<int, Node>>(false, new Dictionary<int, Node>());
                 }
-            } else if (node is TupleExpression)
+            }
+            if (node is TupleExpression)
             {
                 var convertedNode = node as TupleExpression;
                 if (convertedNode.Items.Count != Children.Count)
@@ -135,14 +145,97 @@ namespace Tutor
                 if (comparedNode == null) return false;
                 return inner.Name.Equals(comparedNode.Name);
             }
-            else if (InnerNode is ConstantExpression)
+            if (InnerNode is ConstantExpression)
             {
                 var inner = InnerNode as ConstantExpression;
                 var comparedNode = node as ConstantExpression;
                 if (comparedNode == null) return false;
                 return inner.Value.Equals(comparedNode.Value);
             }
+            if (InnerNode is AssignmentStatement)
+            {
+                var inner = InnerNode as AssignmentStatement;
+                var comparedNode = node as AssignmentStatement;
+                if (comparedNode == null) return false;
+                return true;
+            }
+
+            if (InnerNode is SuiteStatement)
+            {
+                var inner = InnerNode as SuiteStatement;
+                var comparedNode = node as SuiteStatement;
+                if (comparedNode == null) return false;
+                return true;
+            }
             throw new NotImplementedException();
+        }
+
+        public void PostWalk(SortedTreeVisitor visitor)
+        {
+            foreach (var child in Children)
+            {
+                child.PostWalk(visitor);
+            }
+            visitor.Nodes.Add(this);
+        }
+        
+
+        protected bool Equals(PythonNode other)
+        {
+            return Equals(InnerNode, other.InnerNode) && this.IsAbstract == other.IsAbstract && 
+                EditId == other.EditId;
+        }
+
+        public override bool Equals(object obj)
+        {
+            if (ReferenceEquals(null, obj)) return false;
+            if (ReferenceEquals(this, obj)) return true;
+            if (obj.GetType() != GetType()) return false;
+            return Equals((PythonNode)obj);
+        }
+
+        public PythonNode GetLeftMostDescendant()
+        {
+            var walker = new SortedTreeVisitor();
+            PostWalk(walker);
+            if (walker.Nodes.Count == 0)
+                throw new Exception("list should not be empty");
+            return walker.Nodes.First();
+        }
+
+        public string AbstractType()
+        {
+            return InnerNode.NodeName;
+        }
+
+        public override string ToString()
+        {
+            return InnerNode.NodeName + ": " + Value;
+        }
+
+        public override int GetHashCode()
+        {
+            unchecked
+            {
+                return ((Value != null ? Value.GetHashCode() : 0) * 397) ^ (InnerNode!= null ? InnerNode.GetHashCode() : 0);
+            }
+        }
+
+        public bool Similar(PythonNode node1)
+        {
+            return ToString().Equals(node1.ToString());
+        }
+
+        public PythonNode GetAbstractCopy()
+        {
+            var result = new PythonNode(InnerNode,true, EditId);
+            if (Parent != null) result.Parent = Parent;
+            result.Value = Value;
+            foreach (var child in Children)
+            {
+                result.AddChild(child.GetAbstractCopy());
+            }
+            return result;
         }
     }
 }

@@ -15,10 +15,10 @@ namespace Tutor
 {
     public abstract class Operation
     {
-        public  Node NewNode { get; }
-        public  Node Target { get; }
+        public PythonNode NewNode { get; }
+        public PythonNode Target { get; }
 
-        public Operation(Node newNode, Node target)
+        public Operation(PythonNode newNode, PythonNode target)
         {
             NewNode = newNode;
             Target = target;
@@ -30,7 +30,7 @@ namespace Tutor
 
     public class Insert : Operation
     {
-        public Insert(Node newNode, Node target) : base(newNode, target)
+        public Insert(PythonNode newNode, PythonNode target) : base(newNode, target)
         {
         }
 
@@ -42,7 +42,7 @@ namespace Tutor
 
     public class Delete : Operation
     {
-        public Delete(Node newNode, Node target) : base(newNode, target)
+        public Delete(PythonNode newNode, PythonNode target) : base(newNode, target)
         {
         }
 
@@ -53,13 +53,13 @@ namespace Tutor
     }
     public class Update : Operation
     {
-        public Update(Node newNode, Node target) : base(newNode, target)
+        public Update(PythonNode newNode, PythonNode target) : base(newNode, target)
         {
         }
 
         public override Expression Run(PythonAst code, Node node)
         {
-            var rewriter = new UpdateRewriter(node, NewNode);
+            var rewriter = new UpdateRewriter(node, NewNode.InnerNode);
             return rewriter.Update(code);
         }
 

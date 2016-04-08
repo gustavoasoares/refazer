@@ -34,7 +34,8 @@ namespace Tutor
         private static PythonAst Parse(SourceUnit src, ScriptEngine py)
         {
             var pylc = HostingHelpers.GetLanguageContext(py);
-            var parser = Parser.CreateParser(new CompilerContext(src, pylc.GetCompilerOptions(), ErrorSink.Default),
+            var compilerContext = new CompilerContext(src, pylc.GetCompilerOptions(), ErrorSink.Default);
+            var parser = Parser.CreateParser(compilerContext,
                 (PythonOptions)pylc.Options);
             return parser.ParseFile(true);
         }

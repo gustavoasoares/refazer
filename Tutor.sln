@@ -9,10 +9,6 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Tutor.Tests", "Tutor.Tests\
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TutorUI", "TutorUI\TutorUI.csproj", "{D75005ED-0FF9-4ABB-9884-590CDBE30765}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ProseSample.TextExtraction", "..\prose\ProgramSynthesis\ProseSample.TextExtraction\ProseSample.TextExtraction.csproj", "{5AA217F9-DEAB-46BE-81BE-AFD00948AC50}"
-EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ProseSample", "..\prose\ProgramSynthesis\ProseSample\ProseSample.csproj", "{C7FC4D3C-3CAE-42B9-AFF9-83CB07A7872F}"
-EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -31,14 +27,6 @@ Global
 		{D75005ED-0FF9-4ABB-9884-590CDBE30765}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{D75005ED-0FF9-4ABB-9884-590CDBE30765}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{D75005ED-0FF9-4ABB-9884-590CDBE30765}.Release|Any CPU.Build.0 = Release|Any CPU
-		{5AA217F9-DEAB-46BE-81BE-AFD00948AC50}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{5AA217F9-DEAB-46BE-81BE-AFD00948AC50}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{5AA217F9-DEAB-46BE-81BE-AFD00948AC50}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{5AA217F9-DEAB-46BE-81BE-AFD00948AC50}.Release|Any CPU.Build.0 = Release|Any CPU
-		{C7FC4D3C-3CAE-42B9-AFF9-83CB07A7872F}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{C7FC4D3C-3CAE-42B9-AFF9-83CB07A7872F}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{C7FC4D3C-3CAE-42B9-AFF9-83CB07A7872F}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{C7FC4D3C-3CAE-42B9-AFF9-83CB07A7872F}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

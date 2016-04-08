@@ -11,17 +11,17 @@ namespace Tutor.Transformation
     [SuppressMessage("ReSharper", "UnusedMember.Global")]
     public static class Semantics
     {
-        public static IEnumerable<PythonAst> Apply(PythonAst ast, Operation edit, IEnumerable<Node> context)
+        public static IEnumerable<PythonAst> Apply(PythonNode ast, Operation edit, IEnumerable<Node> context)
         {
             var result = new List<PythonAst>();
-            result.AddRange(context.Select(node => edit.Run(ast,node) as PythonAst));
+            result.AddRange(context.Select(node => edit.Run(ast.InnerNode as PythonAst, node) as PythonAst));
             return result;
         }
 
-        public static IEnumerable<Node> Match(PythonAst ast, PythonNode template)
+        public static IEnumerable<Node> Match(PythonNode ast, PythonNode template)
         {
             var match = new Match(template);
-            match.Run(ast);
+            match.Run(ast.InnerNode as PythonAst);
             return match.MatchResult[1];
         }
 

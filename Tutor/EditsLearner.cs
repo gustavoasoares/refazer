@@ -85,6 +85,10 @@ namespace Tutor
                 MatchResult = new Dictionary<int, List<Node>>();
             }
 
+            public override bool Walk(SuiteStatement node)
+            {
+                return CheckTemplate(node);
+            }
             public override bool Walk(BinaryExpression node)
             {
                 return CheckTemplate(node);

@@ -16,6 +16,7 @@ using Microsoft.ProgramSynthesis;
 using Microsoft.ProgramSynthesis.Compiler;
 using Microsoft.ProgramSynthesis.Learning;
 using Microsoft.ProgramSynthesis.Specifications;
+using Microsoft.ProgramSynthesis.Utils;
 using Expression = System.Linq.Expressions.Expression;
 
 namespace Tutor.Tests
@@ -28,9 +29,10 @@ namespace Tutor.Tests
         {
             var grammar = DSLCompiler.LoadGrammarFromFile(@"C:\Users\Gustavo\git\Tutor\Tutor\Transformation.grammar");
 
-            var astBefore = ASTHelper.ParseContent("x = 0");
+            var astBefore = NodeWrapper.Wrap(ASTHelper.ParseContent("x = 0"));
+
             var input = State.Create(grammar.Value.InputSymbol, astBefore);
-            var astAfter = ASTHelper.ParseContent("x = 1");
+            var astAfter = NodeWrapper.Wrap(ASTHelper.ParseContent("x = 1"));
 
             var examples = new Dictionary<State, object> { { input, astAfter } };
             var spec = new ExampleSpec(examples);
@@ -43,6 +45,10 @@ namespace Tutor.Tests
             var unparser = new Unparser();
             var newCode = unparser.Unparse(fixedProgram);
             Assert.AreEqual("\r\nx = 1",newCode);
+
+            var secondOutput = first.Invoke(State.Create(grammar.Value.InputSymbol,
+                NodeWrapper.Wrap(ASTHelper.ParseContent("1 == 0"))));
+            Assert.IsTrue(secondOutput == null);
         }
 
         [TestMethod]
@@ -50,7 +56,6 @@ namespace Tutor.Tests
         {
             var py = Python.CreateEngine();
             var code = ParseContent("x * a", py);
-
             var x = new NameExpression("x");
             var a = new NameExpression("a");
             var multiply = new IronPython.Compiler.Ast.BinaryExpression(PythonOperator.Multiply, x, a);
@@ -108,7 +113,7 @@ namespace Tutor.Tests
             Assert.IsTrue(m.HasMatch(code));
 
             var newNode = new IronPython.Compiler.Ast.ConstantExpression(0);
-            var update = new Update(newNode, null);
+            var update = new Update(new PythonNode(newNode,false), null);
             var newAst = update.Run(code, m.MatchResult[1].First());
             var ast = newAst as PythonAst;
             var body = ast.Body as SuiteStatement;
@@ -144,7 +149,7 @@ def accumulate(combiner, base, n, term):
             Assert.AreEqual("literal", m.MatchResult[1].First().NodeName);
 
             var newNode = new IronPython.Compiler.Ast.ConstantExpression(0);
-            var update = new Update(newNode, null);
+            var update = new Update(new PythonNode(newNode, false), null);
             var newAst = update.Run(ast, m.MatchResult[1].First());
 
             var expected = @"
@@ -236,7 +241,7 @@ def product(n, term):
 
             var m = new Match(root);
             var newNode = new IronPython.Compiler.Ast.ConstantExpression(1);
-            var update = new Update(newNode, null);
+            var update = new Update(new PythonNode(newNode, false), null);
             var fix = new Patch(m, update);
 
             var fixer = new SubmissionFixer();
@@ -292,7 +297,7 @@ def product(n, term):
 
             var m = new Match(root);
             var newNode = new IronPython.Compiler.Ast.ConstantExpression(1);
-            var update = new Update(newNode,null);
+            var update = new Update(new PythonNode(newNode,false), null);
             var fix = new Patch(m, update);
 
             var fixer = new SubmissionFixer();
@@ -348,7 +353,7 @@ def product(n, term):
 
             var m = new Match(root);
             var newNode = new IronPython.Compiler.Ast.ConstantExpression(1);
-            var update = new Update(newNode,null);
+            var update = new Update(new PythonNode(newNode, false), null);
             var fix = new Patch(m, update);
 
             var fixer = new SubmissionFixer();

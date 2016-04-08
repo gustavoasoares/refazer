@@ -13,6 +13,6 @@ language Transformation;
 @start IEnumerable<PythonAst> program := Apply(ast, edit, context);
 IEnumerable<Node> context := Match(ast, template);
 
-@input PythonAst ast;
+@input PythonNode ast;
 PythonNode template; 
 Operation edit;

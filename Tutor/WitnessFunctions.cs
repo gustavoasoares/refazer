@@ -22,8 +22,8 @@ namespace Tutor.Transformation
             var editExamples = new Dictionary<State, object>();
             foreach (State input in spec.ProvidedInputs)
             {
-                var before = (PythonAst)input[rule.Body[0]];
-                var after = (PythonAst)spec.Examples[input];
+                var before = (PythonNode)input[rule.Body[0]];
+                var after = (PythonNode)spec.Examples[input];
 
                 //run the diff
                 var zss = new PythonZss(before, after);
@@ -39,35 +39,38 @@ namespace Tutor.Transformation
             var contextExamples = new Dictionary<State, IEnumerable<object>>();
             foreach (State input in spec.ProvidedInputs)
             {
-                var before = (PythonAst)input[rule.Body[0]];
-                var after = (PythonAst)spec.Examples[input];
-
-                //run the diff
+                var before = (PythonNode)input[rule.Body[0]];
+                var after = (PythonNode)spec.Examples[input];
                 var zss = new PythonZss(before, after);
                 var editDistance = zss.Compute();
                 var operation = editDistance.Item2.First();
                 var target = operation.Target;
+
                 contextExamples[input] = new List<object>() {target};
             }
             return DisjunctiveExamplesSpec.From(contextExamples);
         }
 
         [WitnessFunction("Match", 1)]
-        public static ExampleSpec WitnessTemplate(GrammarRule rule, int parameter, ExampleSpec spec)
+        public static DisjunctiveExamplesSpec WitnessTemplate(GrammarRule rule, int parameter, ExampleSpec spec)
         {
-            var templateExamples = new Dictionary<State, object>();
+            var templateExamples = new Dictionary<State, IEnumerable<object>>();
             foreach (var input in spec.ProvidedInputs)
             {
-                var before = (PythonAst)input[rule.Body[0]];
-
-                PythonNode tree = null;
-                foreach (Node node in spec.DisjunctiveExamples[input])
+                var templateTrees = new List<object>();
+                foreach (PythonNode node in spec.DisjunctiveExamples[input])
                 {
-                    tree = new PythonNode(node, true,1);
+                    node.EditId = 1;
+                    templateTrees.Add(node.Parent.Parent);
+                    templateTrees.Add(node.Parent.Parent.GetAbstractCopy());
+                    templateTrees.Add(node.Parent);
+                    templateTrees.Add(node.Parent.GetAbstractCopy());
+                    templateTrees.Add(node);
+                    templateTrees.Add(node.GetAbstractCopy());
                 }
-                templateExamples[input] = tree;
+                templateExamples[input] = templateTrees;
             }
-            return new ExampleSpec(templateExamples);
+            return DisjunctiveExamplesSpec.From(templateExamples);
         }
 
         [WitnessFunction("SubStr", 1)]

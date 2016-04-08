@@ -18,8 +18,8 @@ namespace Tutor.Tests
         public void TestCompute1()
         {
             var py = Python.CreateEngine();
-            var ast1 = ParseContent("k = 0", py);
-            var ast2 = ParseContent("k = 1", py);
+            var ast1 = NodeWrapper.Wrap(ParseContent("k = 0", py));
+            var ast2 = NodeWrapper.Wrap(ParseContent("k = 1", py));
             var zss = new PythonZss(ast1, ast2);
             var editDistance = zss.Compute();
             Assert.AreEqual(1, editDistance.Item1);
@@ -29,8 +29,8 @@ namespace Tutor.Tests
         public void TestCompute2()
         {
             var py = Python.CreateEngine();
-            var ast1 = ParseContent("total, k = 0, 1", py);
-            var ast2 = ParseContent("total, k = 1, 1", py);
+            var ast1 = NodeWrapper.Wrap(ParseContent("total, k = 0, 1", py));
+            var ast2 = NodeWrapper.Wrap(ParseContent("total, k = 1, 1", py));
             var zss = new PythonZss(ast1, ast2);
             var editDistance = zss.Compute();
             Assert.AreEqual(1, editDistance.Item1);
@@ -40,8 +40,8 @@ namespace Tutor.Tests
         public void TestCompute3()
         {
             var py = Python.CreateEngine();
-            var ast1 = ParseContent("x * a", py);
-            var ast2 = ParseContent("term(x) * a", py);
+            var ast1 = NodeWrapper.Wrap(ParseContent("x * a", py));
+            var ast2 = NodeWrapper.Wrap(ParseContent("term(x) * a", py));
             var zss = new PythonZss(ast1, ast2);
             var editDistance = zss.Compute();
             Assert.AreEqual(3, editDistance.Item1);
@@ -51,11 +51,11 @@ namespace Tutor.Tests
         public void TestCompute4()
         {
             var py = Python.CreateEngine();
-            var ast1 = ParseFile(Environment.CurrentDirectory + "../../../resources/before_1.py", py);
-            var ast2 = ParseFile(Environment.CurrentDirectory + "../../../resources/after_1.py", py);
+            var ast1 = NodeWrapper.Wrap(ParseFile(Environment.CurrentDirectory + "../../../resources/before_1.py", py));
+            var ast2 = NodeWrapper.Wrap(ParseFile(Environment.CurrentDirectory + "../../../resources/after_1.py", py));
             var zss = new PythonZss(ast1, ast2);
             var editDistance = zss.Compute();
-            Assert.AreEqual(2, editDistance.Item1);
+            Assert.AreEqual(1, editDistance.Item1);
 
         }
 
