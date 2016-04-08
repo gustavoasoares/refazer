@@ -21,8 +21,8 @@ namespace Tutor.Transformation
         public static IEnumerable<Node> Match(PythonNode ast, PythonNode template)
         {
             var match = new Match(template);
-            match.Run(ast.InnerNode as PythonAst);
-            return match.MatchResult[1];
+            var hasMatch = match.Run(ast.InnerNode as PythonAst);
+            return (hasMatch) ? match.MatchResult[1] : new List<Node>();
         }
 
     public static StringRegion SubStr(StringRegion v, Tuple<uint?, uint?> posPair)

@@ -124,6 +124,20 @@ namespace Tutor
                 }
                 return Tuple.Create<bool, Dictionary<int, Node>>(true, matchResult);
             }
+            if (node is SuiteStatement)
+            {
+                var convertedNode = node as SuiteStatement;
+                if (convertedNode.Statements.Count != Children.Count)
+                    return Tuple.Create<bool, Dictionary<int, Node>>(false, new Dictionary<int, Node>());
+                for (var i = 0; i < Children.Count; i++)
+                {
+                    var result = Children[i].Match(convertedNode.Statements[i]);
+                    if (!result.Item1)
+                        return Tuple.Create<bool, Dictionary<int, Node>>(false, new Dictionary<int, Node>());
+                    AddMatchResult(matchResult, result.Item2);
+                }
+                return Tuple.Create<bool, Dictionary<int, Node>>(true, matchResult);
+            }
 
             throw new NotImplementedException();
         }

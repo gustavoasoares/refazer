@@ -47,8 +47,8 @@ namespace Tutor.Tests
             Assert.AreEqual("\r\nx = 1",newCode);
 
             var secondOutput = first.Invoke(State.Create(grammar.Value.InputSymbol,
-                NodeWrapper.Wrap(ASTHelper.ParseContent("1 == 0"))));
-            Assert.IsTrue(secondOutput == null);
+                NodeWrapper.Wrap(ASTHelper.ParseContent("1 == 0")))) as IEnumerable<PythonAst>;
+            Assert.IsTrue(!secondOutput.AsEnumerable().Any());
         }
 
         [TestMethod]
