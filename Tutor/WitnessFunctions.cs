@@ -17,36 +17,45 @@ namespace Tutor.Transformation
     public static class WitnessFunctions
     {
         [WitnessFunction("Apply", 1)]
-        public static ExampleSpec WitnessEdit(GrammarRule rule, int parameter, ExampleSpec spec)
+        public static ExampleSpec WitnessPatch(GrammarRule rule, int parameter, ExampleSpec spec)
         {
-            var editExamples = new Dictionary<State, object>();
-            foreach (State input in spec.ProvidedInputs)
+            var patchExamples = new Dictionary<State, object>();
+            foreach (var input in spec.ProvidedInputs)
             {
                 var before = (PythonNode)input[rule.Body[0]];
                 var after = (PythonNode)spec.Examples[input];
 
-                //run the diff
                 var zss = new PythonZss(before, after);
                 var editDistance = zss.Compute();
-                editExamples[input] = editDistance.Item2.First();
+                patchExamples[input] = editDistance.Item2.First();
             }
-            return  new ExampleSpec(editExamples);
+            return  new ExampleSpec(patchExamples);
         }
 
-        [WitnessFunction("Apply", 2)]
+        [WitnessFunction("Patch", 0)]
+        public static ExampleSpec WitnessEdit(GrammarRule rule, int parameter, ExampleSpec spec)
+        {
+            var editExamples = new Dictionary<State, object>();
+            foreach (var input in spec.ProvidedInputs)
+            {
+                var operation = spec.Examples[input] as Operation;
+                editExamples[input] = operation;
+            }
+            return new ExampleSpec(editExamples);
+        }
+
+        [WitnessFunction("Patch", 1)]
         public static DisjunctiveExamplesSpec WitnessContext(GrammarRule rule, int parameter, ExampleSpec spec)
         {
             var contextExamples = new Dictionary<State, IEnumerable<object>>();
             foreach (State input in spec.ProvidedInputs)
             {
-                var before = (PythonNode)input[rule.Body[0]];
-                var after = (PythonNode)spec.Examples[input];
-                var zss = new PythonZss(before, after);
-                var editDistance = zss.Compute();
-                var operation = editDistance.Item2.First();
-                var target = operation.Target;
-
-                contextExamples[input] = new List<object>() {target};
+                var operation = spec.Examples[input] as Operation;
+                if (operation != null)
+                {
+                    var target = operation.Target;
+                    contextExamples[input] = new List<object>() { target };
+                }
             }
             return DisjunctiveExamplesSpec.From(contextExamples);
         }

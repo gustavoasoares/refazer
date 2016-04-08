@@ -12,33 +12,22 @@ using ConstantExpression = IronPython.Compiler.Ast.ConstantExpression;
 
 namespace Tutor
 {
-    public class EditsLearner
-    {
-        public List<Patch> Learn(PythonAst before, PythonAst after)
-        {
-            throw new NotImplementedException();
-        }
-    }
-
     public class Patch
     {
-        public Match Match { get;  }
+        public IEnumerable<Node> Context { get;  }
         public Operation Operation { get; }
 
-        public Patch(Match match, Operation operation)
+        public Patch(IEnumerable<Node> context, Operation operation)
         {
-            this.Match = match;
-            this.Operation = operation;
+            Context = context;
+            Operation = operation;
         }
 
 
         public List<PythonAst> Run(PythonAst ast)
         {
             var result = new List<PythonAst>();
-            if (Match.HasMatch(ast))
-            {
-                result.AddRange(Match.MatchResult[1].Select(node => Operation.Run(ast, node) as PythonAst));
-            }
+            result.AddRange(Context.Select(node => Operation.Run(ast, node) as PythonAst));
             return result;
         }
     }

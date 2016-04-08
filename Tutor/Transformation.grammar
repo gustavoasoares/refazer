@@ -10,7 +10,8 @@ using learners Tutor.Transformation.WitnessFunctions;
 
 language Transformation;
 
-@start IEnumerable<PythonAst> program := Apply(ast, edit, context);
+@start IEnumerable<PythonAst> program := Apply(ast, patch);
+Patch patch := Patch(edit, context);
 IEnumerable<Node> context := Match(ast, template);
 
 @input PythonNode ast;
