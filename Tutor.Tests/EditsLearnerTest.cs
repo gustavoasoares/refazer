@@ -1,6 +1,4 @@
-﻿using System;
-using System.Linq.Expressions;
-using IronPython;
+﻿using IronPython;
 using IronPython.Compiler;
 using IronPython.Compiler.Ast;
 using IronPython.Hosting;
@@ -11,13 +9,10 @@ using Microsoft.Scripting.Runtime;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using System.Collections.Generic;
 using System.Linq;
-using Community.CsharpSqlite;
 using Microsoft.ProgramSynthesis;
 using Microsoft.ProgramSynthesis.Compiler;
 using Microsoft.ProgramSynthesis.Learning;
 using Microsoft.ProgramSynthesis.Specifications;
-using Microsoft.ProgramSynthesis.Utils;
-using Expression = System.Linq.Expressions.Expression;
 
 namespace Tutor.Tests
 {

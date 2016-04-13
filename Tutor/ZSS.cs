@@ -174,7 +174,7 @@ namespace Tutor
                         HashSet<Operation> edits;
                         if (value == fd[x - 1, y].Item1 + 1)
                         {
-                            var node = A[x - 1];
+                            var node = A[x - 1 + ioff];
                             edits = new HashSet<Operation>(fd[x - 1, y].Item2) {new Delete(node, null)};
                         } else if (value == fd[x, y - 1].Item1 + 1)
                         {
