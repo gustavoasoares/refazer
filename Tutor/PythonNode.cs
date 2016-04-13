@@ -36,11 +36,6 @@ namespace Tutor
             Children.Add(node);
         }
 
-        public void Walk(PythonWalker walker)
-        {
-            InnerNode.Walk(walker);
-        }
-
         public Tuple<bool, Dictionary<int, Node>> Match(Node node)
         {
             var matchResult = new Dictionary<int, Node>();
@@ -68,20 +63,32 @@ namespace Tutor
 
             if (node is BinaryExpression)
             {
-                var convertedNode = node as BinaryExpression;
+                var convertedNode = (BinaryExpression) node;
                 var resultLeft = Children[0].Match(convertedNode.Left);
                 var resultRight = Children[1].Match(convertedNode.Right);
                 if (resultRight.Item1 && resultLeft.Item1)
                 {
                     AddMatchResult(matchResult, resultLeft.Item2);
                     AddMatchResult(matchResult, resultRight.Item2);
-                    return Tuple.Create<bool, Dictionary<int, Node>>(true, matchResult);
+                    return Tuple.Create(true, matchResult);
                 }
-                else
-                {
-                    return Tuple.Create<bool, Dictionary<int, Node>>(false, new Dictionary<int, Node>());
-                }
+                return Tuple.Create(false, new Dictionary<int, Node>());
             }
+
+            if (node is AugmentedAssignStatement)
+            {
+                var convertedNode = (AugmentedAssignStatement)node;
+                var resultLeft = Children[0].Match(convertedNode.Left);
+                var resultRight = Children[1].Match(convertedNode.Right);
+                if (resultRight.Item1 && resultLeft.Item1)
+                {
+                    AddMatchResult(matchResult, resultLeft.Item2);
+                    AddMatchResult(matchResult, resultRight.Item2);
+                    return Tuple.Create(true, matchResult);
+                }
+                return Tuple.Create(false, new Dictionary<int, Node>());
+            }
+
             if (node is AssignmentStatement)
             {
                 var convertedNode = node as AssignmentStatement;
@@ -138,6 +145,144 @@ namespace Tutor
                 }
                 return Tuple.Create<bool, Dictionary<int, Node>>(true, matchResult);
             }
+            if (node is ExpressionStatement)
+            {
+                var convertedNode = (ExpressionStatement) node;
+                if (Children.Count != 1)
+                    return Tuple.Create(false, new Dictionary<int, Node>());
+
+                var result = Children[0].Match(convertedNode.Expression);
+                if (!result.Item1)
+                    return Tuple.Create(false, new Dictionary<int, Node>());
+                AddMatchResult(matchResult, result.Item2);
+                return Tuple.Create(true, matchResult);
+            }
+            if (node is ReturnStatement)
+            {
+                var convertedNode = (ReturnStatement)node;
+                if (Children.Count != 1)
+                    return Tuple.Create(false, new Dictionary<int, Node>());
+
+                var result = Children[0].Match(convertedNode.Expression);
+                if (!result.Item1)
+                    return Tuple.Create(false, new Dictionary<int, Node>());
+                AddMatchResult(matchResult, result.Item2);
+                return Tuple.Create(true, matchResult);
+            }
+            if (node is ParenthesisExpression)
+            {
+                var convertedNode = (ParenthesisExpression)node;
+                if (Children.Count != 1)
+                    return Tuple.Create(false, new Dictionary<int, Node>());
+
+                var result = Children[0].Match(convertedNode.Expression);
+                if (!result.Item1)
+                    return Tuple.Create(false, new Dictionary<int, Node>());
+                AddMatchResult(matchResult, result.Item2);
+                return Tuple.Create(true, matchResult);
+            }
+            if (node is Arg)
+            {
+                var convertedNode = (Arg)node;
+                if (Children.Count != 1)
+                    return Tuple.Create(false, new Dictionary<int, Node>());
+
+                var result = Children[0].Match(convertedNode.Expression);
+                if (!result.Item1)
+                    return Tuple.Create(false, new Dictionary<int, Node>());
+                AddMatchResult(matchResult, result.Item2);
+                return Tuple.Create(true, matchResult);
+            }
+
+            if (node is Parameter)
+            {
+                var convertedNode = (Parameter)node;
+                if (Children.Count != 1)
+                    return Tuple.Create(false, new Dictionary<int, Node>());
+
+                var result = Children[0].Match(convertedNode.DefaultValue);
+                if (!result.Item1)
+                    return Tuple.Create(false, new Dictionary<int, Node>());
+                AddMatchResult(matchResult, result.Item2);
+                return Tuple.Create(true, matchResult);
+            }
+
+            if (node is CallExpression)
+            {
+                var convertedNode = (CallExpression) node;
+                if (Children.Count != convertedNode.Args.Count + 1)
+                    return Tuple.Create(false, new Dictionary<int, Node>());
+
+                var result = Children[0].Match(convertedNode.Target);
+                if (!result.Item1)
+                    return Tuple.Create(false, new Dictionary<int, Node>());
+                AddMatchResult(matchResult, result.Item2);
+                for (var i = 1; i < Children.Count; i++)
+                {
+                    result = Children[i].Match(convertedNode.Args[i-1]);
+                    if (!result.Item1)
+                        return Tuple.Create(false, new Dictionary<int, Node>());
+                    AddMatchResult(matchResult, result.Item2);
+                }
+                return Tuple.Create(true, matchResult);
+            }
+
+            if (node is WhileStatement)
+            {
+                var convertedNode = (WhileStatement) node;
+                var totalChildren = (convertedNode.ElseStatement == null) ? 2 : 3;
+                if (totalChildren != Children.Count)
+                    return Tuple.Create(false, new Dictionary<int, Node>());
+                var result = Children[0].Match(convertedNode.Test);
+                if (!result.Item1)
+                    return Tuple.Create(false, new Dictionary<int, Node>());
+                AddMatchResult(matchResult, result.Item2);
+
+                result = Children[1].Match(convertedNode.Body);
+                if (!result.Item1)
+                    return Tuple.Create(false, new Dictionary<int, Node>());
+                AddMatchResult(matchResult, result.Item2);
+
+                if (convertedNode.ElseStatement != null)
+                {
+                    result = Children[2].Match(convertedNode.ElseStatement);
+                    if (!result.Item1)
+                        return Tuple.Create(false, new Dictionary<int, Node>());
+                    AddMatchResult(matchResult, result.Item2);
+                }
+                return Tuple.Create(true, matchResult);
+            }
+
+            if (node is ForStatement)
+            {
+                var convertedNode = (ForStatement)node;
+                var totalChildren = (convertedNode.Else == null) ? 3 : 4;
+                if (totalChildren != Children.Count)
+                    return Tuple.Create(false, new Dictionary<int, Node>());
+                var result = Children[0].Match(convertedNode.Left);
+                if (!result.Item1)
+                    return Tuple.Create(false, new Dictionary<int, Node>());
+                AddMatchResult(matchResult, result.Item2);
+
+                result = Children[1].Match(convertedNode.List);
+                if (!result.Item1)
+                    return Tuple.Create(false, new Dictionary<int, Node>());
+                AddMatchResult(matchResult, result.Item2);
+
+                result = Children[2].Match(convertedNode.Body);
+                if (!result.Item1)
+                    return Tuple.Create(false, new Dictionary<int, Node>());
+                AddMatchResult(matchResult, result.Item2);
+
+                if (convertedNode.Else != null)
+                {
+                    result = Children[3].Match(convertedNode.Else);
+                    if (!result.Item1)
+                        return Tuple.Create(false, new Dictionary<int, Node>());
+                    AddMatchResult(matchResult, result.Item2);
+                }
+                return Tuple.Create(true, matchResult);
+            }
 
             throw new NotImplementedException();
         }
@@ -168,7 +313,6 @@ namespace Tutor
             }
             if (InnerNode is AssignmentStatement)
             {
-                var inner = InnerNode as AssignmentStatement;
                 var comparedNode = node as AssignmentStatement;
                 if (comparedNode == null) return false;
                 return true;
@@ -176,10 +320,115 @@ namespace Tutor
 
             if (InnerNode is SuiteStatement)
             {
-                var inner = InnerNode as SuiteStatement;
                 var comparedNode = node as SuiteStatement;
                 if (comparedNode == null) return false;
                 return true;
+            }
+            if (InnerNode is TupleExpression)
+            {
+                var comparedNode = node as TupleExpression;
+                if (comparedNode == null) return false;
+                return true;
+            }
+
+            if (InnerNode is ExpressionStatement)
+            {
+                var comparedNode = node as ExpressionStatement;
+                if (comparedNode == null) return false;
+                return true;
+            }
+            if (InnerNode is WhileStatement)
+            {
+                var comparedNode = node as WhileStatement;
+                if (comparedNode == null) return false;
+                return true;
+            }
+            if (InnerNode is CallExpression)
+            {
+                var comparedNode = node as CallExpression;
+                if (comparedNode == null) return false;
+                return true;
+            }
+            if (InnerNode is ReturnStatement)
+            {
+                var comparedNode = node as ReturnStatement;
+                if (comparedNode == null) return false;
+                return true;
+            }
+            if (InnerNode is Arg)
+            {
+                var comparedNode = node as Arg;
+                if (comparedNode == null) return false;
+                var inner = (Arg) InnerNode;
+
+                if (inner.Name == null && comparedNode.Name == null)
+                    return true;
+                if (inner.Name == null && comparedNode.Name != null)
+                    return false;
+                if (inner.Name != null && comparedNode.Name == null)
+                    return false;
+                return comparedNode.Name.Equals(inner.Name);
+            }
+
+            if (InnerNode is Parameter)
+            {
+                var comparedNode = node as Parameter;
+                if (comparedNode == null) return false;
+                var inner = (Parameter)InnerNode;
+
+                if (inner.Name == null && comparedNode.Name == null)
+                    return true;
+                if (inner.Name == null && comparedNode.Name != null)
+                    return false;
+                if (inner.Name != null && comparedNode.Name == null)
+                    return false;
+                return comparedNode.Name.Equals(inner.Name);
+            }
+
+            if (InnerNode is BinaryExpression)
+            {
+                var comparedNode = node as BinaryExpression;
+                if (comparedNode == null) return false;
+                var inner = (BinaryExpression)InnerNode;
+                return inner.Operator.Equals(comparedNode.Operator);
+            }
+
+            if (InnerNode is AugmentedAssignStatement)
+            {
+                var comparedNode = node as AugmentedAssignStatement;
+                if (comparedNode == null) return false;
+                var inner = (AugmentedAssignStatement)InnerNode;
+                return inner.Operator.Equals(comparedNode.Operator);
+            }
+
+            if (InnerNode is ParenthesisExpression)
+            {
+                var comparedNode = node as ParenthesisExpression;
+                if (comparedNode == null) return false;
+                return true;
+            }
+            if (InnerNode is ForStatement)
+            {
+                var comparedNode = node as ForStatement;
+                if (comparedNode == null) return false;
+                return true;
+            }
+            if (InnerNode is FunctionDefinition)
+            {
+                var comparedNode = node as FunctionDefinition;
+                if (comparedNode == null) return false;
+                var inner = (FunctionDefinition)InnerNode;
+                if (inner.Name == null && comparedNode.Name == null)
+                    return true;
+                if (inner.Name == null && comparedNode.Name != null)
+                    return false;
+                if (inner.Name != null && comparedNode.Name == null)
+                    return false;
+                if (!comparedNode.Name.Equals(inner.Name))
+                    return false;
+                if (inner.IsGenerator != comparedNode.IsGenerator)
+                    return false;
+                return inner.IsLambda == comparedNode.IsLambda;
             }
             throw new NotImplementedException();
         }
@@ -224,7 +473,35 @@ namespace Tutor
 
         public override string ToString()
         {
-            return InnerNode.NodeName + ": " + Value;
+            var str = new StringBuilder();
+            str.Append(InnerNode.NodeName);
+            str.Append("(");
+
+            if (IsAbstract)
+            {
+                str.Append("Abstract"); 
+            }
+            else
+            {
+                str.Append(Value);
+            }
+            if (EditId != 0)
+            {
+                str.Append(", *"); 
+            }
+            str.Append(")");
+
+            if (Children.Count > 0)
+            {
+                str.Append("{ ");
+                foreach (var child in Children)
+                {
+                    str.Append(child);
+                    str.Append(" ");
+                }
+                str.Append("}");
+            }
+            return str.ToString();
         }
 
         public override int GetHashCode()
@@ -237,7 +514,9 @@ namespace Tutor
 
         public bool Similar(PythonNode node1)
         {
-            return ToString().Equals(node1.ToString());
+            var node =  InnerNode.NodeName + ": " + Value;
+            var compared = node1.InnerNode.NodeName + ": " + node1.Value;
+            return node.Equals(compared);
         }
 
         public PythonNode GetAbstractCopy()

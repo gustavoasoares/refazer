@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Linq;
 using IronPython;
 using IronPython.Compiler;
 using IronPython.Compiler.Ast;
@@ -47,6 +48,8 @@ namespace Tutor.Tests
             Assert.AreEqual(3, editDistance.Item1);
         }
 
+       
+
         [TestMethod]
         public void TestCompute4()
         {
@@ -55,8 +58,63 @@ namespace Tutor.Tests
             var ast2 = NodeWrapper.Wrap(ParseFile(Environment.CurrentDirectory + "../../../resources/after_1.py", py));
             var zss = new PythonZss(ast1, ast2);
             var editDistance = zss.Compute();
-            Assert.AreEqual(1, editDistance.Item1);
+            Assert.AreEqual(2, editDistance.Item1);
 
+        }
+
+        [TestMethod]
+        public void TestCompute5()
+        {
+            var py = Python.CreateEngine();
+            var before = @"
+def product(n, term):
+    if n == 0:
+        return term(0)
+    else:
+        return term(n) * product((n - 1), term)";  
+            var ast1 = NodeWrapper.Wrap(ParseContent(before, py));
+            var after = @"
+def product(n, term):
+    if n == 1:
+        return term(1)
+    else:
+        return term(n) * product((n - 1), term)";
+            var ast2 = NodeWrapper.Wrap(ParseContent(after, py));
+            var zss = new PythonZss(ast1, ast2);
+            var editDistance = zss.Compute();
+            Assert.AreEqual(2, editDistance.Item1);
+        }
+
+        [TestMethod]
+        public void TestCompute6()
+        {
+            var py = Python.CreateEngine();
+            var before = @"term(0)";
+            var ast1 = NodeWrapper.Wrap(ParseContent(before, py));
+            var after = @"term(1)";
+            var ast2 = NodeWrapper.Wrap(ParseContent(after, py));
+            var zss = new PythonZss(ast1, ast2);
+            var editDistance = zss.Compute();
+            Assert.AreEqual(1, editDistance.Item1);
+        }
+
+        [TestMethod]
+        public void TestCompute7()
+        {
+            var py = Python.CreateEngine();
+            var before = @"
+def product(n, term):
+    product(n-1)";
+            var ast1 = NodeWrapper.Wrap(ParseContent(before, py));
+            var after = @"
+def product(n, term):
+    product(n-1, term)";
+            var ast2 = NodeWrapper.Wrap(ParseContent(after, py));
+            var zss = new PythonZss(ast1, ast2);
+            var editDistance = zss.Compute();
+            Assert.AreEqual(2, editDistance.Item1);
+            Assert.AreEqual("NameExpression", editDistance.Item2.First().NewNode.InnerNode.NodeName);
+            Assert.AreEqual("Arg", editDistance.Item2.Last().NewNode.InnerNode.NodeName);
         }
 
         private PythonAst ParseContent(string content, ScriptEngine py)

@@ -63,6 +63,16 @@ namespace Tutor
             return rewriter.Update(code);
         }
 
+        public override string ToString()
+        {
+            var value = "?";
+            var inner = NewNode.InnerNode as IronPython.Compiler.Ast.ConstantExpression;
+            if (inner != null)
+                value = inner.Value.ToString();
+
+            return "Update: " + Target.InnerNode.NodeName + " to: " + NewNode.InnerNode.NodeName + "-" + value;
+        }
+
         class UpdateRewriter : ExpressionVisitor
         {
             private readonly Node _oldNode;
@@ -312,8 +322,10 @@ namespace Tutor
                 {
                     return _newNode as Parameter;
                 }
-                //todo: not checking if the expression inside the parameter was changed
-                return parameter;
+                var newParam = new Parameter(parameter.Name);
+                if (parameter.DefaultValue != null)
+                    newParam.DefaultValue = VisitExpression(parameter.DefaultValue);
+                return newParam;
             }
 
             private Statement VisitStatement(IfStatement stmt)

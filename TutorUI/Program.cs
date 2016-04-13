@@ -1,18 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using IronPython.Compiler.Ast;
-using Microsoft.ProgramSynthesis;
-using Microsoft.ProgramSynthesis.AST;
-using Microsoft.ProgramSynthesis.Compiler;
-using Microsoft.ProgramSynthesis.Extraction.Text.Semantics;
-using Microsoft.ProgramSynthesis.Learning;
-using Microsoft.ProgramSynthesis.Learning.Logging;
-using Microsoft.ProgramSynthesis.Specifications;
-using Microsoft.ProgramSynthesis.VersionSpace;
+
 using Tutor;
 
 namespace TutorUI
@@ -21,25 +10,80 @@ namespace TutorUI
     {
         static void Main(string[] args)
         {
-            var grammar = DSLCompiler.LoadGrammarFromFile(@"C:\Users\Gustavo\git\Tutor\Tutor\Transformation.grammar");
+            var product = new Tuple<TestBasedCluster.Question, string>(TestBasedCluster.Question.Product,
+              "C:/Users/Gustavo/Box Sync/pesquisa/tutor/hw02-sp16/" + "mistake_pairs_product_complete.json");
+            var questionLogs = new[] { product };
+            var cluster = new TestBasedCluster();
+            cluster.GenerateCluster(questionLogs);
+            var clusters = cluster.Clusters[TestBasedCluster.Question.Product];
+            var values = from pair in clusters
+                         orderby pair.Value.Count descending
+                         select pair.Value;
+            var biggest = values.First();
 
-            var astBefore = ASTHelper.ParseContent("x = 0");
-            var input = State.Create(grammar.Value.InputSymbol, astBefore);
-            var astAfter = ASTHelper.ParseContent("x = 1");
+            var count = 0;
 
-            var examples = new Dictionary<State, object> { { input, astAfter } };
-            var spec = new ExampleSpec(examples);
+            var fixer = new SubmissionFixer();
 
-            var prose = new SynthesisEngine(grammar.Value);
-            var learned = prose.LearnGrammar(spec);
-            var first = learned.RealizedPrograms.First();
-            var output = first.Invoke(input) as IEnumerable<PythonAst> ;
-            var fixedProgram = output.First();
-            var unparser = new Unparser();
-            var newCode = unparser.Unparse(fixedProgram);
-            Debug.Assert("x=1" == newCode);
+            var testSetup = 
+@"def square(x):
+    return x * x
+
+def identity(x):
+    return x
+";
+            var tests = new Dictionary<String, int>
+                        {
+                            {testSetup + "product(3, identity)", 6},
+                            {testSetup + "product(5, identity)", 120},
+                            {testSetup + "product(3, square)", 36},
+                            {testSetup + "product(5, square)", 14400}
+                        };
+
+            foreach (var mistake in biggest)
+            {
+                try
+                {
+                    var before = ASTHelper.ParseContent(mistake.before);
+                    var after = ASTHelper.ParseContent(mistake.after);
+                    var diff = new PythonZss(NodeWrapper.Wrap(before), NodeWrapper.Wrap(after));
+                    var changes = diff.Compute();
+                    if (changes.Item1 > 1)
+                        continue;
+                    if (!(changes.Item2.First() is Update))
+                        continue;
+                    Console.Out.WriteLine(changes.Item2.First());
+
+                }
+                catch (Exception)
+                {
+                    continue;
+                }
+                
+
+                Console.Out.WriteLine("Diff =====================");
+                Console.Out.WriteLine(mistake.diff);
+                Console.Out.WriteLine("Before ===================================");
+                Console.Out.WriteLine(mistake.before);
+                var isFixed = fixer.Fix(mistake.before, mistake.after, tests);
+                if (isFixed)
+                {
+                    count++;
+                    Console.Out.WriteLine("Fixed!" + count);
+                }
+                else
+                {
+                    Console.Out.WriteLine("HELPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPP!");
+                }
+            }
+            Console.Out.WriteLine("Total tested: " + biggest.Count);
+            Console.Out.WriteLine("Fixed: " + count);
+            Console.Out.WriteLine("Not Fixed: " + (biggest.Count - count));
+            Console.Out.WriteLine("Program sets: " + (fixer.ProsePrograms.Count));
+            fixer.ProsePrograms.ForEach(e => Console.Out.WriteLine(e.First()));
+            Console.ReadKey();
         }
 
-     
+
     }
 }

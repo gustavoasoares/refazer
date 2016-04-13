@@ -186,8 +186,15 @@ namespace Tutor
             if (exp is ConstantExpression) Write(exp as ConstantExpression);
             if (exp is CallExpression) Write(exp as CallExpression);
             if (exp is TupleExpression) Write(exp as TupleExpression);
+            if (exp is ParenthesisExpression) Write((ParenthesisExpression) exp);
         }
 
+        private void Write(ParenthesisExpression exp)
+        {
+            _code.Append("(");
+            Write(exp.Expression);
+            _code.Append(")");
+        }
 
         private void Write(TupleExpression exp)
         {

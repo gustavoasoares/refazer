@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
-using IronPython.Compiler.Ast;
 using Microsoft.ProgramSynthesis;
 using Microsoft.ProgramSynthesis.Extraction.Text.Semantics;
 using Microsoft.ProgramSynthesis.Learning;
@@ -70,8 +69,6 @@ namespace Tutor.Transformation
                 foreach (PythonNode node in spec.DisjunctiveExamples[input])
                 {
                     node.EditId = 1;
-                    templateTrees.Add(node.Parent.Parent);
-                    templateTrees.Add(node.Parent.Parent.GetAbstractCopy());
                     templateTrees.Add(node.Parent);
                     templateTrees.Add(node.Parent.GetAbstractCopy());
                     templateTrees.Add(node);

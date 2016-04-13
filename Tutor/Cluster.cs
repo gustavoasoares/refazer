@@ -6,13 +6,13 @@ using System.Threading.Tasks;
 
 namespace Tutor
 {
-    class Cluster
+    public class Cluster
     {
         public String TestCase { set; get; }
         public List<Mistake> Mistakes { set; get; } 
     }
 
-    internal class Mistake
+    public class Mistake
     {
         public String diff { set; get; }
         public string before { set; get; }

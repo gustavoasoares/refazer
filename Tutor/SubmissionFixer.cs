@@ -4,12 +4,27 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using IronPython.Compiler.Ast;
+using IronPython.Modules;
+using Microsoft.ProgramSynthesis;
+using Microsoft.ProgramSynthesis.AST;
+using Microsoft.ProgramSynthesis.Compiler;
+using Microsoft.ProgramSynthesis.Diagnostics;
+using Microsoft.ProgramSynthesis.Learning;
+using Microsoft.ProgramSynthesis.Specifications;
 
 namespace Tutor
 {
     public class SubmissionFixer
     {
-        public bool Fix(string program, List<Patch> fixes, Dictionary<string, int> tests)
+        public List<IEnumerable<ProgramNode>> ProsePrograms { get; }
+
+        private Result<Grammar> _grammar = DSLCompiler.LoadGrammarFromFile(@"C:\Users\Gustavo\git\Tutor\Tutor\Transformation.grammar");
+
+        public SubmissionFixer()
+        {
+            ProsePrograms = new List<IEnumerable<ProgramNode>>();
+        }
+        public bool Fix(string program, string programAfter, Dictionary<string, int> tests)
         {
             PythonAst ast = null;
             try
@@ -21,18 +36,42 @@ namespace Tutor
                 Console.Error.WriteLine(e.Message);
                 return false;
             }
+            var input = State.Create(_grammar.Value.InputSymbol, NodeWrapper.Wrap(ast));
 
-            foreach (var editsProgram in fixes)
+            var unparser = new Unparser();
+
+            foreach (var proseProgram in ProsePrograms)
             {
-                var newAsts = editsProgram.Run(ast);
-                if (newAsts.Count == 0)
-                    continue;
+               if (TryFix(tests, proseProgram.First(), input, unparser)) return true;
+                if (TryFix(tests, proseProgram.ToList()[1], input, unparser)) return true;
+                if (TryFix(tests, proseProgram.ToList()[2], input, unparser)) return true;
+            }
 
-                var unparser = new Unparser();
-                foreach (var newAst in newAsts)
+            //learn a new program
+            var astAfter = NodeWrapper.Wrap(ASTHelper.ParseContent(programAfter));
+            var examples = new Dictionary<State, object> { { input, astAfter } };
+            var spec = new ExampleSpec(examples);
+            var prose = new SynthesisEngine(_grammar.Value);
+            var learned = prose.LearnGrammar(spec);
+            ProsePrograms.Add(learned.RealizedPrograms);
+            //foreach (var current in learned.RealizedPrograms)
+            //{
+                if (TryFix(tests, learned.RealizedPrograms.First(), input, unparser)) return true;
+            //}
+            return false;
+        }
+
+        private static bool TryFix(Dictionary<string, int> tests, ProgramNode current, State input, Unparser unparser)
+        {
+            var output = current.Invoke(input);
+            if (output != null)
+            {
+                var programSet  = output as IEnumerable<PythonAst>;
+                foreach (var changedProgram in programSet)
                 {
-                    var newCode = unparser.Unparse(newAst);
+                    var newCode = unparser.Unparse(changedProgram);
 
+                    Console.Out.WriteLine(changedProgram);
                     Console.Out.WriteLine("===================");
                     Console.Out.WriteLine("Fixed:");
                     Console.Out.WriteLine(newCode);

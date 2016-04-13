@@ -130,9 +130,17 @@ namespace Tutor
             if (exp is ConstantExpression) return Wrap(exp as ConstantExpression, parent);
             if (exp is CallExpression) return Wrap(exp as CallExpression, parent);
             if (exp is TupleExpression) return Wrap(exp as TupleExpression, parent);
+            if (exp is ParenthesisExpression) return Wrap((ParenthesisExpression) exp, parent);
             throw  new NotImplementedException();
         }
 
+
+        private static PythonNode Wrap(ParenthesisExpression exp, PythonNode parent)
+        {
+            var result = new PythonNode(exp, false) { Parent = parent };
+            result.AddChild(Wrap(exp.Expression, result));
+            return result;
+        }
 
         private static PythonNode Wrap(TupleExpression exp, PythonNode parent)
         {
@@ -175,7 +183,9 @@ namespace Tutor
 
         private static PythonNode Wrap(Arg arg, PythonNode parent)
         {
-            return new PythonNode(arg, false) { Parent = parent, Value = arg.Name};
+            var result = new PythonNode(arg, false) {Parent = parent, Value = arg.Name};
+            result.AddChild(Wrap(arg.Expression, result));
+            return result;
         }
 
         private static PythonNode Wrap(ReturnStatement stmt, PythonNode parent)

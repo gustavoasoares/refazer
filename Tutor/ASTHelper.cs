@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 using IronPython;
 using IronPython.Compiler;
@@ -40,11 +41,34 @@ namespace Tutor
             return parser.ParseFile(true);
         }
 
-        public static dynamic Run(string script)
+
+        private static dynamic result;
+        private static string script;
+
+        public static dynamic Run(string s)
         {
-            var py = Python.CreateEngine();
-            var result = py.Execute(script);
+            script = s;
+            var t = new Thread(Execute, 1000000000);
+            t.Start();
+            if (!t.Join(TimeSpan.FromMilliseconds(500)))
+            {
+                t.Abort();
+                throw new Exception("More than 1 secs.");
+            }
             return result;
+        }
+
+        private static void Execute()
+        {
+            try
+            {
+                var py = Python.CreateEngine();
+                result = py.Execute(script);
+            }
+            catch (Exception)
+            {
+                result = 0;
+            }
         }
     }
 }

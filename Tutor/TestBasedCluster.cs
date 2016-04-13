@@ -7,7 +7,7 @@ using Newtonsoft.Json;
 
 namespace Tutor
 {
-    class TestBasedCluster
+    public class TestBasedCluster
     {
         public Dictionary<Question, Dictionary<string, List<Mistake>>> Clusters =
             new Dictionary<Question, Dictionary<string, List<Mistake>>>();

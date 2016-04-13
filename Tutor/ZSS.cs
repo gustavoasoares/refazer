@@ -212,12 +212,12 @@ namespace Tutor
                         else if (value == fd[x - 1, y].Item1 + 1)
                         {
                             edits = new HashSet<Operation>(fd[x - 1, y].Item2);
-                            edits.Add(new Delete(A[x - 1], null));
+                            edits.Add(new Delete(A[x - 1 + ioff], null));
                         }
                         else
                         {
                             edits = new HashSet<Operation>(fd[x, y - 1].Item2);
-                            edits.Add(new Insert(B[y - 1], null));
+                            edits.Add(new Insert(B[y - 1 + joff], null));
                         }
                         fd[x, y] = Tuple.Create(value, edits);
                     }

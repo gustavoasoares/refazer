@@ -87,12 +87,36 @@ namespace Tutor
                 return CheckTemplate(node);
             }
 
+            public override bool Walk(ForStatement node)
+            {
+                return CheckTemplate(node);
+            }
+
+            public override bool Walk(WhileStatement node)
+            {
+                return CheckTemplate(node);
+            }
+            public override bool Walk(ReturnStatement node)
+            {
+                return CheckTemplate(node);
+            }
+
             public override bool Walk(ConstantExpression node)
             {
                 return CheckTemplate(node);
             }
 
+            public override bool Walk(Parameter node)
+            {
+                return CheckTemplate(node);
+            }
+
             public override bool Walk(TupleExpression node)
+            {
+                return CheckTemplate(node);
+            }
+
+            public override bool Walk(Arg node)
             {
                 return CheckTemplate(node);
             }
