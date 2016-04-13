@@ -232,6 +232,38 @@ def accumulate(combiner, base, n, term):
         }
 
         [TestMethod]
+        public void TestInsertNode()
+        {
+            var py = Python.CreateEngine();
+            var code =  ParseContent("n = t", py);
+            code.Bind();
+
+            var n = new NameExpression("n");
+            var i = new NameExpression("i");
+            var t = new NameExpression("t");
+            var multiply = new BinaryExpression(PythonOperator.Multiply, i, t);
+            var assign = new AssignmentStatement(new Expression[]{n}, t);
+
+
+            var insert = new Insert(new PythonNode(multiply, false) , new PythonNode(assign, false));
+            var childIinsert = new Insert(new PythonNode(i, false), new PythonNode(multiply, false));
+            insert.ChildOperations.Add(0,childIinsert);
+
+            var newAst = insert.Run(code, ((SuiteStatement)code.Body).Statements.First());
+
+            var ast = newAst as PythonAst;
+            var body = ast.Body as SuiteStatement;
+            var stmt = body.Statements.First() as AssignmentStatement;
+            Assert.IsTrue(stmt.Right is BinaryExpression);
+            var binaryExp = (BinaryExpression)stmt.Right;
+            Assert.IsTrue(binaryExp.Operator == PythonOperator.Multiply);
+            Assert.IsTrue(binaryExp.Left is NameExpression);
+            Assert.IsTrue(binaryExp.Right is NameExpression);
+            Assert.AreEqual("i", ((NameExpression) binaryExp.Left).Name);
+            Assert.AreEqual("t", ((NameExpression)binaryExp.Right).Name);
+        }
+
+        [TestMethod]
         public void TestRunPythonMethod()
         {
             var py = Python.CreateEngine();
@@ -325,7 +357,7 @@ def product(n, term):
 
         //            var m = new Match(root);
         //            var newNode = new IronPython.Compiler.Ast.ConstantExpression(1);
-        //            var update = new Update(new PythonNode(newNode, false), null);
+        //            var update = new Rewrite(new PythonNode(newNode, false), null);
         //            var fix = new Patch(m, update);
 
         //            var fixer = new SubmissionFixer();
@@ -381,7 +413,7 @@ def product(n, term):
 
         //            var m = new Match(root);
         //            var newNode = new IronPython.Compiler.Ast.ConstantExpression(1);
-        //            var update = new Update(new PythonNode(newNode,false), null);
+        //            var update = new Rewrite(new PythonNode(newNode,false), null);
         //            var fix = new Patch(m, update);
 
         //            var fixer = new SubmissionFixer();
@@ -437,7 +469,7 @@ def product(n, term):
 
         //            var m = new Match(root);
         //            var newNode = new IronPython.Compiler.Ast.ConstantExpression(1);
-        //            var update = new Update(new PythonNode(newNode, false), null);
+        //            var update = new Rewrite(new PythonNode(newNode, false), null);
         //            var fix = new Patch(m, update);
 
         //            var fixer = new SubmissionFixer();

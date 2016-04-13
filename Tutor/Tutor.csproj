@@ -225,6 +225,7 @@
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Report.cs" />
     <Compile Include="Unparser.cs" />
+    <Compile Include="Rewriter.cs" />
     <Compile Include="WitnessFunctions.cs" />
     <Compile Include="Zss.cs" />
   </ItemGroup>

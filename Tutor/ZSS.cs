@@ -147,17 +147,16 @@ namespace Tutor
 
             for (int x = 1; x < m; x++)
             {
-                //cost to delete a ZssNode is 1
                 var edits = new HashSet<Operation>(fd[x - 1, 0].Item2);
-                edits.Add(new Delete(A[x +ioff -1], null));
+                var pythonNode = A[x +ioff -1];
+                edits.Add(new Delete(pythonNode, pythonNode.Parent));
                 fd[x, 0] = Tuple.Create(fd[x - 1, 0].Item1 + 1, edits); 
             }
             for (int y = 1; y < n; y++)
             {
                 var node = B[y - 1 + joff];
                 var edits = new HashSet<Operation>(fd[0, y - 1].Item2);
-                edits.Add(new Insert(node, null));
-                //cost do add a ZssNode is 1
+                edits.Add(new Insert(node, node.Parent));
                 fd[0, y] = Tuple.Create(fd[0, y - 1].Item1 + 1, edits);
             }
 
@@ -175,11 +174,11 @@ namespace Tutor
                         if (value == fd[x - 1, y].Item1 + 1)
                         {
                             var node = A[x - 1 + ioff];
-                            edits = new HashSet<Operation>(fd[x - 1, y].Item2) {new Delete(node, null)};
+                            edits = new HashSet<Operation>(fd[x - 1, y].Item2) {new Delete(node, node.Parent)};
                         } else if (value == fd[x, y - 1].Item1 + 1)
                         {
                             var node = B[y - 1 + joff];
-                            edits = new HashSet<Operation>(fd[x, y - 1].Item2) { new Insert(node, null) };
+                            edits = new HashSet<Operation>(fd[x, y - 1].Item2) { new Insert(node, node.Parent) };
                         }
                         else
                         {
@@ -212,12 +211,14 @@ namespace Tutor
                         else if (value == fd[x - 1, y].Item1 + 1)
                         {
                             edits = new HashSet<Operation>(fd[x - 1, y].Item2);
-                            edits.Add(new Delete(A[x - 1 + ioff], null));
+                            var pythonNode = A[x - 1 + ioff];
+                            edits.Add(new Delete(pythonNode, pythonNode.Parent));
                         }
                         else
                         {
                             edits = new HashSet<Operation>(fd[x, y - 1].Item2);
-                            edits.Add(new Insert(B[y - 1 + joff], null));
+                            var pythonNode = B[y - 1 + joff];
+                            edits.Add(new Insert(pythonNode, pythonNode.Parent));
                         }
                         fd[x, y] = Tuple.Create(value, edits);
                     }
