@@ -231,6 +231,7 @@ def accumulate(combiner, base, n, term):
             Assert.AreEqual(expected, actual);
         }
 
+
         [TestMethod]
         public void TestInsertNode()
         {
@@ -238,18 +239,23 @@ def accumulate(combiner, base, n, term):
             var code =  ParseContent("n = t", py);
             code.Bind();
 
-            var n = new NameExpression("n");
+            var assignStatement = ((SuiteStatement)code.Body).Statements.First() as AssignmentStatement;
+            var expression = assignStatement.Right;
+
+            var context = new Dictionary<int, Node>();
             var i = new NameExpression("i");
-            var t = new NameExpression("t");
-            var multiply = new BinaryExpression(PythonOperator.Multiply, i, t);
-            var assign = new AssignmentStatement(new Expression[]{n}, t);
+            context.Add(1, expression);
+            context.Add(2, expression);
+            var generateT = new BindingNodeSynthesizer(2) {Bindings = context};
+            var generateI = new InsertNodeSynthesizer("NameExpression", "i");
+            var generateBinary = new InsertNodeSynthesizer("BinaryExpression", PythonOperator.Multiply, 
+                new List<INodeSynthesizer>() {generateT, generateI});
 
 
-            var insert = new Insert(new PythonNode(multiply, false) , new PythonNode(assign, false));
-            var childIinsert = new Insert(new PythonNode(i, false), new PythonNode(multiply, false));
-            insert.ChildOperations.Add(0,childIinsert);
+            var insert = new Insert(generateBinary, context);
 
-            var newAst = insert.Run(code, ((SuiteStatement)code.Body).Statements.First());
+            
+            var newAst = insert.Run(code, expression);
 
             var ast = newAst as PythonAst;
             var body = ast.Body as SuiteStatement;
@@ -259,8 +265,8 @@ def accumulate(combiner, base, n, term):
             Assert.IsTrue(binaryExp.Operator == PythonOperator.Multiply);
             Assert.IsTrue(binaryExp.Left is NameExpression);
             Assert.IsTrue(binaryExp.Right is NameExpression);
-            Assert.AreEqual("i", ((NameExpression) binaryExp.Left).Name);
-            Assert.AreEqual("t", ((NameExpression)binaryExp.Right).Name);
+            Assert.AreEqual("t", ((NameExpression) binaryExp.Left).Name);
+            Assert.AreEqual("i", ((NameExpression)binaryExp.Right).Name);
         }
 
         [TestMethod]

@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
+using CsQuery;
 using IronPython.Compiler.Ast;
 using IronPython.Runtime;
 using BinaryExpression = IronPython.Compiler.Ast.BinaryExpression;
@@ -16,6 +17,10 @@ namespace Tutor
 
         public Node Context { get; protected set; }
 
+        public Operation()
+        {
+            
+        }
         public Operation(PythonNode newNode, PythonNode target)
         {
             NewNode = newNode;
@@ -35,21 +40,30 @@ namespace Tutor
 
     public class Insert : Operation
     {
-        public Dictionary<int, Operation> ChildOperations = new Dictionary<int, Operation>();
-         
+        private Dictionary<int, Node> context;
+
+        public InsertNodeSynthesizer NodeSynthesizer { private set; get; }
+                 
         public Insert(PythonNode newNode, PythonNode target) : base(newNode, target)
         {
         }
 
+        public Insert(InsertNodeSynthesizer generateBinary, Dictionary<int, Node> context)
+        {
+            NodeSynthesizer = generateBinary;
+            this.context = context;
+        }
+
         public override Expression Run(Node code, Node context)
         {
+            Context = context;
             var rewriter = new Rewriter(this);
             return rewriter.Rewrite(code);
         }
 
         public override Node Apply(Node node)
         {
-            throw new NotImplementedException();
+            return NodeSynthesizer.GetNode();
         }
     }
 

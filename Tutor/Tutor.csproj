@@ -219,6 +219,7 @@
     <Compile Include="RegexUtils.cs" />
     <Compile Include="Semantics.cs" />
     <Compile Include="SubmissionFixer.cs" />
+    <Compile Include="NodeSynthesizer.cs" />
     <Compile Include="TestBasedCluster.cs" />
     <Compile Include="Cluster.cs" />
     <Compile Include="EditClusters.cs" />
