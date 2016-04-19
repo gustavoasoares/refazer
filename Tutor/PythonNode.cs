@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using CsQuery.ExtensionMethods;
 using IronPython.Compiler.Ast;
 
 namespace Tutor
@@ -43,12 +44,12 @@ namespace Tutor
             if (IsAbstract)
             {
                 if (!InnerNode.NodeName.Equals(node.NodeName))
-                    return Tuple.Create<bool, Dictionary<int, Node>>(false, new Dictionary<int, Node>());
+                    return Tuple.Create(false, new Dictionary<int, Node>());
             }
             else
             {
                 if (!IsEqualToInnerNode(node))
-                    return Tuple.Create<bool, Dictionary<int, Node>>(false, new Dictionary<int, Node>());
+                    return Tuple.Create(false, new Dictionary<int, Node>());
             }
 
             if (EditId != 0)
@@ -126,10 +127,10 @@ namespace Tutor
                 {
                     var result = Children[i].Match(convertedNode.Items[i]);
                     if (!result.Item1)
-                        return Tuple.Create<bool, Dictionary<int, Node>>(false, new Dictionary<int, Node>());
+                        return Tuple.Create(false, new Dictionary<int, Node>());
                     AddMatchResult(matchResult, result.Item2);
                 }
-                return Tuple.Create<bool, Dictionary<int, Node>>(true, matchResult);
+                return Tuple.Create(true, matchResult);
             }
             if (node is SuiteStatement)
             {
@@ -530,5 +531,43 @@ namespace Tutor
             }
             return result;
         }
+
+        public void Walk(IVisitor visitor)
+        {
+            if (visitor.Visit(this))
+                Children.ForEach(child => child.Walk(visitor));
+        }
     }
+
+    public interface IVisitor
+    {
+        bool Visit(PythonNode pythonNode);
+    }
+
+    public class SubSequentNodesVisitor : IVisitor
+    {
+        private readonly IEnumerable<Operation> _operations;
+        public List<Operation> SubOperations {get; }
+
+        public SubSequentNodesVisitor(IEnumerable<Operation> operations)
+        {
+            SubOperations = new List<Operation>();
+            _operations = operations;
+        }
+
+        public bool Visit(PythonNode pythonNode)
+        {
+            foreach (var operation in _operations)
+            {
+                if (pythonNode.Equals(operation.NewNode))
+                {
+                    SubOperations.Add(operation);
+                    return true;
+                }
+            }
+            return false; 
+        }
+    }
+
+
 }

@@ -10,10 +10,12 @@ using learners Tutor.Transformation.WitnessFunctions;
 
 language Transformation;
 
-@start IEnumerable<PythonAst> program := Apply(ast, patch);
-Patch patch := Patch(edit, context);
-IEnumerable<Node> context := Match(ast, template);
+@start IEnumerable<PythonAst> program := Patch(ast, changes);
+IEnumerable<Change> changes := Single(change) | Changes(change, changes); 
+Change change := Change(edit, context); 
+IEnumerable<Dictionary<int,Node>> context := Match(ast, template);
 
 @input PythonNode ast;
+IEnumerable<IEnumerable<Operation>> edits;
 PythonNode template; 
 Operation edit;

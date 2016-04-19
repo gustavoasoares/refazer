@@ -43,7 +43,7 @@ namespace Tutor.Tests
 
             var secondOutput = first.Invoke(State.Create(grammar.Value.InputSymbol,
                 NodeWrapper.Wrap(ASTHelper.ParseContent("1 == 0")))) as IEnumerable<PythonAst>;
-            Assert.IsTrue(!secondOutput.AsEnumerable().Any());
+            Assert.IsTrue(secondOutput == null);
         }
 
         [TestMethod]
@@ -162,7 +162,7 @@ def product(n, term):
             root.AddChild(new PythonNode(literal, true, 1));
             var m = new Match(root);
             Assert.IsTrue(m.HasMatch(code));
-            Assert.AreEqual("literal", m.MatchResult[1].First().NodeName);
+            Assert.AreEqual("literal", m.MatchResult.First()[1].NodeName);
         }
 
         [TestMethod]
@@ -182,7 +182,7 @@ def product(n, term):
 
             var newNode = new IronPython.Compiler.Ast.ConstantExpression(0);
             var update = new Update(new PythonNode(newNode,false), null);
-            var newAst = update.Run(code, m.MatchResult[1].First());
+            var newAst = update.Run(code, m.MatchResult.First()[1]);
             var ast = newAst as PythonAst;
             var body = ast.Body as SuiteStatement;
             var stmt = body.Statements.First() as ExpressionStatement;
@@ -214,11 +214,11 @@ def accumulate(combiner, base, n, term):
             var m = new Match(root);
 
             Assert.IsTrue(m.HasMatch(ast));
-            Assert.AreEqual("literal", m.MatchResult[1].First().NodeName);
+            Assert.AreEqual("literal", m.MatchResult.First()[1].NodeName);
 
             var newNode = new IronPython.Compiler.Ast.ConstantExpression(0);
             var update = new Update(new PythonNode(newNode, false), null);
-            var newAst = update.Run(ast, m.MatchResult[1].First());
+            var newAst = update.Run(ast, m.MatchResult.First()[1]);
 
             var expected = @"
 def accumulate(combiner, base, n, term):
@@ -364,7 +364,7 @@ def product(n, term):
         //            var m = new Match(root);
         //            var newNode = new IronPython.Compiler.Ast.ConstantExpression(1);
         //            var update = new Rewrite(new PythonNode(newNode, false), null);
-        //            var fix = new Patch(m, update);
+        //            var fix = new Change(m, update);
 
         //            var fixer = new SubmissionFixer();
 
@@ -381,7 +381,7 @@ def product(n, term):
         //                {testSetup + "product(3, square)", 36},
         //                {testSetup + "product(5, square)", 14400}
         //            };
-        //            var isFixed = fixer.Fix(program, new List<Patch>() { fix }, tests);
+        //            var isFixed = fixer.Fix(program, new List<Change>() { fix }, tests);
         //            Assert.AreEqual(true, isFixed);
 
         //        }
@@ -420,7 +420,7 @@ def product(n, term):
         //            var m = new Match(root);
         //            var newNode = new IronPython.Compiler.Ast.ConstantExpression(1);
         //            var update = new Rewrite(new PythonNode(newNode,false), null);
-        //            var fix = new Patch(m, update);
+        //            var fix = new Change(m, update);
 
         //            var fixer = new SubmissionFixer();
 
@@ -437,7 +437,7 @@ def product(n, term):
         //                {testSetup + "product(3, square)", 36},
         //                {testSetup + "product(5, square)", 14400}
         //            };
-        //            var isFixed = fixer.Fix(program, new List<Patch>() { fix }, tests);
+        //            var isFixed = fixer.Fix(program, new List<Change>() { fix }, tests);
         //            Assert.AreEqual(true, isFixed);
 
         //        }
@@ -476,7 +476,7 @@ def product(n, term):
         //            var m = new Match(root);
         //            var newNode = new IronPython.Compiler.Ast.ConstantExpression(1);
         //            var update = new Rewrite(new PythonNode(newNode, false), null);
-        //            var fix = new Patch(m, update);
+        //            var fix = new Change(m, update);
 
         //            var fixer = new SubmissionFixer();
 
@@ -493,7 +493,7 @@ def product(n, term):
         //                {testSetup + "product(3, square)", 36},
         //                {testSetup + "product(5, square)", 14400}
         //            };
-        //            var isFixed = fixer.Fix(program, new List<Patch>() { fix }, tests);
+        //            var isFixed = fixer.Fix(program, new List<Change>() { fix }, tests);
         //            Assert.AreEqual(true, isFixed);
 
         //        }

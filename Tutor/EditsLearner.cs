@@ -12,12 +12,12 @@ using ConstantExpression = IronPython.Compiler.Ast.ConstantExpression;
 
 namespace Tutor
 {
-    public class Patch
+    public class Change
     {
-        public IEnumerable<Node> Context { get;  }
+        public IEnumerable<Dictionary<int, Node>> Context { get;  }
         public Operation Operation { get; }
 
-        public Patch(IEnumerable<Node> context, Operation operation)
+        public Change(IEnumerable<Dictionary<int, Node>> context, Operation operation)
         {
             Context = context;
             Operation = operation;
@@ -27,7 +27,7 @@ namespace Tutor
         public List<PythonAst> Run(PythonAst ast)
         {
             var result = new List<PythonAst>();
-            result.AddRange(Context.Select(node => Operation.Run(ast, node) as PythonAst));
+            result.AddRange(Context.Select(dict => Operation.Run(ast, dict[1]) as PythonAst));
             return result;
         }
     }
@@ -39,7 +39,7 @@ namespace Tutor
         public string NodeType { set; get; }
         public List<string> Children { set; get; }
 
-        public Dictionary<int, List<Node>> MatchResult { get; private set; }
+        public IEnumerable<Dictionary<int, Node>> MatchResult { get; private set; }
 
         public Match(PythonNode template)
         {
@@ -63,7 +63,7 @@ namespace Tutor
         {
             private readonly PythonNode _template;
 
-            public Dictionary<int, List<Node>> MatchResult { get; }
+            public List<Dictionary<int, Node>> MatchResult { get; }
 
             public bool HasMatch { get; private set; }
 
@@ -71,7 +71,7 @@ namespace Tutor
             {
                 HasMatch = false;
                 _template = template;
-                MatchResult = new Dictionary<int, List<Node>>();
+                MatchResult = new List<Dictionary<int, Node>>();
             }
 
             public override bool Walk(SuiteStatement node)
@@ -127,17 +127,7 @@ namespace Tutor
                 if (result.Item1)
                 {
                     HasMatch = true;
-                    foreach (var keyValuePair in result.Item2)
-                    {
-                        if (MatchResult.ContainsKey(keyValuePair.Key))
-                        {
-                            MatchResult[keyValuePair.Key].Add(keyValuePair.Value);
-                        }
-                        else
-                        {
-                            MatchResult.Add(keyValuePair.Key, new List<Node>() {keyValuePair.Value});
-                        }
-                    }
+                    MatchResult.Add(result.Item2);
                     return false;
                 }
                 return true;

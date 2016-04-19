@@ -15,8 +15,8 @@ namespace Tutor.Transformation
     [SuppressMessage("ReSharper", "UnusedMember.Global")]
     public static class WitnessFunctions
     {
-        [WitnessFunction("Apply", 1)]
-        public static ExampleSpec WitnessPatch(GrammarRule rule, int parameter, ExampleSpec spec)
+        [WitnessFunction("Patch", 1)]
+        public static ExampleSpec WitnessPatches(GrammarRule rule, int parameter, ExampleSpec spec)
         {
             var patchExamples = new Dictionary<State, object>();
             foreach (var input in spec.ProvidedInputs)
@@ -26,35 +26,165 @@ namespace Tutor.Transformation
 
                 var zss = new PythonZss(before, after);
                 var editDistance = zss.Compute();
-                patchExamples[input] = editDistance.Item2.First();
+                patchExamples[input] = editDistance.Item2;
             }
             return  new ExampleSpec(patchExamples);
         }
 
-        [WitnessFunction("Patch", 0)]
+        [WitnessFunction("Single", 0)]
+        public static ExampleSpec WitnessSingleChange(GrammarRule rule, int parameter, ExampleSpec spec)
+        {
+            var editExamples = new Dictionary<State, object>();
+            foreach (var input in spec.ProvidedInputs)
+            {
+                var operations = spec.Examples[input] as IEnumerable<Operation>;
+                if (operations.Count().Equals(1))
+                    editExamples[input] = operations.First();
+                else
+                    return null;
+            }
+            return new ExampleSpec(editExamples);
+        }
+
+        [WitnessFunction("Changes", 0)]
+        public static ExampleSpec WitnessChange(GrammarRule rule, int parameter, ExampleSpec spec)
+        {
+            var editExamples = new Dictionary<State, object>();
+            foreach (var input in spec.ProvidedInputs)
+            {
+                var operations = spec.Examples[input] as IEnumerable<Operation>;
+
+                //var roots = new List<List<Operation>>();
+                //var nonroots = new HashSet<Operation>();
+                //foreach (var operation in operations)
+                //{
+                //    var parent = operation.Target;
+                //    var isRoot = true;
+                //    foreach (var ops in operations)
+                //    {
+                //        if (parent.Equals(ops.NewNode))
+                //        {
+                //            isRoot = false;
+                //        }
+                //    }
+                //    if (isRoot)
+                //    {
+                //        roots.Add(new List<Operation>() { operation });
+                //    }
+                //    else
+                //    {
+                //        nonroots.Add(operation);
+                //    }
+                //}
+                //foreach (var operationList in roots)
+                //{
+                //    var head = operationList.First();
+                //    var root = head.Target;
+                //    var visitor = new SubSequentNodesVisitor(nonroots);
+                //    root.Walk(visitor);
+                //    operationList.AddRange(visitor.SubOperations);
+                //    nonroots.RemoveWhere(op => visitor.SubOperations.Contains(op));
+                //}
+
+                if (operations.Count() > 1)
+                    editExamples[input] = operations.First();
+                else
+                    return null;
+            }
+            return new ExampleSpec(editExamples);
+        }
+
+        [WitnessFunction("Changes", 1)]
+        public static ExampleSpec WitnessChanges(GrammarRule rule, int parameter, ExampleSpec spec)
+        {
+            var editExamples = new Dictionary<State, object>();
+            foreach (var input in spec.ProvidedInputs)
+            {
+                var operations = spec.Examples[input] as IEnumerable<Operation>;
+
+                //var roots = new List<List<Operation>>();
+                //var nonroots = new HashSet<Operation>();
+                //foreach (var operation in operations)
+                //{
+                //    var parent = operation.Target;
+                //    var isRoot = true;
+                //    foreach (var ops in operations)
+                //    {
+                //        if (parent.Equals(ops.NewNode))
+                //        {
+                //            isRoot = false;
+                //        }
+                //    }
+                //    if (isRoot)
+                //    {
+                //        roots.Add(new List<Operation>() { operation });
+                //    }
+                //    else
+                //    {
+                //        nonroots.Add(operation);
+                //    }
+                //}
+                //foreach (var operationList in roots)
+                //{
+                //    var head = operationList.First();
+                //    var root = head.Target;
+                //    var visitor = new SubSequentNodesVisitor(nonroots);
+                //    root.Walk(visitor);
+                //    operationList.AddRange(visitor.SubOperations);
+                //    nonroots.RemoveWhere(op => visitor.SubOperations.Contains(op));
+                //}
+
+                var newList = operations.ToList();
+                if (newList.Count > 1)
+                {
+                    newList.RemoveAt(0);
+                    editExamples[input] = newList;
+                }
+                else
+                {
+                    return null;
+                }
+            }
+            return new ExampleSpec(editExamples);
+        }
+
+        [WitnessFunction("Change", 0)]
         public static ExampleSpec WitnessEdit(GrammarRule rule, int parameter, ExampleSpec spec)
         {
             var editExamples = new Dictionary<State, object>();
             foreach (var input in spec.ProvidedInputs)
             {
                 var operation = spec.Examples[input] as Operation;
+                if (operation == null)
+                {
+                    var operationList = (IEnumerable<Operation>)spec.Examples[input];
+                    if (operationList.Count() > 1)
+                        return null;
+                    operation = operationList.First();
+                }
                 editExamples[input] = operation;
             }
             return new ExampleSpec(editExamples);
         }
 
-        [WitnessFunction("Patch", 1)]
+        [WitnessFunction("Change", 1)]
         public static DisjunctiveExamplesSpec WitnessContext(GrammarRule rule, int parameter, ExampleSpec spec)
         {
             var contextExamples = new Dictionary<State, IEnumerable<object>>();
             foreach (State input in spec.ProvidedInputs)
             {
                 var operation = spec.Examples[input] as Operation;
-                if (operation != null)
+                if (operation == null)
                 {
-                    var target = operation.Target;
-                    contextExamples[input] = new List<object>() { target };
+                    var operationList = (IEnumerable<Operation>)spec.Examples[input];
+                    if (operationList.Count() > 1)
+                        return null;
+                    operation = operationList.First();
                 }
+                var target = operation.Target;
+                var context = new Dictionary<int, PythonNode>();
+                context.Add(0, target);
+                contextExamples[input] = new List<object>() { context };
             }
             return DisjunctiveExamplesSpec.From(contextExamples);
         }
@@ -66,8 +196,9 @@ namespace Tutor.Transformation
             foreach (var input in spec.ProvidedInputs)
             {
                 var templateTrees = new List<object>();
-                foreach (PythonNode node in spec.DisjunctiveExamples[input])
+                foreach (Dictionary<int,PythonNode> context in spec.DisjunctiveExamples[input])
                 {
+                    var node = context[0];
                     node.EditId = 1;
                     templateTrees.Add(node.Parent);
                     templateTrees.Add(node.Parent.GetAbstractCopy());
@@ -77,95 +208,6 @@ namespace Tutor.Transformation
                 templateExamples[input] = templateTrees;
             }
             return DisjunctiveExamplesSpec.From(templateExamples);
-        }
-
-        [WitnessFunction("SubStr", 1)]
-        public static DisjunctiveExamplesSpec WitnessPositionPair(GrammarRule rule, int parameter,
-                                                                  ExampleSpec spec)
-        {
-            var ppExamples = new Dictionary<State, IEnumerable<object>>();
-            foreach (State input in spec.ProvidedInputs)
-            {
-                var v = (StringRegion) input[rule.Body[0]];
-                var desiredOutput = (StringRegion) spec.Examples[input];
-                var occurrences = new List<object>();
-                for (int i = v.Value.IndexOf(desiredOutput.Value, StringComparison.Ordinal);
-                     i >= 0;
-                     i = v.Value.IndexOf(desiredOutput.Value, i + 1, StringComparison.Ordinal))
-                {
-                    occurrences.Add(Tuple.Create(v.Start + (uint?) i, v.Start + (uint?) i + desiredOutput.Length));
-                }
-                ppExamples[input] = occurrences;
-            }
-            return DisjunctiveExamplesSpec.From(ppExamples);
-        }
-
-        [WitnessFunction("AbsPos", 1)]
-        public static DisjunctiveExamplesSpec WitnessK(GrammarRule rule, int parameter,
-                                                       DisjunctiveExamplesSpec spec)
-        {
-            var kExamples = new Dictionary<State, IEnumerable<object>>();
-            foreach (State input in spec.ProvidedInputs)
-            {
-                var v = (StringRegion) input[rule.Body[0]];
-                var positions = new List<object>();
-                foreach (uint pos in spec.DisjunctiveExamples[input])
-                {
-                    positions.Add((int) pos + 1 - (int) v.Start);
-                    positions.Add((int) pos - (int) v.End - 1);
-                }
-                kExamples[input] = positions;
-            }
-            return DisjunctiveExamplesSpec.From(kExamples);
-        }
-
-        [WitnessFunction("RegPos", 1)]
-        public static DisjunctiveExamplesSpec WitnessRegexPair(GrammarRule rule, int parameter,
-                                                               DisjunctiveExamplesSpec spec)
-        {
-            var rrExamples = new Dictionary<State, IEnumerable<object>>();
-            foreach (State input in spec.ProvidedInputs)
-            {
-                var v = (StringRegion) input[rule.Body[0]];
-                var regexes = new List<Tuple<RegularExpression, RegularExpression>>();
-                foreach (uint pos in spec.DisjunctiveExamples[input])
-                {
-                    Dictionary<Token, TokenMatch> rightMatches;
-                    if (!v.Cache.TryGetAllMatchesStartingAt(pos, out rightMatches)) continue;
-                    Dictionary<Token, TokenMatch> leftMatches;
-                    if (!v.Cache.TryGetAllMatchesEndingAt(pos, out leftMatches)) continue;
-                    var leftRegexes = leftMatches.Keys.Select(RegularExpression.Create).Append(Epsilon);
-                    var rightRegexes = rightMatches.Keys.Select(RegularExpression.Create).Append(Epsilon);
-                    var regexPairs = from l in leftRegexes from r in rightRegexes select Tuple.Create(l, r);
-                    regexes.AddRange(regexPairs);
-                }
-                rrExamples[input] = regexes;
-            }
-            return DisjunctiveExamplesSpec.From(rrExamples);
-        }
-
-        [WitnessFunction("RegPos", 2, DependsOnParameters = new[] { 1 })]
-        public static DisjunctiveExamplesSpec WitnessRegexCount(GrammarRule rule, int parameter,
-                                                                DisjunctiveExamplesSpec spec,
-                                                                ExampleSpec regexBinding)
-        {
-            var kExamples = new Dictionary<State, IEnumerable<object>>();
-            foreach (State input in spec.ProvidedInputs)
-            {
-                var v = (StringRegion) input[rule.Body[0]];
-                var rr = (Tuple<RegularExpression, RegularExpression>) regexBinding.Examples[input];
-                var ks = new List<object>();
-                foreach (uint pos in spec.DisjunctiveExamples[input])
-                {
-                    var ms = rr.Item1.Run(v).Where(m => rr.Item2.MatchesAt(v, m.Right)).ToArray();
-                    int index = ms.BinarySearchBy(m => m.Right.CompareTo(pos));
-                    if (index < 0) return null;
-                    ks.Add(index + 1);
-                    ks.Add(index - ms.Length);
-                }
-                kExamples[input] = ks;
-            }
-            return DisjunctiveExamplesSpec.From(kExamples);
         }
     }
 }

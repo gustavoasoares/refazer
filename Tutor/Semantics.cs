@@ -9,21 +9,51 @@ namespace Tutor.Transformation
     [SuppressMessage("ReSharper", "UnusedMember.Global")]
     public static class Semantics
     {
-        public static IEnumerable<PythonAst> Apply(PythonNode ast, Patch patch)
-        {            
-            return (patch != null) ? patch.Run(ast.InnerNode as PythonAst) : new List<PythonAst>();
+        public static IEnumerable<PythonAst> Patch(PythonNode ast, IEnumerable<Change> changes)
+        {
+            var result = new List<PythonAst>() {(PythonAst) ast.InnerNode};
+            foreach (var change in changes)
+            {
+                var pythonAsts = new List<PythonAst>();
+                foreach (var pythonAst in result)
+                {
+                    pythonAsts.AddRange(change.Run(pythonAst));
+                }
+                result = pythonAsts;
+            }
+            return result;
         }
 
-        public static Patch Patch(Operation edit, IEnumerable<Node> context)
+     
+        public static IEnumerable<Change> Single(Change change)
         {
-            return (edit != null && context != null) ? new Patch(context,edit) : null;
+            var result = new List<Change>();
+            if (change != null) result.Add(change);
+            return result;
+        }
+
+        public static IEnumerable<Change> Changes(Change change, IEnumerable<Change> changes)
+        {
+            var result = new List<Change>();
+            if (change != null && changes != null)
+            {
+                result.Add(change);
+                result.AddRange(changes);
+            }
+            return result;
+        }
+
+        public static Change Change(Operation edit, IEnumerable<Dictionary<int, Node>> context)
+        {
+            return (edit != null && context != null) ? new Change(context,edit) : null;
         } 
 
-        public static IEnumerable<Node> Match(PythonNode ast, PythonNode template)
+        public static IEnumerable<Dictionary<int, Node>> Match(PythonNode ast, PythonNode template)
         {
             var match = new Match(template);
             var hasMatch = match.Run(ast.InnerNode as PythonAst);
-            return (hasMatch) ? match.MatchResult[1] : new List<Node>();
+
+            return (hasMatch) ? match.MatchResult : null;
         }
     }
 }
