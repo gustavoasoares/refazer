@@ -211,8 +211,10 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="ASTHelper.cs" />
+    <Compile Include="NodeBuilder.cs" />
+    <Compile Include="NodeInfo.cs" />
     <Compile Include="NodeWrapper.cs" />
-    <Compile Include="Operation.cs" />
+    <Compile Include="Edit.cs" />
     <Compile Include="EditsLearner.cs" />
     <Compile Include="PythonNode.cs" />
     <Compile Include="RankingScore.cs" />

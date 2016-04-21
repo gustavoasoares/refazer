@@ -48,10 +48,10 @@ def identity(x):
                     var after = ASTHelper.ParseContent(mistake.after);
                     var diff = new PythonZss(NodeWrapper.Wrap(before), NodeWrapper.Wrap(after));
                     var changes = diff.Compute();
-                    if (changes.Item1 > 1)
+                    if (changes.Item1 != 1)
                         continue;
-                    if ((changes.Item2.Any(e => e is Delete)))
-                        continue;
+                    //if ((changes.Item2.Any(e => e.Target.InnerNode.NodeName.Equals("literal"))))
+                    //    continue;
 
                 }
                 catch (Exception)

@@ -2,48 +2,47 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
-using CsQuery;
 using IronPython.Compiler.Ast;
-using IronPython.Runtime;
-using BinaryExpression = IronPython.Compiler.Ast.BinaryExpression;
 using Expression = System.Linq.Expressions.Expression;
 
 namespace Tutor
 {
-    public abstract class Operation
+    public abstract class Edit
     {
         public PythonNode NewNode { get; }
         public PythonNode Target { get; }
 
         public Node Context { get; protected set; }
 
-        public Operation()
+        public Edit()
         {
             
         }
-        public Operation(PythonNode newNode, PythonNode target)
+
+        public Edit(PythonNode newNode, PythonNode target)
         {
             NewNode = newNode;
             Target = target;
         }
 
-        public abstract Expression Run(Node code, Node context);
+        public abstract Expression Run(Node ast);
 
         public bool CanApply(Node node)
         {
-            return node.Equals(Context);
+            return node.Equals(Target.InnerNode);
         }
 
         public abstract Node Apply(Node node);
     }
 
 
-    public class Insert : Operation
+    public class Insert : Edit
     {
         private Dictionary<int, Node> context;
+        public int Index { get; }
 
         public InsertNodeSynthesizer NodeSynthesizer { private set; get; }
-                 
+
         public Insert(PythonNode newNode, PythonNode target) : base(newNode, target)
         {
         }
@@ -54,11 +53,15 @@ namespace Tutor
             this.context = context;
         }
 
-        public override Expression Run(Node code, Node context)
+        public Insert(PythonNode newNode, PythonNode target, int index) : this(newNode, target)
         {
-            Context = context;
-            var rewriter = new Rewriter(this);
-            return rewriter.Rewrite(code);
+            Index = index;
+        }
+
+        public override Expression Run(Node ast)
+        {
+            var rewriter = new InsertRewriter(this);
+            return rewriter.Rewrite(ast);
         }
 
         public override Node Apply(Node node)
@@ -67,13 +70,13 @@ namespace Tutor
         }
     }
 
-    public class Delete : Operation
+    public class Delete : Edit
     {
         public Delete(PythonNode newNode, PythonNode target) : base(newNode, target)
         {
         }
 
-        public override Expression Run(Node code, Node context)
+        public override Expression Run(Node ast)
         {
             throw new NotImplementedException();
         }
@@ -83,17 +86,17 @@ namespace Tutor
             throw new NotImplementedException();
         }
     }
-    public class Update : Operation
+
+    public class Update : Edit
     {
         public Update(PythonNode newNode, PythonNode target) : base(newNode, target)
         {
         }
 
-        public override Expression Run(Node code, Node context)
+        public override Expression Run(Node ast)
         {
-            Context = context;
             var rewriter = new Rewriter(this);
-            return rewriter.Rewrite(code);
+            return rewriter.Rewrite(ast);
         }
 
         public override Node Apply(Node node)

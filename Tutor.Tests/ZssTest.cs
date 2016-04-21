@@ -218,11 +218,21 @@ def product(n, term):
             var zss = new PythonZss(ast1, ast2);
             var editDistance = zss.Compute();
             Assert.AreEqual(5, editDistance.Item1);
-            
         }
 
+        [TestMethod]
+        public void TestCompute13()
+        {
+            var py = Python.CreateEngine();
+            var before = @"i";
+            var ast1 = NodeWrapper.Wrap(ParseContent(before, py));
+            var after = @"term(x)";
+            var ast2 = NodeWrapper.Wrap(ParseContent(after, py));
+            var zss = new PythonZss(ast1, ast2);
+            var editDistance = zss.Compute();
+            Assert.AreEqual(4, editDistance.Item1);
 
-
+        }
 
         private PythonAst ParseContent(string content, ScriptEngine py)
         {

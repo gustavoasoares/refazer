@@ -12,26 +12,6 @@ using ConstantExpression = IronPython.Compiler.Ast.ConstantExpression;
 
 namespace Tutor
 {
-    public class Change
-    {
-        public IEnumerable<Dictionary<int, Node>> Context { get;  }
-        public Operation Operation { get; }
-
-        public Change(IEnumerable<Dictionary<int, Node>> context, Operation operation)
-        {
-            Context = context;
-            Operation = operation;
-        }
-
-
-        public List<PythonAst> Run(PythonAst ast)
-        {
-            var result = new List<PythonAst>();
-            result.AddRange(Context.Select(dict => Operation.Run(ast, dict[1]) as PythonAst));
-            return result;
-        }
-    }
-
     public class Match
     {
         private PythonNode _template;
@@ -39,31 +19,43 @@ namespace Tutor
         public string NodeType { set; get; }
         public List<string> Children { set; get; }
 
-        public IEnumerable<Dictionary<int, Node>> MatchResult { get; private set; }
+        public Node MatchResult { get; private set; }
 
         public Match(PythonNode template)
         {
             this._template = template;
         }
 
-        public bool Run(Node code)
+        public bool Run(PythonNode code)
         {
+            var targetInfo = _template.FindHeightTarget(0).Item2;
+            var root = code; 
+            while (targetInfo > 0)
+            {
+                if (code.Parent == null)
+                    return false;
+                root = code.Parent;
+                targetInfo --;
+            }
+
             var checkTemplateWaker = new CheckTemplateWalker(_template);
-            code.Walk(checkTemplateWaker);
+            root.InnerNode.Walk(checkTemplateWaker);
             MatchResult = checkTemplateWaker.MatchResult;
-            return checkTemplateWaker.HasMatch;
+            return checkTemplateWaker.HasMatch && MatchResult.Equals(code.InnerNode);
         }
 
-        public bool HasMatch(PythonAst ast)
+        public bool HasMatch(PythonNode ast)
         {
             return Run(ast);
         }
+
+        
 
         class CheckTemplateWalker : PythonWalker
         {
             private readonly PythonNode _template;
 
-            public List<Dictionary<int, Node>> MatchResult { get; }
+            public Node MatchResult { get; private set; }
 
             public bool HasMatch { get; private set; }
 
@@ -71,13 +63,23 @@ namespace Tutor
             {
                 HasMatch = false;
                 _template = template;
-                MatchResult = new List<Dictionary<int, Node>>();
             }
 
             public override bool Walk(SuiteStatement node)
             {
                 return CheckTemplate(node);
             }
+
+            public override bool Walk(IfStatement node)
+            {
+                return CheckTemplate(node);
+            }
+
+            public override bool Walk(IfStatementTest node)
+            {
+                return CheckTemplate(node);
+            }
+
             public override bool Walk(BinaryExpression node)
             {
                 return CheckTemplate(node);
@@ -116,6 +118,11 @@ namespace Tutor
                 return CheckTemplate(node);
             }
 
+            public override bool Walk(CallExpression node)
+            {
+                return CheckTemplate(node);
+            }
+
             public override bool Walk(Arg node)
             {
                 return CheckTemplate(node);
@@ -127,10 +134,9 @@ namespace Tutor
                 if (result.Item1)
                 {
                     HasMatch = true;
-                    MatchResult.Add(result.Item2);
-                    return false;
+                    MatchResult = result.Item2;
                 }
-                return true;
+                return false;
             }
         }
     }

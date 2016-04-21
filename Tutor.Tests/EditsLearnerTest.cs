@@ -364,7 +364,7 @@ def product(n, term):
         //            var m = new Match(root);
         //            var newNode = new IronPython.Compiler.Ast.ConstantExpression(1);
         //            var update = new Rewrite(new PythonNode(newNode, false), null);
-        //            var fix = new Change(m, update);
+        //            var fix = new Edit(m, update);
 
         //            var fixer = new SubmissionFixer();
 
@@ -381,7 +381,7 @@ def product(n, term):
         //                {testSetup + "product(3, square)", 36},
         //                {testSetup + "product(5, square)", 14400}
         //            };
-        //            var isFixed = fixer.Fix(program, new List<Change>() { fix }, tests);
+        //            var isFixed = fixer.Fix(program, new List<Edit>() { fix }, tests);
         //            Assert.AreEqual(true, isFixed);
 
         //        }
@@ -420,7 +420,7 @@ def product(n, term):
         //            var m = new Match(root);
         //            var newNode = new IronPython.Compiler.Ast.ConstantExpression(1);
         //            var update = new Rewrite(new PythonNode(newNode,false), null);
-        //            var fix = new Change(m, update);
+        //            var fix = new Edit(m, update);
 
         //            var fixer = new SubmissionFixer();
 
@@ -437,7 +437,7 @@ def product(n, term):
         //                {testSetup + "product(3, square)", 36},
         //                {testSetup + "product(5, square)", 14400}
         //            };
-        //            var isFixed = fixer.Fix(program, new List<Change>() { fix }, tests);
+        //            var isFixed = fixer.Fix(program, new List<Edit>() { fix }, tests);
         //            Assert.AreEqual(true, isFixed);
 
         //        }
@@ -476,7 +476,7 @@ def product(n, term):
         //            var m = new Match(root);
         //            var newNode = new IronPython.Compiler.Ast.ConstantExpression(1);
         //            var update = new Rewrite(new PythonNode(newNode, false), null);
-        //            var fix = new Change(m, update);
+        //            var fix = new Edit(m, update);
 
         //            var fixer = new SubmissionFixer();
 
@@ -493,7 +493,7 @@ def product(n, term):
         //                {testSetup + "product(3, square)", 36},
         //                {testSetup + "product(5, square)", 14400}
         //            };
-        //            var isFixed = fixer.Fix(program, new List<Change>() { fix }, tests);
+        //            var isFixed = fixer.Fix(program, new List<Edit>() { fix }, tests);
         //            Assert.AreEqual(true, isFixed);
 
         //        }

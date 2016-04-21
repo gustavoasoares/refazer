@@ -9,51 +9,105 @@ namespace Tutor.Transformation
     [SuppressMessage("ReSharper", "UnusedMember.Global")]
     public static class Semantics
     {
-        public static IEnumerable<PythonAst> Patch(PythonNode ast, IEnumerable<Change> changes)
+
+        public static IEnumerable<PythonAst> Apply(PythonNode ast, IEnumerable<PythonAst> patch)
         {
-            var result = new List<PythonAst>() {(PythonAst) ast.InnerNode};
-            foreach (var change in changes)
+            return patch;
+        }
+
+        public static IEnumerable<Edit> Single(Edit edit)
+        {
+            var result = new List<Edit>();
+            if (edit != null) result.Add(edit);
+            return result;
+        }
+
+        public static IEnumerable<Edit> Edits(Edit edit, IEnumerable<Edit> edits)
+        {
+            var result = new List<Edit>();
+            if (edit != null && edits != null)
             {
-                var pythonAsts = new List<PythonAst>();
-                foreach (var pythonAst in result)
-                {
-                    pythonAsts.AddRange(change.Run(pythonAst));
-                }
-                result = pythonAsts;
+                result.Add(edit);
+                result.AddRange(edits);
             }
             return result;
         }
 
-     
-        public static IEnumerable<Change> Single(Change change)
+        public static PythonAst Update(PythonNode ast, PythonNode before, Node after)
         {
-            var result = new List<Change>();
-            if (change != null) result.Add(change);
-            return result;
+            var wrappedAfter = new PythonNode(after, false);
+            var update = new Update(wrappedAfter, before);
+            var newAst = update.Run(ast.InnerNode);
+            return (PythonAst) newAst;
         }
 
-        public static IEnumerable<Change> Changes(Change change, IEnumerable<Change> changes)
+        public static Edit Insert(Node parent, Node newNode, int index)
         {
-            var result = new List<Change>();
-            if (change != null && changes != null)
-            {
-                result.Add(change);
-                result.AddRange(changes);
-            }
-            return result;
+            var wrappedParent = new PythonNode(parent, false);
+            var wrappedNewNode = new PythonNode(newNode, false);
+
+            var update = new Insert(wrappedNewNode, wrappedParent, index);
+            return update;
         }
 
-        public static Change Change(Operation edit, IEnumerable<Dictionary<int, Node>> context)
+        public static Node LeafConstNode(NodeInfo info)
         {
-            return (edit != null && context != null) ? new Change(context,edit) : null;
-        } 
+            return NodeBuilder.Create(info);
+        }
 
-        public static IEnumerable<Dictionary<int, Node>> Match(PythonNode ast, PythonNode template)
+        public static Node ConstNode(NodeInfo info, IEnumerable<Node> children)
+        {
+            return NodeBuilder.Create(info, children.ToList());
+        }
+
+        public static Node ReferenceNode(PythonNode ast, PythonNode template)
         {
             var match = new Match(template);
-            var hasMatch = match.Run(ast.InnerNode as PythonAst);
+            if (match.HasMatch(ast))
+            {
+                return match.MatchResult;
+            }
+            return null;
+        }
 
-            return (hasMatch) ? match.MatchResult : null;
+        public static IEnumerable<Node> SingleChild(Node node)
+        {
+            return (node != null) ? new List<Node>() {node} : null;
+        }
+
+        public static IEnumerable<Node> Children(Node node, IEnumerable<Node> children)
+        {
+            if (node == null || children == null)
+                return null;
+
+            var result = new List<Node> {node};
+            result.AddRange(children);
+            return result;
+        }
+
+        public static bool Match(PythonNode ast, PythonNode context)
+        {
+            var match = new Match(context);
+            return match.HasMatch(ast);
+
+        }
+
+        public static IEnumerable<PythonNode> InOrderSort(PythonNode ast)
+        {
+            var visitor = new PythonNodeVisitor();
+            ast.Walk(visitor);
+            return visitor.SortedNodes;
+        }
+    }
+
+    public class PythonNodeVisitor : IVisitor
+    {
+        public List<PythonNode> SortedNodes = new List<PythonNode>();
+         
+        public bool Visit(PythonNode pythonNode)
+        {
+            SortedNodes.Add(pythonNode);
+            return true;
         }
     }
 }

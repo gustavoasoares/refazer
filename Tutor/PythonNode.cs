@@ -37,29 +37,28 @@ namespace Tutor
             Children.Add(node);
         }
 
-        public Tuple<bool, Dictionary<int, Node>> Match(Node node)
+        public Tuple<bool, Node> Match(Node node)
         {
-            var matchResult = new Dictionary<int, Node>();
-
+            Node matchResult = null;
             if (IsAbstract)
             {
                 if (!InnerNode.NodeName.Equals(node.NodeName))
-                    return Tuple.Create(false, new Dictionary<int, Node>());
+                    return Tuple.Create<bool, Node>(false, null);
             }
             else
             {
                 if (!IsEqualToInnerNode(node))
-                    return Tuple.Create(false, new Dictionary<int, Node>());
+                    return Tuple.Create<bool, Node>(false, null);
             }
 
             if (EditId != 0)
             {
-                matchResult.Add(EditId,node);
+                matchResult = node;
             }
 
             if (Children.Count == 0)
             {
-                return Tuple.Create<bool, Dictionary<int, Node>>(true, matchResult); 
+                return Tuple.Create<bool, Node>(true, matchResult); 
             }
 
             if (node is BinaryExpression)
@@ -69,11 +68,11 @@ namespace Tutor
                 var resultRight = Children[1].Match(convertedNode.Right);
                 if (resultRight.Item1 && resultLeft.Item1)
                 {
-                    AddMatchResult(matchResult, resultLeft.Item2);
-                    AddMatchResult(matchResult, resultRight.Item2);
-                    return Tuple.Create(true, matchResult);
+                    matchResult = AddMatchResult(matchResult, resultLeft.Item2);
+                    matchResult = AddMatchResult(matchResult, resultRight.Item2);
+                    return Tuple.Create<bool, Node>(true, matchResult);
                 }
-                return Tuple.Create(false, new Dictionary<int, Node>());
+                return Tuple.Create<bool, Node>(false, null);
             }
 
             if (node is AugmentedAssignStatement)
@@ -83,11 +82,11 @@ namespace Tutor
                 var resultRight = Children[1].Match(convertedNode.Right);
                 if (resultRight.Item1 && resultLeft.Item1)
                 {
-                    AddMatchResult(matchResult, resultLeft.Item2);
-                    AddMatchResult(matchResult, resultRight.Item2);
-                    return Tuple.Create(true, matchResult);
+                    matchResult = AddMatchResult(matchResult, resultLeft.Item2);
+                    matchResult = AddMatchResult(matchResult, resultRight.Item2);
+                    return Tuple.Create<bool, Node>(true, matchResult);
                 }
-                return Tuple.Create(false, new Dictionary<int, Node>());
+                return Tuple.Create<bool, Node>(false, null);
             }
 
             if (node is AssignmentStatement)
@@ -97,135 +96,135 @@ namespace Tutor
                 //the number of children - 1 (the last one is for the right side),
                 //the tree is different 
                 if (convertedNode.Left.Count != Children.Count - 1)
-                    return Tuple.Create<bool, Dictionary<int, Node>>(false, new Dictionary<int, Node>());
+                    return Tuple.Create<bool, Node>(false, null);
 
                 for (var i = 0; i < Children.Count -1; i++)
                 {
                     var result = Children[i].Match(convertedNode.Left[i]);
                     if (!result.Item1)
-                        return Tuple.Create<bool, Dictionary<int, Node>>(false, new Dictionary<int, Node>());
-                    AddMatchResult(matchResult, result.Item2);
+                        return Tuple.Create<bool, Node>(false, null);
+                    matchResult = AddMatchResult(matchResult, result.Item2);
                 }
                 var resultRight = Children.Last().Match(convertedNode.Right);
                 if (resultRight.Item1)
                 {
-                    AddMatchResult(matchResult, resultRight.Item2);
-                    return Tuple.Create<bool, Dictionary<int, Node>>(true, matchResult);
+                    matchResult = AddMatchResult(matchResult, resultRight.Item2);
+                    return Tuple.Create<bool, Node>(true, matchResult);
                 }
                 else
                 {
-                    return Tuple.Create<bool, Dictionary<int, Node>>(false, new Dictionary<int, Node>());
+                    return Tuple.Create<bool, Node>(false, null);
                 }
             }
             if (node is TupleExpression)
             {
                 var convertedNode = node as TupleExpression;
                 if (convertedNode.Items.Count != Children.Count)
-                    return Tuple.Create<bool, Dictionary<int, Node>>(false, new Dictionary<int, Node>());
+                    return Tuple.Create<bool, Node>(false, null);
 
                 for (var i = 0; i < Children.Count; i++)
                 {
                     var result = Children[i].Match(convertedNode.Items[i]);
                     if (!result.Item1)
-                        return Tuple.Create(false, new Dictionary<int, Node>());
-                    AddMatchResult(matchResult, result.Item2);
+                        return Tuple.Create<bool, Node>(false, null);
+                    matchResult = AddMatchResult(matchResult, result.Item2);
                 }
-                return Tuple.Create(true, matchResult);
+                return Tuple.Create<bool, Node>(true, matchResult);
             }
             if (node is SuiteStatement)
             {
                 var convertedNode = node as SuiteStatement;
                 if (convertedNode.Statements.Count != Children.Count)
-                    return Tuple.Create<bool, Dictionary<int, Node>>(false, new Dictionary<int, Node>());
+                    return Tuple.Create<bool, Node>(false, null);
                 for (var i = 0; i < Children.Count; i++)
                 {
                     var result = Children[i].Match(convertedNode.Statements[i]);
                     if (!result.Item1)
-                        return Tuple.Create<bool, Dictionary<int, Node>>(false, new Dictionary<int, Node>());
-                    AddMatchResult(matchResult, result.Item2);
+                        return Tuple.Create<bool, Node>(false, null);
+                    matchResult = AddMatchResult(matchResult, result.Item2);
                 }
-                return Tuple.Create<bool, Dictionary<int, Node>>(true, matchResult);
+                return Tuple.Create<bool, Node>(true, matchResult);
             }
             if (node is ExpressionStatement)
             {
                 var convertedNode = (ExpressionStatement) node;
                 if (Children.Count != 1)
-                    return Tuple.Create(false, new Dictionary<int, Node>());
+                    return Tuple.Create<bool, Node>(false, null);
 
                 var result = Children[0].Match(convertedNode.Expression);
                 if (!result.Item1)
-                    return Tuple.Create(false, new Dictionary<int, Node>());
-                AddMatchResult(matchResult, result.Item2);
-                return Tuple.Create(true, matchResult);
+                    return Tuple.Create<bool, Node>(false, null);
+                matchResult = AddMatchResult(matchResult, result.Item2);
+                return Tuple.Create<bool, Node>(true, matchResult);
             }
             if (node is ReturnStatement)
             {
                 var convertedNode = (ReturnStatement)node;
                 if (Children.Count != 1)
-                    return Tuple.Create(false, new Dictionary<int, Node>());
+                    return Tuple.Create<bool, Node>(false, null);
 
                 var result = Children[0].Match(convertedNode.Expression);
                 if (!result.Item1)
-                    return Tuple.Create(false, new Dictionary<int, Node>());
-                AddMatchResult(matchResult, result.Item2);
-                return Tuple.Create(true, matchResult);
+                    return Tuple.Create<bool, Node>(false, null);
+                matchResult = AddMatchResult(matchResult, result.Item2);
+                return Tuple.Create<bool, Node>(true, matchResult);
             }
             if (node is ParenthesisExpression)
             {
                 var convertedNode = (ParenthesisExpression)node;
                 if (Children.Count != 1)
-                    return Tuple.Create(false, new Dictionary<int, Node>());
+                    return Tuple.Create<bool, Node>(false, null);
 
                 var result = Children[0].Match(convertedNode.Expression);
                 if (!result.Item1)
-                    return Tuple.Create(false, new Dictionary<int, Node>());
-                AddMatchResult(matchResult, result.Item2);
-                return Tuple.Create(true, matchResult);
+                    return Tuple.Create<bool, Node>(false, null);
+                matchResult = AddMatchResult(matchResult, result.Item2);
+                return Tuple.Create<bool, Node>(true, matchResult);
             }
             if (node is Arg)
             {
                 var convertedNode = (Arg)node;
                 if (Children.Count != 1)
-                    return Tuple.Create(false, new Dictionary<int, Node>());
+                    return Tuple.Create<bool, Node>(false, null);
 
                 var result = Children[0].Match(convertedNode.Expression);
                 if (!result.Item1)
-                    return Tuple.Create(false, new Dictionary<int, Node>());
-                AddMatchResult(matchResult, result.Item2);
-                return Tuple.Create(true, matchResult);
+                    return Tuple.Create<bool, Node>(false, null);
+                matchResult = AddMatchResult(matchResult, result.Item2);
+                return Tuple.Create<bool, Node>(true, matchResult);
             }
 
             if (node is Parameter)
             {
                 var convertedNode = (Parameter)node;
                 if (Children.Count != 1)
-                    return Tuple.Create(false, new Dictionary<int, Node>());
+                    return Tuple.Create<bool, Node>(false, null);
 
                 var result = Children[0].Match(convertedNode.DefaultValue);
                 if (!result.Item1)
-                    return Tuple.Create(false, new Dictionary<int, Node>());
-                AddMatchResult(matchResult, result.Item2);
-                return Tuple.Create(true, matchResult);
+                    return Tuple.Create<bool, Node>(false, null);
+                matchResult = AddMatchResult(matchResult, result.Item2);
+                return Tuple.Create<bool, Node>(true, matchResult);
             }
 
             if (node is CallExpression)
             {
                 var convertedNode = (CallExpression) node;
                 if (Children.Count != convertedNode.Args.Count + 1)
-                    return Tuple.Create(false, new Dictionary<int, Node>());
+                    return Tuple.Create<bool, Node>(false, null);
 
                 var result = Children[0].Match(convertedNode.Target);
                 if (!result.Item1)
-                    return Tuple.Create(false, new Dictionary<int, Node>());
-                AddMatchResult(matchResult, result.Item2);
+                    return Tuple.Create<bool, Node>(false, null);
+                matchResult = AddMatchResult(matchResult, result.Item2);
                 for (var i = 1; i < Children.Count; i++)
                 {
                     result = Children[i].Match(convertedNode.Args[i-1]);
                     if (!result.Item1)
-                        return Tuple.Create(false, new Dictionary<int, Node>());
-                    AddMatchResult(matchResult, result.Item2);
+                        return Tuple.Create<bool, Node>(false, null);
+                    matchResult = AddMatchResult(matchResult, result.Item2);
                 }
-                return Tuple.Create(true, matchResult);
+                return Tuple.Create<bool, Node>(true, matchResult);
             }
 
             if (node is WhileStatement)
@@ -233,25 +232,25 @@ namespace Tutor
                 var convertedNode = (WhileStatement) node;
                 var totalChildren = (convertedNode.ElseStatement == null) ? 2 : 3;
                 if (totalChildren != Children.Count)
-                    return Tuple.Create(false, new Dictionary<int, Node>());
+                    return Tuple.Create<bool, Node>(false, null);
                 var result = Children[0].Match(convertedNode.Test);
                 if (!result.Item1)
-                    return Tuple.Create(false, new Dictionary<int, Node>());
-                AddMatchResult(matchResult, result.Item2);
+                    return Tuple.Create<bool, Node>(false, null);
+                matchResult = AddMatchResult(matchResult, result.Item2);
 
                 result = Children[1].Match(convertedNode.Body);
                 if (!result.Item1)
-                    return Tuple.Create(false, new Dictionary<int, Node>());
-                AddMatchResult(matchResult, result.Item2);
+                    return Tuple.Create<bool, Node>(false, null);
+                matchResult = AddMatchResult(matchResult, result.Item2);
 
                 if (convertedNode.ElseStatement != null)
                 {
                     result = Children[2].Match(convertedNode.ElseStatement);
                     if (!result.Item1)
-                        return Tuple.Create(false, new Dictionary<int, Node>());
-                    AddMatchResult(matchResult, result.Item2);
+                        return Tuple.Create<bool, Node>(false, null);
+                    matchResult = AddMatchResult(matchResult, result.Item2);
                 }
-                return Tuple.Create(true, matchResult);
+                return Tuple.Create<bool, Node>(true, matchResult);
             }
 
             if (node is ForStatement)
@@ -259,41 +258,38 @@ namespace Tutor
                 var convertedNode = (ForStatement)node;
                 var totalChildren = (convertedNode.Else == null) ? 3 : 4;
                 if (totalChildren != Children.Count)
-                    return Tuple.Create(false, new Dictionary<int, Node>());
+                    return Tuple.Create<bool, Node>(false, null);
                 var result = Children[0].Match(convertedNode.Left);
                 if (!result.Item1)
-                    return Tuple.Create(false, new Dictionary<int, Node>());
-                AddMatchResult(matchResult, result.Item2);
+                    return Tuple.Create<bool, Node>(false, null);
+                matchResult = AddMatchResult(matchResult, result.Item2);
 
                 result = Children[1].Match(convertedNode.List);
                 if (!result.Item1)
-                    return Tuple.Create(false, new Dictionary<int, Node>());
-                AddMatchResult(matchResult, result.Item2);
+                    return Tuple.Create<bool, Node>(false, null);
+                matchResult = AddMatchResult(matchResult, result.Item2);
 
                 result = Children[2].Match(convertedNode.Body);
                 if (!result.Item1)
-                    return Tuple.Create(false, new Dictionary<int, Node>());
-                AddMatchResult(matchResult, result.Item2);
+                    return Tuple.Create<bool, Node>(false, null);
+                matchResult = AddMatchResult(matchResult, result.Item2);
 
                 if (convertedNode.Else != null)
                 {
                     result = Children[3].Match(convertedNode.Else);
                     if (!result.Item1)
-                        return Tuple.Create(false, new Dictionary<int, Node>());
-                    AddMatchResult(matchResult, result.Item2);
+                        return Tuple.Create<bool, Node>(false, null);
+                    matchResult = AddMatchResult(matchResult, result.Item2);
                 }
-                return Tuple.Create(true, matchResult);
+                return Tuple.Create<bool, Node>(true, matchResult);
             }
 
             throw new NotImplementedException();
         }
 
-        private void AddMatchResult(Dictionary<int, Node> current, Dictionary<int, Node> matchresult)
+        private Node AddMatchResult(Node current, Node matchresult)
         {
-            foreach (var keyValuePair in matchresult)
-            {
-                current.Add(keyValuePair.Key, keyValuePair.Value);
-            }
+            return (matchresult != null && current == null) ? matchresult : current;
         }
 
         private bool IsEqualToInnerNode(Node node)
@@ -520,6 +516,19 @@ namespace Tutor
             return node.Equals(compared);
         }
 
+
+        public PythonNode GetCopy()
+        {
+            var result = new PythonNode(InnerNode, false, EditId);
+            if (Parent != null) result.Parent = Parent;
+            result.Value = Value;
+            foreach (var child in Children)
+            {
+                result.AddChild(child.GetCopy());
+            }
+            return result;
+        }
+
         public PythonNode GetAbstractCopy()
         {
             var result = new PythonNode(InnerNode,true, EditId);
@@ -537,6 +546,32 @@ namespace Tutor
             if (visitor.Visit(this))
                 Children.ForEach(child => child.Walk(visitor));
         }
+
+        public bool Contains(PythonNode node)
+        {
+            if (Equals(node))
+                return true;
+            foreach (var child in Children)
+            {
+                var contains = child.Contains(node);
+                if (contains)
+                    return true;
+            }
+            return false;
+        }
+
+        public Tuple<bool, int> FindHeightTarget(int height)
+        {
+            if (EditId == 1)
+                return Tuple.Create(true, height);
+            foreach (var child in Children)
+            {
+                var result = child.FindHeightTarget(height + 1);
+                if (result.Item1)
+                    return result;
+            }
+            return Tuple.Create(false, height);
+        }
     }
 
     public interface IVisitor
@@ -546,12 +581,12 @@ namespace Tutor
 
     public class SubSequentNodesVisitor : IVisitor
     {
-        private readonly IEnumerable<Operation> _operations;
-        public List<Operation> SubOperations {get; }
+        private readonly IEnumerable<Edit> _operations;
+        public List<Edit> SubOperations {get; }
 
-        public SubSequentNodesVisitor(IEnumerable<Operation> operations)
+        public SubSequentNodesVisitor(IEnumerable<Edit> operations)
         {
-            SubOperations = new List<Operation>();
+            SubOperations = new List<Edit>();
             _operations = operations;
         }
 

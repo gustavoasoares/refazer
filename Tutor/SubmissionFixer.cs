@@ -42,9 +42,9 @@ namespace Tutor
 
             foreach (var proseProgram in ProsePrograms)
             {
-               if (TryFix(tests, proseProgram.First(), input, unparser)) return true;
-                if (TryFix(tests, proseProgram.ToList()[1], input, unparser)) return true;
-                if (TryFix(tests, proseProgram.ToList()[2], input, unparser)) return true;
+                if (TryFix(tests, proseProgram.First(), input, unparser)) return true;
+                //if (TryFix(tests, proseProgram.ToList()[1], input, unparser)) return true;
+                //if (TryFix(tests, proseProgram.ToList()[2], input, unparser)) return true;
             }
 
             //learn a new program
@@ -54,10 +54,7 @@ namespace Tutor
             var prose = new SynthesisEngine(_grammar.Value);
             var learned = prose.LearnGrammar(spec);
             ProsePrograms.Add(learned.RealizedPrograms);
-            //foreach (var current in learned.RealizedPrograms)
-            //{
-                if (TryFix(tests, learned.RealizedPrograms.First(), input, unparser)) return true;
-            //}
+            if (TryFix(tests, learned.RealizedPrograms.First(), input, unparser)) return true;
             return false;
         }
 
@@ -66,7 +63,8 @@ namespace Tutor
             var output = current.Invoke(input);
             if (output != null)
             {
-                var programSet  = output as IEnumerable<PythonAst>;
+                var programSet = output as IEnumerable<PythonAst>;
+
                 foreach (var changedProgram in programSet)
                 {
                     var newCode = unparser.Unparse(changedProgram);

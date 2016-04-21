@@ -38,7 +38,7 @@ namespace Tutor
         /// dynamic programming table with the edit distances as Tuple. The first item is the cost
         /// the second item is the list of edit operations 
         /// </summary>
-        private Tuple<int, HashSet<Operation>>[,] _treedists;
+        private Tuple<int, HashSet<Edit>>[,] _treedists;
 
         /// <summary>
         /// Create an object to compute the edit distance given two trees
@@ -112,7 +112,7 @@ namespace Tutor
        /// </summary>
        /// <returns>Returns a tuple. The first item is the cost. The second item is the 
        /// sequence of edit operations</returns>
-        public Tuple<int, HashSet<Operation>>  Compute()
+        public Tuple<int, HashSet<Edit>>  Compute()
         {
             GenerateNodes(PreviousTree, CurrentTree);
             _l1 = ComputeL(T1, A);
@@ -120,9 +120,9 @@ namespace Tutor
             _k1 = ComputeK(T1, _l1);
             _k2 = ComputeK(T2, _l2);
 
-            _treedists = new Tuple<int, HashSet<Operation>>[T1.Length + 1, T2.Length + 1];
+            _treedists = new Tuple<int, HashSet<Edit>>[T1.Length + 1, T2.Length + 1];
 
-            _treedists[0, 0] = Tuple.Create(0,new HashSet<Operation>());
+            _treedists[0, 0] = Tuple.Create(0,new HashSet<Edit>());
                  
             foreach (var x in _k1)
             {
@@ -140,14 +140,14 @@ namespace Tutor
             var m = i - _l1[i] + 2;
             var n = j - _l2[j] + 2;
 
-            var fd = new Tuple<int, HashSet<Operation>>[m, n];
-            fd[0, 0] = Tuple.Create(0, new HashSet<Operation>());
+            var fd = new Tuple<int, HashSet<Edit>>[m, n];
+            fd[0, 0] = Tuple.Create(0, new HashSet<Edit>());
             var ioff = _l1[i] - 1;
             var joff = _l2[j] - 1;
 
             for (int x = 1; x < m; x++)
             {
-                var edits = new HashSet<Operation>(fd[x - 1, 0].Item2);
+                var edits = new HashSet<Edit>(fd[x - 1, 0].Item2);
                 var pythonNode = A[x +ioff -1];
                 edits.Add(new Delete(pythonNode, pythonNode.Parent));
                 fd[x, 0] = Tuple.Create(fd[x - 1, 0].Item1 + 1, edits); 
@@ -155,7 +155,7 @@ namespace Tutor
             for (int y = 1; y < n; y++)
             {
                 var node = B[y - 1 + joff];
-                var edits = new HashSet<Operation>(fd[0, y - 1].Item2);
+                var edits = new HashSet<Edit>(fd[0, y - 1].Item2);
                 edits.Add(new Insert(node, node.Parent));
                 fd[0, y] = Tuple.Create(fd[0, y - 1].Item1 + 1, edits);
             }
@@ -168,21 +168,21 @@ namespace Tutor
                     {
                         var value = Math.Min(Math.Min(fd[x - 1, y].Item1 + 1, //cost to remove is 1
                             fd[x, y - 1].Item1 + 1), //cost to insert is 1
-                            fd[x-1,y-1].Item1 + CostUpdate(A[x+ioff-1], B[y+joff-1])); //cost to Operation depends
+                            fd[x-1,y-1].Item1 + CostUpdate(A[x+ioff-1], B[y+joff-1])); //cost to Edit depends
 
-                        HashSet<Operation> edits;
+                        HashSet<Edit> edits;
                         if (value == fd[x - 1, y].Item1 + 1)
                         {
                             var node = A[x - 1 + ioff];
-                            edits = new HashSet<Operation>(fd[x - 1, y].Item2) {new Delete(node, node.Parent)};
+                            edits = new HashSet<Edit>(fd[x - 1, y].Item2) {new Delete(node, node.Parent)};
                         } else if (value == fd[x, y - 1].Item1 + 1)
                         {
                             var node = B[y - 1 + joff];
-                            edits = new HashSet<Operation>(fd[x, y - 1].Item2) { new Insert(node, node.Parent) };
+                            edits = new HashSet<Edit>(fd[x, y - 1].Item2) { new Insert(node, node.Parent) };
                         }
                         else
                         {
-                            edits = new HashSet<Operation>(fd[x - 1, y - 1].Item2); 
+                            edits = new HashSet<Edit>(fd[x - 1, y - 1].Item2); 
                             if (CostUpdate(A[x + ioff - 1], B[y + joff - 1]) > 0)
                             {
                                 var oldNode = A[x + ioff - 1];
@@ -202,21 +202,21 @@ namespace Tutor
                         var value = Math.Min(fd[p, q].Item1 + _treedists[x + ioff, y + joff].Item1, 
                                 Math.Min(fd[x - 1, y].Item1 + 1, fd[x, y - 1].Item1 + 1));
 
-                        HashSet<Operation> edits;
+                        HashSet<Edit> edits;
                         if (value == fd[p, q].Item1 + _treedists[x + ioff, y + joff].Item1)
                         {
-                            edits = new HashSet<Operation>(fd[p, q].Item2);
+                            edits = new HashSet<Edit>(fd[p, q].Item2);
                             edits.UnionWith(_treedists[x + ioff, y + joff].Item2);
                         }
                         else if (value == fd[x - 1, y].Item1 + 1)
                         {
-                            edits = new HashSet<Operation>(fd[x - 1, y].Item2);
+                            edits = new HashSet<Edit>(fd[x - 1, y].Item2);
                             var pythonNode = A[x - 1 + ioff];
                             edits.Add(new Delete(pythonNode, pythonNode.Parent));
                         }
                         else
                         {
-                            edits = new HashSet<Operation>(fd[x, y - 1].Item2);
+                            edits = new HashSet<Edit>(fd[x, y - 1].Item2);
                             var pythonNode = B[y - 1 + joff];
                             edits.Add(new Insert(pythonNode, pythonNode.Parent));
                         }

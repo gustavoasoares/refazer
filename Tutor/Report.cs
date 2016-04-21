@@ -197,7 +197,7 @@
 //                        select item;
 
 //            var table = new StringBuilder();
-//            table.Append("Operation, Size, MultipleQuestions, MultipleTestCases");
+//            table.Append("Edit, Size, MultipleQuestions, MultipleTestCases");
 //            var log = new StringBuilder();
 //            var counter = 1;
 //            foreach (var cluster in items)
