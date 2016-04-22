@@ -216,6 +216,7 @@
     <Compile Include="NodeWrapper.cs" />
     <Compile Include="Edit.cs" />
     <Compile Include="EditsLearner.cs" />
+    <Compile Include="Patch.cs" />
     <Compile Include="PythonNode.cs" />
     <Compile Include="RankingScore.cs" />
     <Compile Include="RegexUtils.cs" />

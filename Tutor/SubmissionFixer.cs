@@ -18,11 +18,14 @@ namespace Tutor
     {
         public List<IEnumerable<ProgramNode>> ProsePrograms { get; }
 
+        public HashSet<ProgramNode> UsedPrograms { get;  } 
+
         private Result<Grammar> _grammar = DSLCompiler.LoadGrammarFromFile(@"C:\Users\Gustavo\git\Tutor\Tutor\Transformation.grammar");
 
         public SubmissionFixer()
         {
             ProsePrograms = new List<IEnumerable<ProgramNode>>();
+            UsedPrograms = new HashSet<ProgramNode>();
         }
         public bool Fix(string program, string programAfter, Dictionary<string, int> tests)
         {
@@ -43,8 +46,8 @@ namespace Tutor
             foreach (var proseProgram in ProsePrograms)
             {
                 if (TryFix(tests, proseProgram.First(), input, unparser)) return true;
-                //if (TryFix(tests, proseProgram.ToList()[1], input, unparser)) return true;
-                //if (TryFix(tests, proseProgram.ToList()[2], input, unparser)) return true;
+                if (TryFix(tests, proseProgram.ElementAt(1), input, unparser)) return true;
+                if (TryFix(tests, proseProgram.ElementAt(2), input, unparser)) return true;
             }
 
             //learn a new program
@@ -58,8 +61,13 @@ namespace Tutor
             return false;
         }
 
-        private static bool TryFix(Dictionary<string, int> tests, ProgramNode current, State input, Unparser unparser)
+        private bool TryFix(Dictionary<string, int> tests, ProgramNode current, State input, Unparser unparser)
         {
+            Console.Out.WriteLine("===================");
+            Console.Out.WriteLine("TRY:");
+            Console.Out.WriteLine(current);
+            Console.Out.WriteLine("===================");
+
             var output = current.Invoke(input);
             if (output != null)
             {
@@ -89,7 +97,11 @@ namespace Tutor
                             isFixed = false;
                         }
                     }
-                    if (isFixed) return true;
+                    if (isFixed)
+                    {
+                        UsedPrograms.Add(current);
+                        return true;
+                    }
                 }
             }
             return false;

@@ -10,44 +10,49 @@ namespace Tutor.Transformation
     public static class Semantics
     {
 
-        public static IEnumerable<PythonAst> Apply(PythonNode ast, IEnumerable<PythonAst> patch)
+        public static IEnumerable<PythonAst> Apply(PythonNode ast, Patch patch)
         {
+            var inputs = new List<PythonAst>() {(PythonAst) ast.InnerNode};
+            for (var i = 0; i < patch.EditSets.Count; i++)
+            {
+                var newInputs = new List<PythonAst>();
+                var editSet = patch.EditSets[i];
+
+                foreach (var input in inputs)
+                {
+                    var newAsts = editSet.Select(e => e.Run(input) as PythonAst);
+                    newInputs.AddRange(newAsts);
+                }
+                inputs = newInputs;
+            }
+            return inputs;
+        }
+
+        public static Patch Patch(IEnumerable<Edit> editSet)
+        {
+            var patch = new Patch(editSet);
             return patch;
         }
 
-        public static IEnumerable<Edit> Single(Edit edit)
+        public static Patch ConcatPatch(IEnumerable<Edit> editSet, Patch patch)
         {
-            var result = new List<Edit>();
-            if (edit != null) result.Add(edit);
-            return result;
+            patch.EditSets.Add(editSet);
+            return patch;
         }
 
-        public static IEnumerable<Edit> Edits(Edit edit, IEnumerable<Edit> edits)
-        {
-            var result = new List<Edit>();
-            if (edit != null && edits != null)
-            {
-                result.Add(edit);
-                result.AddRange(edits);
-            }
-            return result;
-        }
-
-        public static PythonAst Update(PythonNode ast, PythonNode before, Node after)
+        public static Edit Update(PythonNode before, Node after)
         {
             var wrappedAfter = new PythonNode(after, false);
-            var update = new Update(wrappedAfter, before);
-            var newAst = update.Run(ast.InnerNode);
-            return (PythonAst) newAst;
+            var update = new Update(wrappedAfter, before);            
+            return update;
         }
 
-        public static Edit Insert(Node parent, Node newNode, int index)
+        public static Edit Insert(PythonNode parent, Node newNode, int index)
         {
-            var wrappedParent = new PythonNode(parent, false);
             var wrappedNewNode = new PythonNode(newNode, false);
 
-            var update = new Insert(wrappedNewNode, wrappedParent, index);
-            return update;
+            var insert = new Insert(wrappedNewNode, parent, index);
+            return insert;
         }
 
         public static Node LeafConstNode(NodeInfo info)

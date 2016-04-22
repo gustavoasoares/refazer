@@ -131,6 +131,14 @@ namespace Tutor
                 }
                 return Tuple.Create<bool, Node>(true, matchResult);
             }
+            if (node is PythonAst)
+            {
+                var convertedNode = (PythonAst) node;
+                var result = Children[0].Match(convertedNode.Body);
+                if (!result.Item1)
+                    return Tuple.Create<bool, Node>(false, null);
+                matchResult = AddMatchResult(matchResult, result.Item2);
+            }
             if (node is SuiteStatement)
             {
                 var convertedNode = node as SuiteStatement;
@@ -311,6 +319,13 @@ namespace Tutor
             if (InnerNode is AssignmentStatement)
             {
                 var comparedNode = node as AssignmentStatement;
+                if (comparedNode == null) return false;
+                return true;
+            }
+
+            if (InnerNode is PythonAst)
+            {
+                var comparedNode = node as PythonAst;
                 if (comparedNode == null) return false;
                 return true;
             }
@@ -549,7 +564,7 @@ namespace Tutor
 
         public bool Contains(PythonNode node)
         {
-            if (Equals(node))
+            if (Match(node.InnerNode).Item1)
                 return true;
             foreach (var child in Children)
             {

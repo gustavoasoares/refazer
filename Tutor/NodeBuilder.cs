@@ -44,11 +44,29 @@ namespace Tutor
                     return (info.NodeValue == null) ? new Arg(expression) :
                         new Arg(info.NodeType, expression);
                 case "BinaryExpression":
-
                     var left = (Expression)Children[0];
                     var right = (Expression)Children[1];
                     PythonOperator op = info.NodeValue;
                     return new BinaryExpression(op, left, right);
+                case "SuiteStatement":
+                    var statements = Children.Select(e => (Statement) e);
+                    return new SuiteStatement(statements.ToArray());
+                case "IfStatement":
+                    if (Children.Last() is IfStatementTest)
+                    {
+                        return new IfStatement(Children.Select(e => (IfStatementTest) e).ToArray(), null);
+                    }
+                    var tests = Children.GetRange(0, Children.Count - 1).Select(e => (IfStatementTest) e);
+                    var elseStmt = Children.Last();
+                    return new IfStatement(tests.ToArray(), (Statement) elseStmt);
+                case "IfStatementTest":
+                    return new IfStatementTest((Expression) Children[0],(Statement) Children[1]);
+                case "AssignmentStatement":
+                    IEnumerable<Expression> leftAssign = Children.GetRange(0, Children.Count - 1).Select(e => (Expression) e);
+                    return new AssignmentStatement(leftAssign.ToArray(), (Expression) Children.Last());
+                case "TupleExpression":
+                    IEnumerable<Expression> expressions = Children.Select(e => (Expression) e);
+                    return new TupleExpression(info.NodeValue, expressions.ToArray());
                 default:
                     throw new NotImplementedException(info.NodeType);
             }

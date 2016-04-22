@@ -10,7 +10,7 @@ namespace Tutor
     public abstract class Edit
     {
         public PythonNode NewNode { get; }
-        public PythonNode Target { get; }
+        public PythonNode Target { get; set; }
 
         public Node Context { get; protected set; }
 

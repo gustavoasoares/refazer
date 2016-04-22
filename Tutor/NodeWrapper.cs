@@ -29,9 +29,16 @@ namespace Tutor
             if (stmt is ForStatement) return Wrap(stmt as ForStatement, parent);
             if (stmt is WhileStatement) return Wrap(stmt as WhileStatement, parent);
             if (stmt is ExpressionStatement) return Wrap(stmt as ExpressionStatement, parent);
+            if (stmt is ImportStatement) return Wrap(stmt as ImportStatement, parent);
             throw new NotImplementedException(stmt.NodeName);
         }
 
+
+        private static PythonNode Wrap(ImportStatement stmt, PythonNode parent)
+        {
+            var result = new PythonNode(stmt, false) { Parent = parent };
+            return result;
+        }
         private static PythonNode Wrap(ExpressionStatement stmt, PythonNode parent)
         {
             var result = new PythonNode(stmt, false) { Parent = parent };
@@ -131,9 +138,16 @@ namespace Tutor
             if (exp is CallExpression) return Wrap(exp as CallExpression, parent);
             if (exp is TupleExpression) return Wrap(exp as TupleExpression, parent);
             if (exp is ParenthesisExpression) return Wrap((ParenthesisExpression) exp, parent);
+            if (exp is MemberExpression) return Wrap((MemberExpression)exp, parent);
             throw  new NotImplementedException();
         }
 
+        private static PythonNode Wrap(MemberExpression exp, PythonNode parent)
+        {
+            var result = new PythonNode(exp, false) { Parent = parent };
+            //todo add target child
+            return result;
+        }
 
         private static PythonNode Wrap(ParenthesisExpression exp, PythonNode parent)
         {

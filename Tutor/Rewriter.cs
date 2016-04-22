@@ -115,9 +115,11 @@ namespace Tutor
             {
                 switch (_edit.Index)
                 {
-                    case 3:
-                        exp.Args.Insert(0, (Arg)_edit.NewNode.InnerNode);
-                        return new CallExpression(exp.Target, exp.Args.ToArray());
+                    case 1:
+                        var args = new List<Arg>();
+                        args.Add((Arg)_edit.NewNode.InnerNode);
+                        args.AddRange(exp.Args);
+                        return new CallExpression(exp.Target, args.ToArray());
                     default:
                         throw new NotImplementedException();
                 }
@@ -129,7 +131,10 @@ namespace Tutor
 
         private Arg VisitArg(Arg arg)
         {
-            if (_edit.CanApply(arg)) return _edit.Apply(arg) as Arg;
+            if (_edit.CanApply(arg))
+            {
+                return new Arg(arg.Name, (IronPython.Compiler.Ast.Expression) _edit.NewNode.InnerNode);
+            }
             return new Arg(arg.Name, VisitExpression(arg.Expression));
         }
 
@@ -180,7 +185,17 @@ namespace Tutor
 
         private Node VisitStatement(WhileStatement stmt)
         {
-            if (_edit.CanApply(stmt)) return _edit.Apply(stmt);
+            if (_edit.CanApply(stmt))
+            {
+                switch (_edit.Index)
+                {
+                    case 1:
+                        return new WhileStatement(stmt.Test, (Statement) _edit.NewNode.InnerNode, stmt.ElseStatement);
+                    default:
+                        throw new NotImplementedException();
+
+                }
+            }
 
             return new WhileStatement(VisitExpression(stmt.Test), VisitStatement(stmt.Body), VisitStatement(stmt.ElseStatement));
         }
@@ -195,7 +210,10 @@ namespace Tutor
 
         private Node VisitStatement(ReturnStatement stmt)
         {
-            if (_edit.CanApply(stmt)) return _edit.Apply(stmt);
+            if (_edit.CanApply(stmt))
+            {
+                return new ReturnStatement((IronPython.Compiler.Ast.Expression)_edit.NewNode.InnerNode);
+            }
             return new ReturnStatement(VisitExpression(stmt.Expression));
         }
 

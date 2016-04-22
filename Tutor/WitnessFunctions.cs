@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
+using IronPython.Modules;
 using Microsoft.ProgramSynthesis;
 using Microsoft.ProgramSynthesis.Extraction.Text.Semantics;
 using Microsoft.ProgramSynthesis.Learning;
@@ -15,10 +16,10 @@ namespace Tutor.Transformation
     public static class WitnessFunctions
     {
         [WitnessFunction("Apply", 1)]
-        public static SubsequenceSpec WitnessPatch(GrammarRule rule, int parameter,
+        public static ExampleSpec WitnessPatch(GrammarRule rule, int parameter,
                                                  ExampleSpec spec)
         {
-            var examples = new Dictionary<State, IEnumerable<object>>();
+            var examples = new Dictionary<State, object>();
             foreach (State input in spec.ProvidedInputs)
             {
                 var before = (PythonNode)input[rule.Body[0]];
@@ -27,16 +28,73 @@ namespace Tutor.Transformation
                 var zss = new PythonZss(before, after);
                 var editDistance = zss.Compute();
                 var newList = new List<Edit>();
-                foreach (var edit in editDistance.Item2)
+                foreach (var edit in editDistance.Edits)
                 {
-                    if (before.Contains(edit.Target))
+                    bool isNew = true;
+                    foreach (var edit1 in editDistance.Edits)
+                    {
+                        if (edit.Target.Equals(edit1.NewNode))
+                            isNew = false;
+                    }
+                    if (isNew)
+                    {
+                        if (edit is Insert)
+                            edit.Target = editDistance.Mapping[edit.Target];
                         newList.Add(edit);
-
+                    }
                 }
                 examples[input] = newList;
             }
+            return new ExampleSpec(examples);
+        }
+
+        [WitnessFunction("Patch", 0)]
+        public static SubsequenceSpec WitnessSingleEditSet(GrammarRule rule, int parameter,
+            ExampleSpec spec)
+        {
+            var examples = new Dictionary<State, IEnumerable<object>>();
+            foreach (var input in spec.ProvidedInputs)
+            {
+                var edits = spec.Examples[input] as IEnumerable<Edit>;
+                if (edits == null || edits.Count() > 1)
+                    return null;
+                examples[input] = new List<Edit>() {edits.First()};
+            }
             return new SubsequenceSpec(examples);
         }
+
+        [WitnessFunction("ConcatPatch", 0)]
+        public static SubsequenceSpec WitnessHeadPatch(GrammarRule rule, int parameter,
+            ExampleSpec spec)
+        {
+            var examples = new Dictionary<State, IEnumerable<object>>();
+            foreach (var input in spec.ProvidedInputs)
+            {
+                var edits = spec.Examples[input] as IEnumerable<Edit>;
+                if (edits == null || edits.Count() < 2)
+                    return null;
+                examples[input] = new List<Edit>() { edits.First() };
+            }
+            return new SubsequenceSpec(examples);
+        }
+
+        [WitnessFunction("ConcatPatch", 1)]
+        public static ExampleSpec WitnessTailPatch(GrammarRule rule, int parameter,
+            ExampleSpec spec)
+        {
+            var examples = new Dictionary<State, object>();
+            foreach (var input in spec.ProvidedInputs)
+            {
+                var edits = spec.Examples[input] as IEnumerable<Edit>;
+                if (edits == null || edits.Count() < 2)
+                    return null;
+                var tail = new List<Edit>(edits);
+                tail.RemoveAt(0);
+                examples[input] = tail;
+            }
+            return new ExampleSpec(examples);
+        }
+
 
         [WitnessFunction("EditMap", 1)]
         public static SubsequenceSpec WitnessSelectedNodes(GrammarRule rule, int parameter,
@@ -77,6 +135,7 @@ namespace Tutor.Transformation
                 var t4 = selectedNode.GetAbstractCopy();
                 templateTrees.Add(t4);
                 examples[input] = templateTrees;
+                selectedNode.EditId = 0;
             }
             return DisjunctiveExamplesSpec.From(examples);
         }
@@ -135,39 +194,33 @@ namespace Tutor.Transformation
             return new ExampleSpec(editExamples);
         }
 
-        [WitnessFunction("Update", 2)]
+        [WitnessFunction("Update", 1)]
         public static DisjunctiveExamplesSpec WitnessN2(GrammarRule rule, int parameter, ExampleSpec spec)
         {
             var contextExamples = new Dictionary<State, object>();
             foreach (State input in spec.ProvidedInputs)
             {
                 var operation = spec.Examples[input] as Update;
+                if (operation == null)
+                    return null;
                 contextExamples[input] = operation.NewNode;
             }
             return new ExampleSpec(contextExamples);
         }
 
-        [WitnessFunction("Insert", 0)]
-        public static ExampleSpec WitnessInsertR(GrammarRule rule, int parameter, ExampleSpec spec)
+        [WitnessFunction("Insert", 1)]
+        public static DisjunctiveExamplesSpec WitnessInsertN(GrammarRule rule, int parameter, ExampleSpec spec)
         {
             var contextExamples = new Dictionary<State, object>();
             foreach (State input in spec.ProvidedInputs)
             {
                 var operation = spec.Examples[input] as Insert;
                 if (operation == null)
-                {
-                    var operationList = (IEnumerable<Edit>)spec.Examples[input];
-                    if (operationList.Count() > 1)
-                        return null;
-                    operation = operationList.First() as Insert;
-                    if (operation == null)
-                        return null;
-                }
-                contextExamples[input] = operation.Target;
+                    return null;
+                contextExamples[input] = operation.NewNode;
             }
             return new ExampleSpec(contextExamples);
         }
-
 
         [WitnessFunction("Insert", 2)]
         public static ExampleSpec WitnessInsertK(GrammarRule rule, int parameter, ExampleSpec spec)
@@ -177,14 +230,7 @@ namespace Tutor.Transformation
             {
                 var operation = spec.Examples[input] as Insert;
                 if (operation == null)
-                {
-                    var operationList = (IEnumerable<Edit>)spec.Examples[input];
-                    if (operationList.Count() > 1)
-                        return null;
-                    operation = operationList.First() as Insert;
-                    if (operation == null)
-                        return null;
-                }
+                    return null;
                 contextExamples[input] = operation.NewNode.Parent.Children.IndexOf(operation.NewNode);
             }
             return new ExampleSpec(contextExamples);

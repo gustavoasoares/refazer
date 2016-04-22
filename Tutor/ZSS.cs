@@ -1,7 +1,9 @@
 ﻿using System;
 using System.CodeDom;
 using System.Collections.Generic;
+using System.Data;
 using System.Linq;
+using CsQuery.ExtensionMethods.Internal;
 using IronPython.Compiler.Ast;
 
 namespace Tutor
@@ -38,7 +40,8 @@ namespace Tutor
         /// dynamic programming table with the edit distances as Tuple. The first item is the cost
         /// the second item is the list of edit operations 
         /// </summary>
-        private Tuple<int, HashSet<Edit>>[,] _treedists;
+        private EditDistance[,] _treedists;
+
 
         /// <summary>
         /// Create an object to compute the edit distance given two trees
@@ -112,7 +115,7 @@ namespace Tutor
        /// </summary>
        /// <returns>Returns a tuple. The first item is the cost. The second item is the 
        /// sequence of edit operations</returns>
-        public Tuple<int, HashSet<Edit>>  Compute()
+        public EditDistance  Compute()
         {
             GenerateNodes(PreviousTree, CurrentTree);
             _l1 = ComputeL(T1, A);
@@ -120,9 +123,9 @@ namespace Tutor
             _k1 = ComputeK(T1, _l1);
             _k2 = ComputeK(T2, _l2);
 
-            _treedists = new Tuple<int, HashSet<Edit>>[T1.Length + 1, T2.Length + 1];
+            _treedists = new EditDistance[T1.Length + 1, T2.Length + 1];
 
-            _treedists[0, 0] = Tuple.Create(0,new HashSet<Edit>());
+            _treedists[0, 0] = new EditDistance() {Distance = 0};
                  
             foreach (var x in _k1)
             {
@@ -140,24 +143,24 @@ namespace Tutor
             var m = i - _l1[i] + 2;
             var n = j - _l2[j] + 2;
 
-            var fd = new Tuple<int, HashSet<Edit>>[m, n];
-            fd[0, 0] = Tuple.Create(0, new HashSet<Edit>());
+            var fd = new EditDistance[m, n];
+            fd[0, 0] = new EditDistance() {Distance = 0};
             var ioff = _l1[i] - 1;
             var joff = _l2[j] - 1;
 
             for (int x = 1; x < m; x++)
             {
-                var edits = new HashSet<Edit>(fd[x - 1, 0].Item2);
+                var edits = new HashSet<Edit>(fd[x - 1, 0].Edits);
                 var pythonNode = A[x +ioff -1];
                 edits.Add(new Delete(pythonNode, pythonNode.Parent));
-                fd[x, 0] = Tuple.Create(fd[x - 1, 0].Item1 + 1, edits); 
+                fd[x, 0] =  new EditDistance() {Distance = fd[x - 1, 0].Distance+ 1 , Edits = edits, Mapping = fd[x - 1, 0].Mapping}; 
             }
             for (int y = 1; y < n; y++)
             {
                 var node = B[y - 1 + joff];
-                var edits = new HashSet<Edit>(fd[0, y - 1].Item2);
+                var edits = new HashSet<Edit>(fd[0, y - 1].Edits);
                 edits.Add(new Insert(node, node.Parent));
-                fd[0, y] = Tuple.Create(fd[0, y - 1].Item1 + 1, edits);
+                fd[0, y] = new EditDistance() { Distance = fd[0, y - 1].Distance + 1, Edits = edits, Mapping = fd[0, y - 1].Mapping};
             }
 
             for (int x = 1; x < m; x++)
@@ -166,32 +169,52 @@ namespace Tutor
                 {
                     if (_l1[i] == _l1[x + ioff] && _l2[j] == _l2[y + joff])
                     {
-                        var value = Math.Min(Math.Min(fd[x - 1, y].Item1 + 1, //cost to remove is 1
-                            fd[x, y - 1].Item1 + 1), //cost to insert is 1
-                            fd[x-1,y-1].Item1 + CostUpdate(A[x+ioff-1], B[y+joff-1])); //cost to Edit depends
+                        var value = Math.Min(Math.Min(fd[x - 1, y].Distance + 1, //cost to remove is 1
+                            fd[x, y - 1].Distance + 1), //cost to insert is 1
+                            fd[x-1,y-1].Distance + CostUpdate(A[x+ioff-1], B[y+joff-1])); //cost to Edit depends
 
                         HashSet<Edit> edits;
-                        if (value == fd[x - 1, y].Item1 + 1)
+                        Dictionary<PythonNode, PythonNode> mapping;
+                        if (value == fd[x - 1, y].Distance + 1)
                         {
                             var node = A[x - 1 + ioff];
-                            edits = new HashSet<Edit>(fd[x - 1, y].Item2) {new Delete(node, node.Parent)};
-                        } else if (value == fd[x, y - 1].Item1 + 1)
+                            edits = new HashSet<Edit>(fd[x - 1, y].Edits) {new Delete(node, node.Parent)};
+                            mapping = fd[x - 1, y].Mapping;
+                            //if (CostUpdate(A[x + ioff - 1], B[y + joff - 1]) == 0)
+                            //{
+                            //    mapping.Add(B[y + joff - 1], A[x + ioff - 1]);
+                            //}
+                        } else if (value == fd[x, y - 1].Distance + 1)
                         {
                             var node = B[y - 1 + joff];
-                            edits = new HashSet<Edit>(fd[x, y - 1].Item2) { new Insert(node, node.Parent) };
+                            edits = new HashSet<Edit>(fd[x, y - 1].Edits) { new Insert(node, node.Parent) };
+                            mapping = fd[x, y - 1].Mapping;
+                            //if (CostUpdate(A[x + ioff - 1], B[y + joff - 1]) == 0)
+                            //{
+                            //    mapping.Add(B[y + joff - 1], A[x + ioff - 1]);
+                            //}
                         }
                         else
                         {
-                            edits = new HashSet<Edit>(fd[x - 1, y - 1].Item2); 
+                            edits = new HashSet<Edit>(fd[x - 1, y - 1].Edits);
+                            mapping = fd[x - 1, y - 1].Mapping;
                             if (CostUpdate(A[x + ioff - 1], B[y + joff - 1]) > 0)
                             {
                                 var oldNode = A[x + ioff - 1];
                                 var newNode = B[y + joff - 1];
                                 edits.Add(new Update(newNode, oldNode));
                             }
+                            else
+                            {
+                                var pythonNode = B[y + joff - 1];
+                                var node = A[x + ioff - 1];
+                                if (mapping.ContainsKey(pythonNode))
+                                    mapping.Remove(pythonNode);
+                                mapping.Add(pythonNode, node);
+                            }
                         }
 
-                        fd[x, y] = Tuple.Create(value, edits);
+                        fd[x, y] = new EditDistance() {Distance = value, Edits = edits, Mapping = mapping};
                         _treedists[x + ioff, y + joff] = fd[x, y];
                     }
                     else
@@ -199,28 +222,38 @@ namespace Tutor
                         var p = _l1[x + ioff] - 1 - ioff;
                         var q = _l2[y + joff] - 1 - joff;
 
-                        var value = Math.Min(fd[p, q].Item1 + _treedists[x + ioff, y + joff].Item1, 
-                                Math.Min(fd[x - 1, y].Item1 + 1, fd[x, y - 1].Item1 + 1));
+                        var value = Math.Min(fd[p, q].Distance + _treedists[x + ioff, y + joff].Distance, 
+                                Math.Min(fd[x - 1, y].Distance + 1, fd[x, y - 1].Distance + 1));
 
                         HashSet<Edit> edits;
-                        if (value == fd[p, q].Item1 + _treedists[x + ioff, y + joff].Item1)
+                        Dictionary<PythonNode, PythonNode> mapping; 
+                        if (value == fd[p, q].Distance + _treedists[x + ioff, y + joff].Distance)
                         {
-                            edits = new HashSet<Edit>(fd[p, q].Item2);
-                            edits.UnionWith(_treedists[x + ioff, y + joff].Item2);
+                            edits = new HashSet<Edit>(fd[p, q].Edits);
+                            edits.UnionWith(_treedists[x + ioff, y + joff].Edits);
+                            mapping = fd[p, q].Mapping;
+                            foreach (var keyValuePair in _treedists[x + ioff, y + joff].Mapping)
+                            {
+                                if (!mapping.ContainsKey(keyValuePair.Key))
+                                    mapping.Add(keyValuePair.Key,keyValuePair.Value);
+                            }
                         }
-                        else if (value == fd[x - 1, y].Item1 + 1)
+                        else if (value == fd[x - 1, y].Distance + 1)
                         {
-                            edits = new HashSet<Edit>(fd[x - 1, y].Item2);
+                            edits = new HashSet<Edit>(fd[x - 1, y].Edits);
                             var pythonNode = A[x - 1 + ioff];
                             edits.Add(new Delete(pythonNode, pythonNode.Parent));
+                            mapping = fd[x - 1, y].Mapping;
                         }
                         else
                         {
-                            edits = new HashSet<Edit>(fd[x, y - 1].Item2);
+                            edits = new HashSet<Edit>(fd[x, y - 1].Edits);
                             var pythonNode = B[y - 1 + joff];
                             edits.Add(new Insert(pythonNode, pythonNode.Parent));
+                            mapping = fd[x, y - 1].Mapping;
                         }
-                        fd[x, y] = Tuple.Create(value, edits);
+
+                        fd[x, y] = new EditDistance() {Distance = value, Edits = edits, Mapping = mapping};
                     }
                 }
             }
@@ -229,6 +262,21 @@ namespace Tutor
         private int CostUpdate(PythonNode zssNode, PythonNode node1)
         {
             return (zssNode.Similar(node1)) ? 0 : 1;
+        }
+    }
+
+    public class EditDistance
+    {
+        public HashSet<Edit> Edits { get; set; }
+
+        public int Distance { get; set; }
+
+        public Dictionary<PythonNode, PythonNode> Mapping { get; set; } 
+
+        public EditDistance()
+        {
+            Edits = new HashSet<Edit>();
+            Mapping = new Dictionary<PythonNode, PythonNode>();
         }
     }
 

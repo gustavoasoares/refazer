@@ -10,15 +10,17 @@ using learners Tutor.Transformation.WitnessFunctions;
 
 language Transformation;
 
-@start IEnumerable<PythonAst> program := Apply(ast, patch); 
-IEnumerable<PythonAst> patch := EditMap(edit, selectednodes) = Map(\node : PythonNode => edit, selectednodes);
+@start IEnumerable<PythonAst> transformation := Apply(ast, patch);
+Patch patch := Patch(editSet) | ConcatPatch(editSet, patch);
+IEnumerable<Edit> editSet := EditMap(edit, selectednodes) = Map(\node : PythonNode => edit, selectednodes);
 IEnumerable<PythonNode> selectednodes := Selected(match, nodes) = Filter(\x : PythonNode => match,nodes); 
 bool match := Match(x, template);
-PythonAst edit := let x : PythonNode = node in Update(ast, x, n); 
-Node n := LeafConstNode(info) | ConstNode(info, children) | ReferenceNode(x, template);
+Edit edit := Update(node, n) | Insert(node, n, k);
+Node n := LeafConstNode(info) | ConstNode(info, children) | ReferenceNode(node, template);
 IEnumerable<PythonNode> nodes := InOrderSort(ast);
 IEnumerable<Node> children := SingleChild(n) | Children(n, children);
 
 @input PythonNode ast;
 PythonNode template;
 NodeInfo info; 
+int k;

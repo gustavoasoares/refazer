@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-
+using Microsoft.Scripting;
 using Tutor;
 
 namespace TutorUI
@@ -48,19 +48,23 @@ def identity(x):
                     var after = ASTHelper.ParseContent(mistake.after);
                     var diff = new PythonZss(NodeWrapper.Wrap(before), NodeWrapper.Wrap(after));
                     var changes = diff.Compute();
-                    if (changes.Item1 != 1)
+                    if ((changes.Edits.Any(e => e is Delete)))
                         continue;
-                    //if ((changes.Item2.Any(e => e.Target.InnerNode.NodeName.Equals("literal"))))
-                    //    continue;
-
+                    Console.Out.WriteLine("Diff =====================");
                 }
-                catch (Exception)
+                catch (NotImplementedException)
                 {
+                    //todo implemenent it
                     continue;
                 }
-                
+                catch (SyntaxErrorException)
+                {
+                    //skip input output with syntax error
+                    continue;
+                }
 
-                Console.Out.WriteLine("Diff =====================");
+
+                
                 Console.Out.WriteLine(mistake.diff);
                 Console.Out.WriteLine("Before ===================================");
                 Console.Out.WriteLine(mistake.before);
@@ -79,7 +83,7 @@ def identity(x):
             Console.Out.WriteLine("Fixed: " + count);
             Console.Out.WriteLine("Not Fixed: " + (biggest.Count - count));
             Console.Out.WriteLine("Program sets: " + (fixer.ProsePrograms.Count));
-            fixer.ProsePrograms.ForEach(e => Console.Out.WriteLine(e.First()));
+            fixer.UsedPrograms.ForEach(e => Console.Out.WriteLine(e));
             Console.ReadKey();
         }
 
