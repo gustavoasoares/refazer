@@ -51,6 +51,15 @@ namespace Tutor
                 case "SuiteStatement":
                     var statements = Children.Select(e => (Statement) e);
                     return new SuiteStatement(statements.ToArray());
+                case "WhileStatement":
+                    var test = (Expression) Children[0];
+                    var body = (Statement) Children[1];
+                    Statement else_ = (Children.Count == 3) ? (Statement) Children[2] : null; 
+                    return new WhileStatement(test, body, else_);
+                case "ReturnStatement":
+                    return new ReturnStatement((Expression) Children[0]);
+                case "ExpressionStatement":
+                    return new ReturnStatement((Expression)Children[0]);
                 case "IfStatement":
                     if (Children.Last() is IfStatementTest)
                     {

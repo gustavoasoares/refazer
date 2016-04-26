@@ -150,7 +150,7 @@ namespace Tutor
 
             for (int x = 1; x < m; x++)
             {
-                var edits = new HashSet<Edit>(fd[x - 1, 0].Edits);
+                var edits = new List<Edit>(fd[x - 1, 0].Edits);
                 var pythonNode = A[x +ioff -1];
                 edits.Add(new Delete(pythonNode, pythonNode.Parent));
                 fd[x, 0] =  new EditDistance() {Distance = fd[x - 1, 0].Distance+ 1 , Edits = edits, Mapping = fd[x - 1, 0].Mapping}; 
@@ -158,7 +158,7 @@ namespace Tutor
             for (int y = 1; y < n; y++)
             {
                 var node = B[y - 1 + joff];
-                var edits = new HashSet<Edit>(fd[0, y - 1].Edits);
+                var edits = new List<Edit>(fd[0, y - 1].Edits);
                 edits.Add(new Insert(node, node.Parent));
                 fd[0, y] = new EditDistance() { Distance = fd[0, y - 1].Distance + 1, Edits = edits, Mapping = fd[0, y - 1].Mapping};
             }
@@ -173,12 +173,12 @@ namespace Tutor
                             fd[x, y - 1].Distance + 1), //cost to insert is 1
                             fd[x-1,y-1].Distance + CostUpdate(A[x+ioff-1], B[y+joff-1])); //cost to Edit depends
 
-                        HashSet<Edit> edits;
+                        List<Edit> edits;
                         Dictionary<PythonNode, PythonNode> mapping;
                         if (value == fd[x - 1, y].Distance + 1)
                         {
                             var node = A[x - 1 + ioff];
-                            edits = new HashSet<Edit>(fd[x - 1, y].Edits) {new Delete(node, node.Parent)};
+                            edits = new List<Edit>(fd[x - 1, y].Edits) {new Delete(node, node.Parent)};
                             mapping = fd[x - 1, y].Mapping;
                             //if (CostUpdate(A[x + ioff - 1], B[y + joff - 1]) == 0)
                             //{
@@ -187,7 +187,7 @@ namespace Tutor
                         } else if (value == fd[x, y - 1].Distance + 1)
                         {
                             var node = B[y - 1 + joff];
-                            edits = new HashSet<Edit>(fd[x, y - 1].Edits) { new Insert(node, node.Parent) };
+                            edits = new List<Edit>(fd[x, y - 1].Edits) { new Insert(node, node.Parent) };
                             mapping = fd[x, y - 1].Mapping;
                             //if (CostUpdate(A[x + ioff - 1], B[y + joff - 1]) == 0)
                             //{
@@ -196,7 +196,7 @@ namespace Tutor
                         }
                         else
                         {
-                            edits = new HashSet<Edit>(fd[x - 1, y - 1].Edits);
+                            edits = new List<Edit>(fd[x - 1, y - 1].Edits);
                             mapping = fd[x - 1, y - 1].Mapping;
                             if (CostUpdate(A[x + ioff - 1], B[y + joff - 1]) > 0)
                             {
@@ -225,12 +225,12 @@ namespace Tutor
                         var value = Math.Min(fd[p, q].Distance + _treedists[x + ioff, y + joff].Distance, 
                                 Math.Min(fd[x - 1, y].Distance + 1, fd[x, y - 1].Distance + 1));
 
-                        HashSet<Edit> edits;
+                        List<Edit> edits;
                         Dictionary<PythonNode, PythonNode> mapping; 
                         if (value == fd[p, q].Distance + _treedists[x + ioff, y + joff].Distance)
                         {
-                            edits = new HashSet<Edit>(fd[p, q].Edits);
-                            edits.UnionWith(_treedists[x + ioff, y + joff].Edits);
+                            edits = new List<Edit>(fd[p, q].Edits);
+                            edits.AddRange(_treedists[x + ioff, y + joff].Edits);
                             mapping = fd[p, q].Mapping;
                             foreach (var keyValuePair in _treedists[x + ioff, y + joff].Mapping)
                             {
@@ -240,14 +240,14 @@ namespace Tutor
                         }
                         else if (value == fd[x - 1, y].Distance + 1)
                         {
-                            edits = new HashSet<Edit>(fd[x - 1, y].Edits);
+                            edits = new List<Edit>(fd[x - 1, y].Edits);
                             var pythonNode = A[x - 1 + ioff];
                             edits.Add(new Delete(pythonNode, pythonNode.Parent));
                             mapping = fd[x - 1, y].Mapping;
                         }
                         else
                         {
-                            edits = new HashSet<Edit>(fd[x, y - 1].Edits);
+                            edits = new List<Edit>(fd[x, y - 1].Edits);
                             var pythonNode = B[y - 1 + joff];
                             edits.Add(new Insert(pythonNode, pythonNode.Parent));
                             mapping = fd[x, y - 1].Mapping;
@@ -267,7 +267,7 @@ namespace Tutor
 
     public class EditDistance
     {
-        public HashSet<Edit> Edits { get; set; }
+        public List<Edit> Edits { get; set; }
 
         public int Distance { get; set; }
 
@@ -275,7 +275,7 @@ namespace Tutor
 
         public EditDistance()
         {
-            Edits = new HashSet<Edit>();
+            Edits = new List<Edit>();
             Mapping = new Dictionary<PythonNode, PythonNode>();
         }
     }

@@ -3,21 +3,52 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using IronPython.Compiler.Ast;
 
 namespace Tutor
 {
     public class Patch
     {
-        public List<IEnumerable<Edit>> EditSets { get; }
+        public List<List<Edit>> EditSets { get; }
 
         public Patch()
         {
-            EditSets = new List<IEnumerable<Edit>>();
+            EditSets = new List<List<Edit>>();
         }
 
-        public Patch(IEnumerable<Edit> editSet)
+        public Patch(List<Edit> editSet)
         {
-            EditSets = new List<IEnumerable<Edit>> {editSet};
+            EditSets = new List<List<Edit>> {editSet};
+        }
+
+        public IEnumerable<PythonAst> Run(PythonNode ast)
+        {
+            var results = new List<PythonAst>();
+
+            if (EditSets.Count == 1)
+            {
+                var edits = EditSets.First();
+                foreach (var edit in edits)
+                {
+                    var rewriter = new Rewriter(new List<Edit>() { edit });
+                    var newAst = rewriter.Rewrite(ast.InnerNode);
+                    results.Add((PythonAst)newAst);
+                }
+                return results;
+            }
+            else
+            {
+                var nonEmptySets = EditSets.Where(e => e.Any());
+                List<Edit> firstEdits = nonEmptySets.Select(e => e.First()).ToList();
+                if (firstEdits.Any())
+                {
+                    var rewriter = new Rewriter(firstEdits);
+                    var newAst = rewriter.Rewrite(ast.InnerNode);
+                    results.Add((PythonAst)newAst);
+                    return results;
+                }
+            }
+            return null;
         }
     }
 }

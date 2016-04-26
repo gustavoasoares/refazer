@@ -44,12 +44,19 @@ def identity(x):
             {
                 try
                 {
+                    var unparser = new Unparser();
                     var before = ASTHelper.ParseContent(mistake.before);
+                    var cleanbefore = unparser.Unparse(before);
+                    before = ASTHelper.ParseContent(cleanbefore);
                     var after = ASTHelper.ParseContent(mistake.after);
+                    var cleanAfter = unparser.Unparse(after);
+                    after = ASTHelper.ParseContent(cleanAfter);
                     var diff = new PythonZss(NodeWrapper.Wrap(before), NodeWrapper.Wrap(after));
                     var changes = diff.Compute();
-                    if ((changes.Edits.Any(e => e is Delete)))
-                        continue;
+                    //if (changes.Distance != 1)
+                    //    continue;
+                    //if ((changes.Edits.Any(e => e is Delete)))
+                    //    continue;
                     Console.Out.WriteLine("Diff =====================");
                 }
                 catch (NotImplementedException)

@@ -1,14 +1,12 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel.Design.Serialization;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
-using IronPython.Modules;
 using Microsoft.ProgramSynthesis;
-using Microsoft.ProgramSynthesis.Extraction.Text.Semantics;
 using Microsoft.ProgramSynthesis.Learning;
 using Microsoft.ProgramSynthesis.Rules;
 using Microsoft.ProgramSynthesis.Specifications;
-using Microsoft.ProgramSynthesis.Utils;
 
 namespace Tutor.Transformation
 {
@@ -27,7 +25,13 @@ namespace Tutor.Transformation
 
                 var zss = new PythonZss(before, after);
                 var editDistance = zss.Compute();
-                var newList = new List<Edit>();
+
+                if (editDistance.Distance >= 20)
+                    return null;
+
+                var roots = new List<Edit>();
+                var nonroots = new List<Edit>();
+
                 foreach (var edit in editDistance.Edits)
                 {
                     bool isNew = true;
@@ -36,16 +40,78 @@ namespace Tutor.Transformation
                         if (edit.Target.Equals(edit1.NewNode))
                             isNew = false;
                     }
+
                     if (isNew)
                     {
                         if (edit is Insert)
                             edit.Target = editDistance.Mapping[edit.Target];
-                        newList.Add(edit);
+                        roots.Add(edit);
+                    }
+                    else
+                    {
+                        nonroots.Add(edit);
                     }
                 }
+
+                var newList = new List<Edit>();
+                foreach (var root in roots)
+                {
+                    if (root is Delete)
+                    {
+                        var children = NotDeletedChildren(root.NewNode, nonroots.Where(e => e is Delete));
+                        if (children.Any())
+                        {
+                            if (children.Count == 1)
+                            {
+                                var update = new Update(children.First(), root.NewNode);
+                                newList.Add(update);
+                            }
+                            else
+                            {
+                                //todo fix this hack. The zss algo does not perform the expected diff. 
+                                //See test case TestCompute14 
+                                var update = new Update(children.Last(), root.NewNode);
+                                newList.Add(update);
+                                //throw new NotImplementedException();
+                            }
+                        }
+                        else
+                        {
+                            newList.Add(root);
+                        }
+                    }
+                    else
+                    {
+                       newList.Add(root);
+                    }
+                }
+
+
                 examples[input] = newList;
             }
             return new ExampleSpec(examples);
+        }
+
+        private static List<PythonNode> NotDeletedChildren(PythonNode node, IEnumerable<Edit> edits)
+        {
+            var result = new List<PythonNode>();
+            foreach (var child in node.Children)
+            {
+                var isDeleted = false;
+                foreach (var edit in edits)
+                {
+                    if (edit.NewNode.Equals(child))
+                        isDeleted = true;
+                }
+                if (!isDeleted)
+                    result.Add(child);
+                else
+                {
+                    var childResult = NotDeletedChildren(child, edits);
+                    result.AddRange(childResult);
+                }
+            }
+            return result;
         }
 
         [WitnessFunction("Patch", 0)]
@@ -236,6 +302,20 @@ namespace Tutor.Transformation
             return new ExampleSpec(contextExamples);
         }
 
+        [WitnessFunction("Delete", 1)]
+        public static ExampleSpec WitnessDeleteK(GrammarRule rule, int parameter, ExampleSpec spec)
+        {
+            var contextExamples = new Dictionary<State, object>();
+            foreach (State input in spec.ProvidedInputs)
+            {
+                var operation = spec.Examples[input] as Delete;
+                if (operation == null)
+                    return null;
+                contextExamples[input] = operation.NewNode;
+            }
+            return new ExampleSpec(contextExamples);
+        }
+
 
         [WitnessFunction("LeafConstNode", 0)]
         public static ExampleSpec WitnessInfo(GrammarRule rule, int parameter, ExampleSpec spec)
@@ -300,18 +380,18 @@ namespace Tutor.Transformation
                 if (!ast.Contains(node))
                     return null;
 
-                var t1 = node.Parent.GetCopy();
-                t1.EditId = 1;
-                templateTrees.Add(t1);
-                var t2 = node.Parent.GetAbstractCopy();
-                t2.EditId = 1;
-                templateTrees.Add(t2);
                 var t3 = node.GetCopy();
                 t3.EditId = 1; 
                 templateTrees.Add(t3);
                 var t4 = node.GetAbstractCopy();
                 t4.EditId = 1;
                 templateTrees.Add(t4);
+
+                var t1 = t3.Parent.GetCopy();
+                templateTrees.Add(t1);
+                var t2 = t3.Parent.GetAbstractCopy();
+                templateTrees.Add(t2);
+
                 templateExamples[input] = templateTrees;
             }
             return DisjunctiveExamplesSpec.From(templateExamples);

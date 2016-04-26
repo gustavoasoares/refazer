@@ -260,7 +260,90 @@ namespace Tutor
                 }
                 return Tuple.Create<bool, Node>(true, matchResult);
             }
+            if (node is IfStatementTest)
+            {
+                var convertedNode = (IfStatementTest)node;
+                var result = Children[0].Match(convertedNode.Test);
+                if (!result.Item1)
+                    return Tuple.Create<bool, Node>(false, null);
+                matchResult = AddMatchResult(matchResult, result.Item2);
 
+                result = Children[1].Match(convertedNode.Body);
+                if (!result.Item1)
+                    return Tuple.Create<bool, Node>(false, null);
+                matchResult = AddMatchResult(matchResult, result.Item2);
+                return Tuple.Create<bool, Node>(true, matchResult);
+            }
+
+            if (node is IfStatement)
+            {
+                var convertedNode = (IfStatement)node;
+                if (convertedNode.ElseStatement != null)
+                {
+                    if (Children.Count != convertedNode.Tests.Count + 1)
+                        return Tuple.Create<bool, Node>(false, null);
+                
+                    for (var i = 0; i < Children.Count - 1; i++)
+                    {
+                        var result = Children[i].Match(convertedNode.Tests[i]);
+                        if (!result.Item1)
+                            return Tuple.Create<bool, Node>(false, null);
+                        matchResult = AddMatchResult(matchResult, result.Item2);
+                    }
+                    var result2 = Children.Last().Match(convertedNode.ElseStatement);
+                    if (!result2.Item1)
+                        return Tuple.Create<bool, Node>(false, null);
+                    matchResult = AddMatchResult(matchResult, result2.Item2);
+                    return Tuple.Create<bool, Node>(true, matchResult);
+
+                }
+                else
+                {
+                    if (Children.Count !=  convertedNode.Tests.Count)
+                        return Tuple.Create<bool, Node>(false, null);
+                    for (var i = 1; i < Children.Count; i++)
+                    {
+                        var result = Children[i].Match(convertedNode.Tests[i]);
+                        if (!result.Item1)
+                            return Tuple.Create<bool, Node>(false, null);
+                        matchResult = AddMatchResult(matchResult, result.Item2);
+                    }
+                    return Tuple.Create<bool, Node>(true, matchResult);
+                }
+            }
+
+            if (node is FunctionDefinition)
+            {
+                var convertedNode = (FunctionDefinition)node;
+                var currentChild = 0;
+                if (convertedNode.Decorators != null && convertedNode.Decorators.Any())
+                {
+                    foreach (var decoretor in convertedNode.Decorators)
+                    {
+                        var result = Children[currentChild].Match(decoretor);
+                        if (!result.Item1)
+                            return Tuple.Create<bool, Node>(false, null);
+                        matchResult = AddMatchResult(matchResult, result.Item2);
+                        currentChild++;
+                    }
+                }
+                if (convertedNode.Parameters != null && convertedNode.Parameters.Any())
+                {
+                    foreach (var parameter in convertedNode.Parameters)
+                    {
+                        var result = Children[currentChild].Match(parameter);
+                        if (!result.Item1)
+                            return Tuple.Create<bool, Node>(false, null);
+                        matchResult = AddMatchResult(matchResult, result.Item2);
+                        currentChild++;
+                    }
+                }
+                var result2 = Children[currentChild].Match(convertedNode.Body);
+                if (!result2.Item1)
+                    return Tuple.Create<bool, Node>(false, null);
+                matchResult = AddMatchResult(matchResult, result2.Item2);
+                return Tuple.Create<bool, Node>(true, matchResult);
+            }
             if (node is ForStatement)
             {
                 var convertedNode = (ForStatement)node;
@@ -425,6 +508,20 @@ namespace Tutor
                 if (comparedNode == null) return false;
                 return true;
             }
+            if (InnerNode is IfStatementTest)
+            {
+                var comparedNode = node as IfStatementTest;
+                if (comparedNode == null) return false;
+                return true;
+            }
+
+            if (InnerNode is IfStatement)
+            {
+                var comparedNode = node as IfStatement;
+                if (comparedNode == null) return false;
+                return true;
+            }
+
             if (InnerNode is FunctionDefinition)
             {
                 var comparedNode = node as FunctionDefinition;

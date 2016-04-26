@@ -5,6 +5,7 @@ using System.Text;
 using System.Threading.Tasks;
 using IronPython.Compiler;
 using IronPython.Compiler.Ast;
+using Microsoft.CodeAnalysis.CSharp.Syntax;
 
 namespace Tutor
 {
@@ -16,6 +17,21 @@ namespace Tutor
             result.AddChild(Wrap(ast.Body, result));
             
             return result;
+        }
+
+        public static PythonNode Wrap(Node node)
+        {
+            if (node is Expression)
+                return Wrap((Expression)node, null);
+            if (node is Statement)
+                return Wrap((Statement)node, null);
+            if (node is IfStatementTest)
+                return Wrap((IfStatementTest)node, null);
+            if (node is Arg)
+                return Wrap((Arg)node, null);
+            if (node is Parameter)
+                return Wrap((Parameter)node, null);
+            throw new NotImplementedException();
         }
 
         private static PythonNode Wrap(Statement stmt, PythonNode parent)
@@ -139,9 +155,19 @@ namespace Tutor
             if (exp is TupleExpression) return Wrap(exp as TupleExpression, parent);
             if (exp is ParenthesisExpression) return Wrap((ParenthesisExpression) exp, parent);
             if (exp is MemberExpression) return Wrap((MemberExpression)exp, parent);
+            if (exp is IndexExpression) return Wrap((IndexExpression)exp, parent);
             throw  new NotImplementedException();
         }
 
+        private static PythonNode Wrap(IndexExpression exp, PythonNode parent)
+        {
+            var result = new PythonNode(exp, false) { Parent = parent };
+            if (exp.Index != null)
+                result.AddChild(Wrap(exp.Index, result));
+            if (exp.Target != null)
+                result.AddChild(Wrap(exp.Target, result));
+            return result;
+        }
         private static PythonNode Wrap(MemberExpression exp, PythonNode parent)
         {
             var result = new PythonNode(exp, false) { Parent = parent };
@@ -217,7 +243,6 @@ namespace Tutor
                 var test = stmt.Tests[i];
                 var child = Wrap(test, result);
                 result.AddChild(child);
-                child.AddChild(Wrap(test.Body,child));
             }
             if (stmt.ElseStatement != null)
             {
@@ -230,6 +255,7 @@ namespace Tutor
         {
             var result = new PythonNode(test, false) { Parent = parent };
             result.AddChild(Wrap(test.Test, result));
+            result.AddChild(Wrap(test.Body, result));
             return result;
            
         }

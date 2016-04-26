@@ -26,7 +26,7 @@ namespace Tutor
             this._template = template;
         }
 
-        public bool Run(PythonNode code)
+        public bool Run(PythonNode code, bool exact)
         {
             var targetInfo = _template.FindHeightTarget(0).Item2;
             var root = code; 
@@ -38,31 +38,42 @@ namespace Tutor
                 targetInfo --;
             }
 
-            var checkTemplateWaker = new CheckTemplateWalker(_template);
+            var checkTemplateWaker = new CheckTemplateWalker(_template, exact);
             root.InnerNode.Walk(checkTemplateWaker);
             MatchResult = checkTemplateWaker.MatchResult;
-            return checkTemplateWaker.HasMatch && MatchResult.Equals(code.InnerNode);
+            if (exact)
+                return checkTemplateWaker.HasMatch && MatchResult.Equals(code.InnerNode);
+            return checkTemplateWaker.HasMatch;
+        }
+
+        public bool ExactMatch(PythonNode ast)
+        {
+            return Run(ast, true);
         }
 
         public bool HasMatch(PythonNode ast)
         {
-            return Run(ast);
+            return Run(ast, false);
         }
 
-        
+
+
+
 
         class CheckTemplateWalker : PythonWalker
         {
             private readonly PythonNode _template;
+            private bool _exact;
 
             public Node MatchResult { get; private set; }
 
             public bool HasMatch { get; private set; }
 
-            public CheckTemplateWalker(PythonNode template)
+            public CheckTemplateWalker(PythonNode template, bool exact)
             {
                 HasMatch = false;
                 _template = template;
+                _exact = exact;
             }
 
             public override bool Walk(SuiteStatement node)
@@ -71,6 +82,16 @@ namespace Tutor
             }
 
             public override bool Walk(IfStatement node)
+            {
+                return CheckTemplate(node);
+            }
+
+            public override bool Walk(FunctionDefinition node)
+            {
+                return CheckTemplate(node);
+            }
+
+            public override bool Walk(AugmentedAssignStatement node)
             {
                 return CheckTemplate(node);
             }
@@ -108,6 +129,11 @@ namespace Tutor
                 return CheckTemplate(node);
             }
 
+            public override bool Walk(NameExpression node)
+            {
+                return CheckTemplate(node);
+            }
+
             public override bool Walk(Parameter node)
             {
                 return CheckTemplate(node);
@@ -135,8 +161,9 @@ namespace Tutor
                 {
                     HasMatch = true;
                     MatchResult = result.Item2;
+                    return false;
                 }
-                return false;
+                return !_exact;
             }
         }
     }

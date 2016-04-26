@@ -23,7 +23,7 @@ namespace Tutor.Tests
             var ast2 = NodeWrapper.Wrap(ParseContent("k = 1", py));
             var zss = new PythonZss(ast1, ast2);
             var editDistance = zss.Compute();
-            Assert.AreEqual(1, editDistance.Item1);
+            Assert.AreEqual(1, editDistance.Distance);
         }
 
         [TestMethod]
@@ -34,7 +34,7 @@ namespace Tutor.Tests
             var ast2 = NodeWrapper.Wrap(ParseContent("total, k = 1, 1", py));
             var zss = new PythonZss(ast1, ast2);
             var editDistance = zss.Compute();
-            Assert.AreEqual(1, editDistance.Item1);
+            Assert.AreEqual(1, editDistance.Distance);
         }
 
         [TestMethod]
@@ -45,7 +45,7 @@ namespace Tutor.Tests
             var ast2 = NodeWrapper.Wrap(ParseContent("term(x) * a", py));
             var zss = new PythonZss(ast1, ast2);
             var editDistance = zss.Compute();
-            Assert.AreEqual(3, editDistance.Item1);
+            Assert.AreEqual(3, editDistance.Distance);
         }
 
        
@@ -58,7 +58,7 @@ namespace Tutor.Tests
             var ast2 = NodeWrapper.Wrap(ParseFile(Environment.CurrentDirectory + "../../../resources/after_1.py", py));
             var zss = new PythonZss(ast1, ast2);
             var editDistance = zss.Compute();
-            Assert.AreEqual(2, editDistance.Item1);
+            Assert.AreEqual(2, editDistance.Distance);
 
         }
 
@@ -82,7 +82,7 @@ def product(n, term):
             var ast2 = NodeWrapper.Wrap(ParseContent(after, py));
             var zss = new PythonZss(ast1, ast2);
             var editDistance = zss.Compute();
-            Assert.AreEqual(2, editDistance.Item1);
+            Assert.AreEqual(2, editDistance.Distance);
         }
 
         [TestMethod]
@@ -95,7 +95,7 @@ def product(n, term):
             var ast2 = NodeWrapper.Wrap(ParseContent(after, py));
             var zss = new PythonZss(ast1, ast2);
             var editDistance = zss.Compute();
-            Assert.AreEqual(1, editDistance.Item1);
+            Assert.AreEqual(1, editDistance.Distance);
         }
 
         [TestMethod]
@@ -112,9 +112,9 @@ def product(n, term):
             var ast2 = NodeWrapper.Wrap(ParseContent(after, py));
             var zss = new PythonZss(ast1, ast2);
             var editDistance = zss.Compute();
-            Assert.AreEqual(2, editDistance.Item1);
-            Assert.AreEqual("NameExpression", editDistance.Item2.First().NewNode.InnerNode.NodeName);
-            Assert.AreEqual("Arg", editDistance.Item2.Last().NewNode.InnerNode.NodeName);
+            Assert.AreEqual(2, editDistance.Distance);
+            Assert.AreEqual("NameExpression", editDistance.Edits.First().NewNode.InnerNode.NodeName);
+            Assert.AreEqual("Arg", editDistance.Edits.Last().NewNode.InnerNode.NodeName);
         }
 
         [TestMethod]
@@ -127,11 +127,11 @@ def product(n, term):
             var ast2 = NodeWrapper.Wrap(ParseContent(after, py));
             var zss = new PythonZss(ast1, ast2);
             var editDistance = zss.Compute();
-            Assert.AreEqual(2, editDistance.Item1);
-            Assert.IsTrue(editDistance.Item2.First() is Delete);
-            Assert.IsTrue(editDistance.Item2.Last() is Delete);
-            Assert.AreEqual("NameExpression", editDistance.Item2.First().NewNode.InnerNode.NodeName);
-            Assert.AreEqual("BinaryExpression", editDistance.Item2.Last().NewNode.InnerNode.NodeName);
+            Assert.AreEqual(2, editDistance.Distance);
+            Assert.IsTrue(editDistance.Edits.First() is Delete);
+            Assert.IsTrue(editDistance.Edits.Last() is Delete);
+            Assert.AreEqual("NameExpression", editDistance.Edits.First().NewNode.InnerNode.NodeName);
+            Assert.AreEqual("BinaryExpression", editDistance.Edits.Last().NewNode.InnerNode.NodeName);
         }
 
         [TestMethod]
@@ -144,13 +144,13 @@ def product(n, term):
             var ast2 = NodeWrapper.Wrap(ParseContent(after, py));
             var zss = new PythonZss(ast1, ast2);
             var editDistance = zss.Compute();
-            Assert.AreEqual(2, editDistance.Item1);
-            Assert.IsTrue(editDistance.Item2.First() is Delete);
-            Assert.IsTrue(editDistance.Item2.Last() is Delete);
-            Assert.AreEqual("NameExpression", editDistance.Item2.First().NewNode.InnerNode.NodeName);
-            Assert.AreEqual("BinaryExpression", editDistance.Item2.Last().NewNode.InnerNode.NodeName);
-            Assert.AreEqual("BinaryExpression", editDistance.Item2.First().Target.InnerNode.NodeName);
-            Assert.AreEqual("AssignmentStatement", editDistance.Item2.Last().Target.InnerNode.NodeName);
+            Assert.AreEqual(2, editDistance.Distance);
+            Assert.IsTrue(editDistance.Edits.First() is Delete);
+            Assert.IsTrue(editDistance.Edits.Last() is Delete);
+            Assert.AreEqual("NameExpression", editDistance.Edits.First().NewNode.InnerNode.NodeName);
+            Assert.AreEqual("BinaryExpression", editDistance.Edits.Last().NewNode.InnerNode.NodeName);
+            Assert.AreEqual("BinaryExpression", editDistance.Edits.First().Target.InnerNode.NodeName);
+            Assert.AreEqual("AssignmentStatement", editDistance.Edits.Last().Target.InnerNode.NodeName);
         }
 
         [TestMethod]
@@ -177,14 +177,14 @@ def product(n, term):
             var ast2 = NodeWrapper.Wrap(ParseContent(after, py));
             var zss = new PythonZss(ast1, ast2);
             var editDistance = zss.Compute();
-            Assert.AreEqual(3, editDistance.Item1);
+            Assert.AreEqual(3, editDistance.Distance);
             
-            Assert.IsTrue(editDistance.Item2.First() is Update);
-            Assert.IsTrue(editDistance.Item2.ElementAt(1) is Delete);
-            Assert.IsTrue(editDistance.Item2.Last() is Delete);
-            Assert.AreEqual("literal", editDistance.Item2.First().NewNode.InnerNode.NodeName);
-            Assert.AreEqual("NameExpression", editDistance.Item2.ElementAt(1).NewNode.InnerNode.NodeName);
-            Assert.AreEqual("BinaryExpression", editDistance.Item2.Last().NewNode.InnerNode.NodeName);
+            Assert.IsTrue(editDistance.Edits.First() is Update);
+            Assert.IsTrue(editDistance.Edits.ElementAt(1) is Delete);
+            Assert.IsTrue(editDistance.Edits.Last() is Delete);
+            Assert.AreEqual("literal", editDistance.Edits.First().NewNode.InnerNode.NodeName);
+            Assert.AreEqual("NameExpression", editDistance.Edits.ElementAt(1).NewNode.InnerNode.NodeName);
+            Assert.AreEqual("BinaryExpression", editDistance.Edits.Last().NewNode.InnerNode.NodeName);
         }
 
 
@@ -198,13 +198,13 @@ def product(n, term):
             var ast2 = NodeWrapper.Wrap(ParseContent(after, py));
             var zss = new PythonZss(ast1, ast2);
             var editDistance = zss.Compute();
-            Assert.AreEqual(2, editDistance.Item1);
-            Assert.IsTrue(editDistance.Item2.First() is Insert);
-            Assert.IsTrue(editDistance.Item2.Last() is Insert);
-            Assert.AreEqual("NameExpression", editDistance.Item2.First().NewNode.InnerNode.NodeName);
-            Assert.AreEqual("BinaryExpression", editDistance.Item2.Last().NewNode.InnerNode.NodeName);
-            Assert.AreEqual("BinaryExpression", editDistance.Item2.First().Target.InnerNode.NodeName);
-            Assert.AreEqual("AssignmentStatement", editDistance.Item2.Last().Target.InnerNode.NodeName);
+            Assert.AreEqual(2, editDistance.Distance);
+            Assert.IsTrue(editDistance.Edits.First() is Insert);
+            Assert.IsTrue(editDistance.Edits.Last() is Insert);
+            Assert.AreEqual("NameExpression", editDistance.Edits.First().NewNode.InnerNode.NodeName);
+            Assert.AreEqual("BinaryExpression", editDistance.Edits.Last().NewNode.InnerNode.NodeName);
+            Assert.AreEqual("BinaryExpression", editDistance.Edits.First().Target.InnerNode.NodeName);
+            Assert.AreEqual("AssignmentStatement", editDistance.Edits.Last().Target.InnerNode.NodeName);
         }
 
         [TestMethod]
@@ -217,7 +217,7 @@ def product(n, term):
             var ast2 = NodeWrapper.Wrap(ParseContent(after, py));
             var zss = new PythonZss(ast1, ast2);
             var editDistance = zss.Compute();
-            Assert.AreEqual(5, editDistance.Item1);
+            Assert.AreEqual(5, editDistance.Distance);
         }
 
         [TestMethod]
@@ -230,7 +230,31 @@ def product(n, term):
             var ast2 = NodeWrapper.Wrap(ParseContent(after, py));
             var zss = new PythonZss(ast1, ast2);
             var editDistance = zss.Compute();
-            Assert.AreEqual(4, editDistance.Item1);
+            Assert.AreEqual(4, editDistance.Distance);
+
+        }
+
+        [TestMethod]
+        public void TestCompute14()
+        {
+            var py = Python.CreateEngine();
+            var before = @"
+def product(n, term):
+    item, Total = 0, 1
+    while item<=n:
+        item, Total = item + 1, Total * term(item)
+        return Total";
+            var ast1 = NodeWrapper.Wrap(ParseContent(before, py));
+            var after = @"
+def product(n, term):
+    item, Total = 0, 1
+    while item<=n:
+        item, Total = item + 1, Total * term(item)
+    return Total";
+            var ast2 = NodeWrapper.Wrap(ParseContent(after, py));
+            var zss = new PythonZss(ast1, ast2);
+            var editDistance = zss.Compute();
+            Assert.AreEqual(3, editDistance.Distance);
 
         }
 

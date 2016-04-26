@@ -25,11 +25,10 @@ namespace Tutor
             Target = target;
         }
 
-        public abstract Expression Run(Node ast);
-
         public bool CanApply(Node node)
         {
-            return node.Equals(Target.InnerNode);
+            var result = Target.Match(node);
+            return result.Item1;
         }
 
         public abstract Node Apply(Node node);
@@ -57,12 +56,7 @@ namespace Tutor
         {
             Index = index;
         }
-
-        public override Expression Run(Node ast)
-        {
-            var rewriter = new InsertRewriter(this);
-            return rewriter.Rewrite(ast);
-        }
+        
 
         public override Node Apply(Node node)
         {
@@ -72,13 +66,16 @@ namespace Tutor
 
     public class Delete : Edit
     {
+        public int Pos { get; }
+
         public Delete(PythonNode newNode, PythonNode target) : base(newNode, target)
         {
         }
 
-        public override Expression Run(Node ast)
+        public Delete(PythonNode parent, int k)
         {
-            throw new NotImplementedException();
+            Target = parent;
+            Pos = k;
         }
 
         public override Node Apply(Node node)
@@ -91,12 +88,6 @@ namespace Tutor
     {
         public Update(PythonNode newNode, PythonNode target) : base(newNode, target)
         {
-        }
-
-        public override Expression Run(Node ast)
-        {
-            var rewriter = new Rewriter(this);
-            return rewriter.Rewrite(ast);
         }
 
         public override Node Apply(Node node)

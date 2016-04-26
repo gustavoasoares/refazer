@@ -13,36 +13,34 @@ namespace Tutor.Transformation
         public static IEnumerable<PythonAst> Apply(PythonNode ast, Patch patch)
         {
             var inputs = new List<PythonAst>() {(PythonAst) ast.InnerNode};
-            for (var i = 0; i < patch.EditSets.Count; i++)
-            {
-                var newInputs = new List<PythonAst>();
-                var editSet = patch.EditSets[i];
-
-                foreach (var input in inputs)
-                {
-                    var newAsts = editSet.Select(e => e.Run(input) as PythonAst);
-                    newInputs.AddRange(newAsts);
-                }
-                inputs = newInputs;
-            }
-            return inputs;
+            var asts = patch.Run(ast);
+            
+            return asts;
         }
 
         public static Patch Patch(IEnumerable<Edit> editSet)
         {
-            var patch = new Patch(editSet);
+            var patch = new Patch(editSet.ToList());
             return patch;
         }
 
         public static Patch ConcatPatch(IEnumerable<Edit> editSet, Patch patch)
         {
-            patch.EditSets.Add(editSet);
+            patch.EditSets.Insert(0,editSet.ToList());
             return patch;
+        }
+
+        public static Edit Delete(PythonNode parent, Node deleted)
+        {
+            var wrappedAfter = NodeWrapper.Wrap(deleted);
+            var delete = new Delete(wrappedAfter, parent);
+
+            return delete;
         }
 
         public static Edit Update(PythonNode before, Node after)
         {
-            var wrappedAfter = new PythonNode(after, false);
+            var wrappedAfter = new PythonNode(after, false);    
             var update = new Update(wrappedAfter, before);            
             return update;
         }
@@ -93,7 +91,7 @@ namespace Tutor.Transformation
         public static bool Match(PythonNode ast, PythonNode context)
         {
             var match = new Match(context);
-            return match.HasMatch(ast);
+            return match.ExactMatch(ast);
 
         }
 

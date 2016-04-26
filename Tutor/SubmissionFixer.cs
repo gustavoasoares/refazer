@@ -39,16 +39,16 @@ namespace Tutor
                 Console.Error.WriteLine(e.Message);
                 return false;
             }
-            var input = State.Create(_grammar.Value.InputSymbol, NodeWrapper.Wrap(ast));
+                var input = State.Create(_grammar.Value.InputSymbol, NodeWrapper.Wrap(ast));
 
             var unparser = new Unparser();
 
-            foreach (var proseProgram in ProsePrograms)
-            {
-                if (TryFix(tests, proseProgram.First(), input, unparser)) return true;
-                if (TryFix(tests, proseProgram.ElementAt(1), input, unparser)) return true;
-                if (TryFix(tests, proseProgram.ElementAt(2), input, unparser)) return true;
-            }
+            //foreach (var proseProgram in ProsePrograms)
+            //{
+            //    if (TryFix(tests, proseProgram.First(), input, unparser)) return true;
+            //    //if (TryFix(tests, proseProgram.ElementAt(1), input, unparser)) return true;
+            //    //if (TryFix(tests, proseProgram.ElementAt(2), input, unparser)) return true;
+            //}
 
             //learn a new program
             var astAfter = NodeWrapper.Wrap(ASTHelper.ParseContent(programAfter));
@@ -56,8 +56,11 @@ namespace Tutor
             var spec = new ExampleSpec(examples);
             var prose = new SynthesisEngine(_grammar.Value);
             var learned = prose.LearnGrammar(spec);
-            ProsePrograms.Add(learned.RealizedPrograms);
-            if (TryFix(tests, learned.RealizedPrograms.First(), input, unparser)) return true;
+            if (learned.RealizedPrograms.Any())
+            {
+                ProsePrograms.Add(new List<ProgramNode>() { learned.RealizedPrograms.First() });
+                if (TryFix(tests, learned.RealizedPrograms.First(), input, unparser)) return true;
+            }
             return false;
         }
 

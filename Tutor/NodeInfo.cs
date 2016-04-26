@@ -52,7 +52,9 @@ namespace Tutor
                 case "IfStatement":
                 case "IfStatementTest":
                 case "AssignmentStatement":
-                
+                case "ReturnStatement":
+                case "ExpressionStatement":
+                case "WhileStatement":
                     nodeValue = null;
                     break;
                 default: 
