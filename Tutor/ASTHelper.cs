@@ -1,8 +1,12 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Globalization;
 using System.Linq;
 using System.Linq.Expressions;
+using System.Runtime.Remoting;
+using System.ServiceModel;
+using System.ServiceProcess;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
@@ -15,6 +19,7 @@ using Microsoft.Scripting;
 using Microsoft.Scripting.Hosting;
 using Microsoft.Scripting.Hosting.Providers;
 using Microsoft.Scripting.Runtime;
+using SubmissionGrader;
 
 namespace Tutor
 {
@@ -44,113 +49,46 @@ namespace Tutor
             return parser.ParseFile(true);
         }
 
-
-        private static dynamic result;
-        private static string script;
+        private static AppDomain testDomain = AppDomain.CreateDomain("TestDomain", null);
 
         public static dynamic Run(string s)
         {
-            script = s;
-            Worker workerObject = new Worker(s);
-            Thread workerThread = new Thread(workerObject.DoWork, 100000000);
+            StartCodeService();
+            var serviceResult = _serviceProxy.Execute(s);
+            if (serviceResult.Equals("aborted"))
+                _timeout = true;
+            else
+                _timeout = false;
+            return serviceResult;
+        }
 
-            try
+        private static bool _timeout = false;
+        private static readonly Uri ServiceUri = new Uri("net.pipe://localhost/Pipe");
+        private const string PipeName = "RossieEngineService";
+        private static readonly EndpointAddress ServiceAddress = 
+            new EndpointAddress(string.Format(CultureInfo.InvariantCulture, 
+                "{0}/{1}", ServiceUri.OriginalString, PipeName));
+        private static ICommandService _serviceProxy;
+
+        private static void StartCodeService()
+        {
+            var service = new ServiceController("RossieEngineService");
+            if (service.Status != ServiceControllerStatus.Running || _timeout)
             {
-                workerThread.Start();
-                if (!workerThread.Join(TimeSpan.FromMilliseconds(300)))
+                if (service.Status == ServiceControllerStatus.Running)
                 {
-                    workerObject.RequestStop();
-                    workerThread.Abort();
-                    GC.Collect();
-                    result = 0;
-                    throw new Exception("More than 1 secs.");
+                    if (service.CanStop)
+                        service.Stop();
+
+                    service.WaitForStatus(ServiceControllerStatus.Stopped);
                 }
-                result = workerObject.Result;
+                service.Start();
+                service.WaitForStatus(ServiceControllerStatus.Running);
             }
-            catch (OutOfMemoryException e)
-            {
-                Console.Out.WriteLine("--------------------------------------------- Exception: " + e);
-                workerObject.RequestStop();
-                workerThread.Abort();
-                result = 0;
-                GC.Collect();
-            }
-            catch (Exception e)
-            {
-                Console.Out.WriteLine("--------------------------------------------- Exception: " + e);
-                workerObject.RequestStop();
-                workerThread.Abort();
-                result = 0;
-                GC.Collect();
-            }
-
-            return result;
+            _serviceProxy = ChannelFactory<ICommandService>.CreateChannel(new NetNamedPipeBinding(), ServiceAddress);
         }
+    }
 
+  
         
-        //private static void Execute()
-        //{
-        //    try
-        //    {
-        //        Dictionary<String, Object> options = new Dictionary<string, object>();
-        //        options["LightweightScopes"] = true;
-        //        py = Python.CreateEngine(options);
-        //        ScriptScope scope = py.Runtime.CreateScope();
-        //        var source = py.CreateScriptSourceFromString(script);
-        //        var comped = source.Compile();
-        //        result = comped.Execute(scope);
-        //        py.Runtime.Shutdown();
-        //    }
-        //    catch (Exception)
-        //    {
-        //        result = 0;
-        //    }
-        //}
-    }
-
-    public class Worker
-    {
-        private readonly string _script;
-
-        public dynamic Result { get; set; }
-        public Worker(string script)
-        {
-            _script = script;
-            py = Python.CreateEngine();
-        }
-
-        private ScriptEngine py;
-
-        // This method will be called when the thread is started. 
-        public void DoWork()
-        {
-            try
-            {
-                var options = new Dictionary<string, object>();
-                options["LightweightScopes"] = true;
-                py = Python.CreateEngine(options);
-                var source = py.CreateScriptSourceFromString(_script);
-                var comped = source.Compile();
-                Result = comped.Execute();
-                py.Runtime.Shutdown();
-            }
-            catch (Exception)
-            {
-                py.Runtime.Shutdown();
-                Result = 0;
-            }
-        }
-        public void RequestStop()
-        {
-            py.Runtime.Shutdown();
-        }
-
-        public bool ShouldContinue()
-        {
-            StackTrace s = new StackTrace();
-            if (s.FrameCount > 50)
-                return false;
-            return true;
-        }
-    }
 }

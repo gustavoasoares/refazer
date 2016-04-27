@@ -43,12 +43,12 @@ namespace Tutor
 
             var unparser = new Unparser();
 
-            //foreach (var proseProgram in ProsePrograms)
-            //{
-            //    if (TryFix(tests, proseProgram.First(), input, unparser)) return true;
-            //    //if (TryFix(tests, proseProgram.ElementAt(1), input, unparser)) return true;
-            //    //if (TryFix(tests, proseProgram.ElementAt(2), input, unparser)) return true;
-            //}
+            foreach (var proseProgram in ProsePrograms)
+            {
+                if (TryFix(tests, proseProgram.First(), input, unparser)) return true;
+                if (TryFix(tests, proseProgram.ElementAt(1), input, unparser)) return true;
+                if (TryFix(tests, proseProgram.ElementAt(2), input, unparser)) return true;
+            }
 
             //learn a new program
             var astAfter = NodeWrapper.Wrap(ASTHelper.ParseContent(programAfter));
@@ -58,7 +58,7 @@ namespace Tutor
             var learned = prose.LearnGrammar(spec);
             if (learned.RealizedPrograms.Any())
             {
-                ProsePrograms.Add(new List<ProgramNode>() { learned.RealizedPrograms.First() });
+                ProsePrograms.Add(learned.RealizedPrograms);
                 if (TryFix(tests, learned.RealizedPrograms.First(), input, unparser)) return true;
             }
             return false;
@@ -99,6 +99,8 @@ namespace Tutor
                         {
                             isFixed = false;
                         }
+                        if (!isFixed)
+                            break;
                     }
                     if (isFixed)
                     {
