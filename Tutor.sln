@@ -11,7 +11,7 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TutorUI", "TutorUI\TutorUI.
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TutorLearner", "..\prose\ProgramSynthesis\ProseSample.Substrings\TutorLearner.csproj", "{41E9A9B1-B013-4A87-9759-E3004FEF8A81}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SubmissionGrader", "SubmissionGrader\SubmissionGrader.csproj", "{935F3C7A-57DF-4721-A9AE-F1C58807D0A7}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TutorGradeService", "TutorGradeService\TutorGradeService.csproj", "{164FF12C-7C37-4E8F-B4D8-111EC1316203}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -35,10 +35,10 @@ Global
 		{41E9A9B1-B013-4A87-9759-E3004FEF8A81}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{41E9A9B1-B013-4A87-9759-E3004FEF8A81}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{41E9A9B1-B013-4A87-9759-E3004FEF8A81}.Release|Any CPU.Build.0 = Release|Any CPU
-		{935F3C7A-57DF-4721-A9AE-F1C58807D0A7}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{935F3C7A-57DF-4721-A9AE-F1C58807D0A7}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{935F3C7A-57DF-4721-A9AE-F1C58807D0A7}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{935F3C7A-57DF-4721-A9AE-F1C58807D0A7}.Release|Any CPU.Build.0 = Release|Any CPU
+		{164FF12C-7C37-4E8F-B4D8-111EC1316203}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{164FF12C-7C37-4E8F-B4D8-111EC1316203}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{164FF12C-7C37-4E8F-B4D8-111EC1316203}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{164FF12C-7C37-4E8F-B4D8-111EC1316203}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

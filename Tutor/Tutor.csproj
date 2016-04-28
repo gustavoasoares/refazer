@@ -230,6 +230,7 @@
     <Compile Include="EditClusters.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Report.cs" />
+    <Compile Include="TestCaseException.cs" />
     <Compile Include="Unparser.cs" />
     <Compile Include="Rewriter.cs" />
     <Compile Include="WitnessFunctions.cs" />
@@ -247,9 +248,9 @@
     <Analyzer Include="..\packages\Microsoft.CodeAnalysis.Analyzers.1.1.0\analyzers\dotnet\cs\Microsoft.CodeAnalysis.CSharp.Analyzers.dll" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\SubmissionGrader\SubmissionGrader.csproj">
-      <Project>{935f3c7a-57df-4721-a9ae-f1c58807d0a7}</Project>
-      <Name>SubmissionGrader</Name>
+    <ProjectReference Include="..\TutorGradeService\TutorGradeService.csproj">
+      <Project>{164ff12c-7c37-4e8f-b4d8-111ec1316203}</Project>
+      <Name>TutorGradeService</Name>
     </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />

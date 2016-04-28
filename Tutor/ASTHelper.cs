@@ -54,17 +54,26 @@ namespace Tutor
         public static dynamic Run(string s)
         {
             StartCodeService();
-            var serviceResult = _serviceProxy.Execute(s);
-            if (serviceResult.Equals("aborted"))
+            try
+            {
+                var serviceResult = _serviceProxy.Execute(s);
+                if (serviceResult.Equals("aborted"))
+                    _timeout = true;
+                else
+                    _timeout = false;
+
+                return serviceResult;
+            }
+            catch (CommunicationException e)
+            {
                 _timeout = true;
-            else
-                _timeout = false;
-            return serviceResult;
+                throw new TestCaseException(e);
+            }
         }
 
         private static bool _timeout = false;
         private static readonly Uri ServiceUri = new Uri("net.pipe://localhost/Pipe");
-        private const string PipeName = "RossieEngineService";
+        private const string PipeName = "TutorGradeService";
         private static readonly EndpointAddress ServiceAddress = 
             new EndpointAddress(string.Format(CultureInfo.InvariantCulture, 
                 "{0}/{1}", ServiceUri.OriginalString, PipeName));
@@ -72,7 +81,7 @@ namespace Tutor
 
         private static void StartCodeService()
         {
-            var service = new ServiceController("RossieEngineService");
+            var service = new ServiceController("TutorGradeService");
             if (service.Status != ServiceControllerStatus.Running || _timeout)
             {
                 if (service.Status == ServiceControllerStatus.Running)
@@ -89,6 +98,5 @@ namespace Tutor
         }
     }
 
-  
-        
+    
 }

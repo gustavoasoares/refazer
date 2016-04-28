@@ -95,7 +95,7 @@ namespace Tutor
                             if (result != test.Value)
                                 isFixed = false;
                         }
-                        catch (Exception)
+                        catch (TestCaseException)
                         {
                             isFixed = false;
                         }
