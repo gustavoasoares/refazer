@@ -5,6 +5,7 @@ using System.Linq.Expressions;
 using IronPython.Compiler.Ast;
 using IronPython.Runtime;
 using BinaryExpression = System.Linq.Expressions.BinaryExpression;
+using ConstantExpression = IronPython.Compiler.Ast.ConstantExpression;
 using Expression = System.Linq.Expressions.Expression;
 
 namespace Tutor
@@ -31,7 +32,7 @@ namespace Tutor
                 return node;
             if (node.Equals(_edits.First().Context))
             {
-                return _edits.First().NewNode.InnerNode;
+                return _edits.First().ModifiedNode.InnerNode;
             }
 
             switch (node.NodeName)
@@ -55,21 +56,21 @@ namespace Tutor
                     changed = true;
                     if (edit is Update)
                     {
-                        newCode = edit.NewNode.InnerNode;
+                        newCode = edit.ModifiedNode.InnerNode;
                     }
                     else if (edit is Insert)
                     {
                         var insert = (Insert) edit;
                         var suite = newCode as SuiteStatement;
                         var newList = new List<Statement>(suite.Statements);
-                        newList.Insert(insert.Index, (Statement) insert.NewNode.InnerNode);
+                        newList.Insert(insert.Index, (Statement) insert.ModifiedNode.InnerNode);
                         newCode = new SuiteStatement(newList.ToArray());
                     }
                     else
                     {
                         var suite = newCode as SuiteStatement;
                         var newList = new List<Statement>(suite.Statements);
-                        newList = newList.Where(e => !edit.NewNode.Match(e).Item1).ToList();
+                        newList = newList.Where(e => !edit.ModifiedNode.Match(e).Item1).ToList();
                         newCode = new SuiteStatement(newList.ToArray());
                     }
                 }
@@ -96,7 +97,7 @@ namespace Tutor
                     changed = true;
                     if (edit is Update)
                     {
-                        newCode = edit.NewNode.InnerNode;
+                        newCode = edit.ModifiedNode.InnerNode;
                     }
                     else if (edit is Insert)
                     {
@@ -126,11 +127,11 @@ namespace Tutor
                     changed = true;
                     if (edit is Update)
                     {
-                        newCode = edit.NewNode.InnerNode;
+                        newCode = edit.ModifiedNode.InnerNode;
                     } else if (edit is Delete)
                     {
                         var deleted = new IronPython.Compiler.Ast.ConstantExpression("Tutor:deletedNode");
-                        if (edit.NewNode.InnerNode.Equals(node.Left))
+                        if (edit.ModifiedNode.InnerNode.Equals(node.Left))
                         {
                             var binary = newCode as IronPython.Compiler.Ast.BinaryExpression;
                             newCode = new IronPython.Compiler.Ast.BinaryExpression(binary.Operator, VisitExpression(binary.Right), deleted);
@@ -147,11 +148,11 @@ namespace Tutor
                         {
                             case 0:
                                 var binary = newCode as IronPython.Compiler.Ast.BinaryExpression;
-                                newCode = new IronPython.Compiler.Ast.BinaryExpression(binary.Operator, (IronPython.Compiler.Ast.Expression) edit.NewNode.InnerNode, VisitExpression(binary.Right));
+                                newCode = new IronPython.Compiler.Ast.BinaryExpression(binary.Operator, (IronPython.Compiler.Ast.Expression) edit.ModifiedNode.InnerNode, VisitExpression(binary.Right));
                                 break;
                             case 1:
                                 binary = newCode as IronPython.Compiler.Ast.BinaryExpression;
-                                newCode = new IronPython.Compiler.Ast.BinaryExpression(binary.Operator, VisitExpression(binary.Left), (IronPython.Compiler.Ast.Expression)edit.NewNode.InnerNode);
+                                newCode = new IronPython.Compiler.Ast.BinaryExpression(binary.Operator, VisitExpression(binary.Left), (IronPython.Compiler.Ast.Expression)edit.ModifiedNode.InnerNode);
                                 break;
                         }
                     }
@@ -176,7 +177,7 @@ namespace Tutor
                     changed = true;
                     if (edit is Update)
                     {
-                        newCode = edit.NewNode.InnerNode;
+                        newCode = edit.ModifiedNode.InnerNode;
                     }
                     else if (edit is Insert)
                     {
@@ -205,7 +206,7 @@ namespace Tutor
                     changed = true;
                     if (edit is Update)
                     {
-                        newCode = edit.NewNode.InnerNode;
+                        newCode = edit.ModifiedNode.InnerNode;
                     }
                     else if (edit is Insert)
                     {
@@ -253,7 +254,7 @@ namespace Tutor
                     changed = true;
                     if (edit is Update)
                     {
-                        newCode = edit.NewNode.InnerNode;
+                        newCode = edit.ModifiedNode.InnerNode;
                     }
                     else if (edit is Insert)
                     {
@@ -283,7 +284,7 @@ namespace Tutor
                     changed = true;
                     if (edit is Update)
                     {
-                        newCode = edit.NewNode.InnerNode;
+                        newCode = edit.ModifiedNode.InnerNode;
                     }
                     else if (edit is Insert)
                     {
@@ -312,7 +313,7 @@ namespace Tutor
                     changed = true;
                     if (edit is Update)
                     {
-                        newCode = edit.NewNode.InnerNode;
+                        newCode = edit.ModifiedNode.InnerNode;
                     }
                     else if (edit is Insert)
                     {
@@ -320,7 +321,7 @@ namespace Tutor
                         {
                             case 1:
                                 var args = new List<Arg>();
-                                args.Add((Arg)edit.NewNode.InnerNode);
+                                args.Add((Arg)edit.ModifiedNode.InnerNode);
                                 args.AddRange(exp.Args);
                                 newCode = new CallExpression(exp.Target, args.ToArray());
                                 break;
@@ -354,27 +355,33 @@ namespace Tutor
                     changed = true;
                     if (edit is Update)
                     {
-                        newCode = (Arg)edit.NewNode.InnerNode;
+                        newCode = (Arg)edit.ModifiedNode.InnerNode;
                     }
                     else if (edit is Insert)
                     {
-                        newCode = new Arg(arg.Name, (IronPython.Compiler.Ast.Expression)edit.NewNode.InnerNode);
+                        newCode = new Arg(arg.Name, (IronPython.Compiler.Ast.Expression) edit.ModifiedNode.InnerNode);
                     }
                     else
                     {
-                        throw new NotImplementedException();
+                        if (edit.ModifiedNode.Match(newCode.Expression).Item1)
+                        {
+                            var deleted = new ConstantExpression("tutor:deleted");
+                            newCode = new Arg(arg.Name, deleted);
+                        }
+                        else
+                        {
+                            throw new Exception("Deleted expression not found");
+                        }
                     }
                 }
             }
-            if (changed)
-                return newCode;
-            return new Arg(arg.Name, VisitExpression(arg.Expression));
+            return new Arg(newCode.Name, VisitExpression(newCode.Expression));
         }
 
         private Node VisitExpression(TupleExpression exp)
         {
             var changed = false;
-            Node newCode = exp;
+            var newCode = exp;
             foreach (var edit in _edits)
             {
                 if (edit.CanApply(exp))
@@ -382,22 +389,28 @@ namespace Tutor
                     changed = true;
                     if (edit is Update)
                     {
-                        newCode = edit.NewNode.InnerNode;
+                        newCode = (TupleExpression) edit.ModifiedNode.InnerNode;
                     }
                     else if (edit is Insert)
                     {
-                        throw new NotImplementedException();
+                        var insert = (Insert) edit;
+                        var items = new List<IronPython.Compiler.Ast.Expression>(newCode.Items);
+                        if (insert.Index > items.Count)
+                            throw new Exception("Not possible to insert expresstion at this possition");
+                        items.Insert(insert.Index,(IronPython.Compiler.Ast.Expression) insert.ModifiedNode.InnerNode);
+                        newCode = new TupleExpression(newCode.IsExpandable, items.ToArray());
                     }
                     else
                     {
-                        throw new NotImplementedException();
+                        if (!(newCode.Items.Any(e => !(edit.ModifiedNode.Match(e).Item1))))
+                            throw new Exception("deleted method not found");
+                        var items=  newCode.Items.Where(e => !(edit.ModifiedNode.Match(e).Item1));
+                        newCode = new TupleExpression(newCode.IsExpandable, items.ToArray());
                     }
                 }
             }
-            if (changed)
-                return newCode;
-            var newExpressions = exp.Items.Select(VisitExpression);
-            return new TupleExpression(exp.IsExpandable, newExpressions.ToArray());
+            var newExpressions = newCode.Items.Select(VisitExpression);
+            return new TupleExpression(newCode.IsExpandable, newExpressions.ToArray());
         }
 
         private Statement VisitStatement(Statement stmt)
@@ -436,7 +449,7 @@ namespace Tutor
                     changed = true;
                     if (edit is Update)
                     {
-                        newCode = edit.NewNode.InnerNode;
+                        newCode = edit.ModifiedNode.InnerNode;
                     }
                     else if (edit is Insert)
                     {
@@ -457,7 +470,7 @@ namespace Tutor
         private Node VisitStatement(AugmentedAssignStatement stmt)
         {
             var changed = false;
-            Node newCode = stmt;
+            AugmentedAssignStatement newCode = stmt;
             foreach (var edit in _edits)
             {
                 if (edit.CanApply(stmt))
@@ -465,21 +478,58 @@ namespace Tutor
                     changed = true;
                     if (edit is Update)
                     {
-                        newCode = edit.NewNode.InnerNode;
+                        newCode = (AugmentedAssignStatement) edit.ModifiedNode.InnerNode;
                     }
                     else if (edit is Insert)
                     {
-                        throw new NotImplementedException();
+                        var insert = (Insert) edit;
+                        if (insert.Index == 0)
+                        {
+                            var deleted = newCode.Left as IronPython.Compiler.Ast.ConstantExpression;
+                            if (deleted != null && deleted.Value.Equals("Tutor:deletedNode"))
+                            {
+                                newCode = new AugmentedAssignStatement(newCode.Operator,
+                                    (IronPython.Compiler.Ast.Expression) insert.ModifiedNode.InnerNode,newCode.Right);
+                            }
+                            else
+                            {
+                                throw new Exception("Not possible to insert a node. There is already a node at this position");
+                            }
+                        }
+                        else if (insert.Index == 1)
+                        {
+                            var deleted = newCode.Right as IronPython.Compiler.Ast.ConstantExpression;
+                            if (deleted != null && deleted.Value.Equals("Tutor:deletedNode"))
+                            {
+                                newCode = new AugmentedAssignStatement(newCode.Operator,
+                                    newCode.Left, (IronPython.Compiler.Ast.Expression)insert.ModifiedNode.InnerNode);
+                            }
+                            else
+                            {
+                                throw new Exception("Not possible to insert a node. There is already a node at this position");
+                            }
+                        } else
+                        {
+                            throw new Exception("Index out of bound");
+                        }
                     }
                     else
                     {
-                        throw new NotImplementedException();
+                        var deleted = new IronPython.Compiler.Ast.ConstantExpression("Tutor:deletedNode");
+                        if ((edit.ModifiedNode.Match(newCode.Left).Item1))
+                        {
+                            newCode = new AugmentedAssignStatement(newCode.Operator, deleted, newCode.Right);
+                        }
+                        else
+                        {
+                            if ((!edit.ModifiedNode.Match(newCode.Right).Item1))
+                                throw new Exception("node not found to perform the delete");
+                            newCode = new AugmentedAssignStatement(newCode.Operator, newCode.Left, deleted);
+                        }
                     }
                 }
             }
-            if (changed)
-                return newCode;
-            return new AugmentedAssignStatement(stmt.Operator, VisitExpression(stmt.Left), VisitExpression(stmt.Right));
+            return new AugmentedAssignStatement(newCode.Operator, VisitExpression(newCode.Left), VisitExpression(newCode.Right));
         }
 
         private Node VisitStatement(WhileStatement stmt)
@@ -493,14 +543,14 @@ namespace Tutor
                     changed = true;
                     if (edit is Update)
                     {
-                        newCode = edit.NewNode.InnerNode;
+                        newCode = edit.ModifiedNode.InnerNode;
                     }
                     else if (edit is Insert)
                     {
                         switch (((Insert)edit).Index)
                         {
                             case 1:
-                                newCode = new WhileStatement(stmt.Test, (Statement)edit.NewNode.InnerNode, stmt.ElseStatement);
+                                newCode = new WhileStatement(stmt.Test, (Statement)edit.ModifiedNode.InnerNode, stmt.ElseStatement);
                                 break;
                             default:
                                 throw new NotImplementedException();
@@ -522,7 +572,7 @@ namespace Tutor
         private Node VisitStatement(AssignmentStatement stmt)
         {
             var changed = false;
-            Node newCode = stmt;
+            var newCode = stmt;
             foreach (var edit in _edits)
             {
                 if (edit.CanApply(stmt))
@@ -530,23 +580,57 @@ namespace Tutor
                     changed = true;
                     if (edit is Update)
                     {
-                        newCode = edit.NewNode.InnerNode;
+                        newCode = (AssignmentStatement) edit.ModifiedNode.InnerNode;
                     }
                     else if (edit is Insert)
                     {
-                        throw new NotImplementedException();
+                        var insert = (Insert) edit;
+                        if (insert.Index == 1)
+                        {
+                            if (newCode.Left.Count == 1)
+                            {
+                                var deleted = newCode.Right as IronPython.Compiler.Ast.ConstantExpression;
+                                if (deleted != null && deleted.Value.Equals("Tutor:deletedNode"))
+                                {
+                                    newCode = new AssignmentStatement(newCode.Left.ToArray(), (IronPython.Compiler.Ast.Expression) edit.ModifiedNode.InnerNode);
+                                }
+                                else
+                                {
+                                    throw new Exception("Not possible to insert a node. There is already a node at this position");
+                                }
+                            }
+                            else
+                            {
+                                throw new NotImplementedException();
+                            }
+                        }
+                        else
+                        {
+                            throw new NotImplementedException();
+                        }
                     }
                     else
                     {
-                        throw new NotImplementedException();
+                        var node = (AssignmentStatement) stmt;
+                        var leftDelete = node.Left.Any(e => edit.ModifiedNode.Match(e).Item1);
+                        if (leftDelete)
+                        {
+                            var newLeft = node.Left.Where(e => !(edit.ModifiedNode.Match(e).Item1));
+                            newCode = new AssignmentStatement(newLeft.ToArray(),node.Right);
+                        }
+                        else
+                        {
+                            if ((!edit.ModifiedNode.Match(node.Right).Item1))
+                                throw new Exception("node not found to perform the delete");
+                            var deleted = new IronPython.Compiler.Ast.ConstantExpression("Tutor:deletedNode");
+                            newCode = new AssignmentStatement(node.Left.ToArray(), deleted);
+
+                        }
                     }
                 }
             }
-            if (changed)
-                return newCode;
-
-            var expressions = stmt.Left.Select(VisitExpression).ToList();
-            return new AssignmentStatement(expressions.ToArray(), VisitExpression(stmt.Right));
+            var expressions = newCode.Left.Select(VisitExpression).ToList();
+            return new AssignmentStatement(expressions.ToArray(), VisitExpression(newCode.Right));
         }
 
         private Node VisitStatement(ReturnStatement stmt)
@@ -560,10 +644,10 @@ namespace Tutor
                     changed = true;
                     if (edit is Update)
                     {
-                        newCode = (ReturnStatement) edit.NewNode.InnerNode;
+                        newCode = (ReturnStatement) edit.ModifiedNode.InnerNode;
                     } else if (edit is Insert)
                     {
-                        newCode = new ReturnStatement((IronPython.Compiler.Ast.Expression) edit.NewNode.InnerNode);
+                        newCode = new ReturnStatement((IronPython.Compiler.Ast.Expression) edit.ModifiedNode.InnerNode);
                     }
                     else
                     {
@@ -587,7 +671,7 @@ namespace Tutor
                     changed = true;
                     if (edit is Update)
                     {
-                        newCode = edit.NewNode.InnerNode;
+                        newCode = edit.ModifiedNode.InnerNode;
                     }
                     else if (edit is Insert)
                     {
@@ -621,7 +705,7 @@ namespace Tutor
                     changed = true;
                     if (edit is Update)
                     {
-                        newCode = edit.NewNode.InnerNode;
+                        newCode = edit.ModifiedNode.InnerNode;
                     }
                     else if (edit is Insert)
                     {
@@ -645,7 +729,7 @@ namespace Tutor
         private Node VisitStatement(IfStatement stmt)
         {
             var changed = false;
-            Node newCode = stmt;
+            var newCode = stmt;
             foreach (var edit in _edits)
             {
                 if (edit.CanApply(stmt))
@@ -653,34 +737,68 @@ namespace Tutor
                     changed = true;
                     if (edit is Update)
                     {
-                        newCode = edit.NewNode.InnerNode;
+                        newCode = (IfStatement) edit.ModifiedNode.InnerNode;
                     }
                     else if (edit is Insert)
                     {
-                        throw new NotImplementedException();
+                        var insert = (Insert)edit;
+                        if (insert.ModifiedNode.InnerNode is IfStatementTest)
+                        {
+                            var newIfs = new List<IfStatementTest>(newCode.Tests);
+                            if (insert.Index <= newIfs.Count)
+                            {
+                                newIfs.Insert(insert.Index,(IfStatementTest) insert.ModifiedNode.InnerNode);
+                            }
+                            else
+                            {
+                                throw new Exception("Cannot insert test in this position");
+                            }
+                            newCode = new IfStatement(newIfs.ToArray(), newCode.ElseStatement);
+                        }
+                        else
+                        {
+                            if (insert.Index != newCode.Tests.Count || newCode.ElseStatement != null)
+                            {
+                                throw new Exception("Cannot add else statement");
+                            }
+                            newCode = new IfStatement(newCode.Tests.ToArray(), (Statement) insert.ModifiedNode.InnerNode);
+                        }
                     }
                     else
                     {
-                        var if_ = newCode as IfStatement;
-                        var newList = new List<IfStatementTest>(if_.Tests);
-                        newList = newList.Where(e => !edit.NewNode.Match(e).Item1).ToList();
-                        var else_ = (if_.ElseStatement != null && edit.NewNode.Match(if_.ElseStatement).Item1)
-                            ? (Statement) edit.NewNode.InnerNode
-                            : if_.ElseStatement;
-                        newCode = new IfStatement(newList.ToArray(), else_);
+                        if (edit.ModifiedNode.InnerNode is IfStatementTest)
+                        {
+                            var newList = new List<IfStatementTest>(newCode.Tests);
+                            newList = newList.Where(e => !edit.ModifiedNode.Match(e).Item1).ToList();
+                            var else_ = (newCode.ElseStatement != null &&
+                                         edit.ModifiedNode.Match(newCode.ElseStatement).Item1)
+                                ? (Statement) edit.ModifiedNode.InnerNode
+                                : newCode.ElseStatement;
+                            newCode = new IfStatement(newList.ToArray(), else_);
+                        }
+                        else
+                        {
+                            if (newCode.ElseStatement != null && edit.ModifiedNode.Match(newCode.ElseStatement).Item1)
+                            {
+                                newCode = new IfStatement(newCode.Tests.ToArray(), null);
+                            }
+                            else
+                            {
+                                throw new Exception("Not possible to delete statement");
+                            }
+                        }
                     }
                 }
             }
-            var ifStmt = newCode as IfStatement;
 
             var newTests = new List<IfStatementTest>();
-            foreach (var ifStatementTest in ifStmt.Tests)
+            foreach (var ifStatementTest in newCode.Tests)
             {
                 var newTest = new IfStatementTest(VisitExpression(ifStatementTest.Test),
                     VisitStatement(ifStatementTest.Body));
                 newTests.Add(newTest);
             }
-            return new IfStatement(newTests.ToArray(), VisitStatement(ifStmt.ElseStatement));
+            return new IfStatement(newTests.ToArray(), VisitStatement(newCode.ElseStatement));
         }
 
         public Node Rewrite(Node code)

@@ -9,8 +9,8 @@ namespace Tutor
 {
     public abstract class Edit
     {
-        public PythonNode NewNode { get; }
-        public PythonNode Target { get; set; }
+        public PythonNode ModifiedNode { get; }
+        public PythonNode TargetNode { get; set; }
 
         public Node Context { get; protected set; }
 
@@ -19,15 +19,15 @@ namespace Tutor
             
         }
 
-        public Edit(PythonNode newNode, PythonNode target)
+        public Edit(PythonNode modifiedNode, PythonNode targetNode)
         {
-            NewNode = newNode;
-            Target = target;
+            ModifiedNode = modifiedNode;
+            TargetNode = targetNode;
         }
 
         public bool CanApply(Node node)
         {
-            var result = Target.Match(node);
+            var result = TargetNode.Match(node);
             return result.Item1;
         }
 
@@ -38,11 +38,11 @@ namespace Tutor
     public class Insert : Edit
     {
         private Dictionary<int, Node> context;
-        public int Index { get; }
+        public int Index { get; set; }
 
         public InsertNodeSynthesizer NodeSynthesizer { private set; get; }
 
-        public Insert(PythonNode newNode, PythonNode target) : base(newNode, target)
+        public Insert(PythonNode modifiedNode, PythonNode targetNode) : base(modifiedNode, targetNode)
         {
         }
 
@@ -52,7 +52,7 @@ namespace Tutor
             this.context = context;
         }
 
-        public Insert(PythonNode newNode, PythonNode target, int index) : this(newNode, target)
+        public Insert(PythonNode modifiedNode, PythonNode targetNode, int index) : this(modifiedNode, targetNode)
         {
             Index = index;
         }
@@ -68,13 +68,13 @@ namespace Tutor
     {
         public int Pos { get; }
 
-        public Delete(PythonNode newNode, PythonNode target) : base(newNode, target)
+        public Delete(PythonNode modifiedNode, PythonNode targetNode) : base(modifiedNode, targetNode)
         {
         }
 
         public Delete(PythonNode parent, int k)
         {
-            Target = parent;
+            TargetNode = parent;
             Pos = k;
         }
 
@@ -86,23 +86,23 @@ namespace Tutor
 
     public class Update : Edit
     {
-        public Update(PythonNode newNode, PythonNode target) : base(newNode, target)
+        public Update(PythonNode modifiedNode, PythonNode targetNode) : base(modifiedNode, targetNode)
         {
         }
 
         public override Node Apply(Node node)
         {
-            return NewNode.InnerNode;
+            return ModifiedNode.InnerNode;
         }
 
         public override string ToString()
         {
             var value = "?";
-            var inner = NewNode.InnerNode as IronPython.Compiler.Ast.ConstantExpression;
+            var inner = ModifiedNode.InnerNode as IronPython.Compiler.Ast.ConstantExpression;
             if (inner != null)
                 value = inner.Value.ToString();
 
-            return "Rewrite: " + Target.InnerNode.NodeName + " to: " + NewNode.InnerNode.NodeName + "-" + value;
+            return "Rewrite: " + TargetNode.InnerNode.NodeName + " to: " + ModifiedNode.InnerNode.NodeName + "-" + value;
         }
     }
 }

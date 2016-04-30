@@ -86,6 +86,11 @@ namespace Tutor
                 return CheckTemplate(node);
             }
 
+            public override bool Walk(ExpressionStatement node)
+            {
+                return CheckTemplate(node);
+            }
+
             public override bool Walk(FunctionDefinition node)
             {
                 return CheckTemplate(node);
@@ -135,6 +140,11 @@ namespace Tutor
             }
 
             public override bool Walk(Parameter node)
+            {
+                return CheckTemplate(node);
+            }
+
+            public override bool Walk(ParenthesisExpression node)
             {
                 return CheckTemplate(node);
             }

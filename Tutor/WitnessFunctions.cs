@@ -26,70 +26,96 @@ namespace Tutor.Transformation
                 var zss = new PythonZss(before, after);
                 var editDistance = zss.Compute();
 
+                //todo remove this limitation
                 if (editDistance.Distance >= 20)
                     return null;
 
-                var roots = new List<Edit>();
-                var nonroots = new List<Edit>();
-
-                foreach (var edit in editDistance.Edits)
+                var rootAndNonRootEdits = SplitEditsByRootsAndNonRoots(editDistance);
+                var edits = new List<Edit>();
+                foreach (var root in rootAndNonRootEdits.Item1)
                 {
-                    bool isNew = true;
-                    foreach (var edit1 in editDistance.Edits)
-                    {
-                        if (edit.Target.Equals(edit1.NewNode))
-                            isNew = false;
-                    }
-
-                    if (isNew)
-                    {
-                        if (edit is Insert)
-                            edit.Target = editDistance.Mapping[edit.Target];
-                        roots.Add(edit);
-                    }
-                    else
-                    {
-                        nonroots.Add(edit);
-                    }
-                }
-
-                var newList = new List<Edit>();
-                foreach (var root in roots)
-                {
+                    edits.Add(root);
                     if (root is Delete)
                     {
-                        var children = NotDeletedChildren(root.NewNode, nonroots.Where(e => e is Delete));
+                        var children = NotDeletedChildren(root.ModifiedNode,
+                            rootAndNonRootEdits.Item2.Where(e => e is Delete));
                         if (children.Any())
                         {
-                            if (children.Count == 1)
+                            foreach (var child in children)
                             {
-                                var update = new Update(children.First(), root.NewNode);
-                                newList.Add(update);
-                            }
-                            else
-                            {
-                                //todo fix this hack. The zss algo does not perform the expected diff. 
-                                //See test case TestCompute14 
-                                var update = new Update(children.Last(), root.NewNode);
-                                newList.Add(update);
-                                //throw new NotImplementedException();
+                                var inserts = rootAndNonRootEdits.Item1.Where(
+                                    e => (e is Insert) && e.TargetNode.Equals(root.TargetNode));
+
+                                PythonNode mappedNodeInTheResultingAst = null;
+                                foreach (var keyValuePair in editDistance.Mapping)
+                                {
+                                    if (keyValuePair.Value.Equals(child))
+                                    {
+                                        mappedNodeInTheResultingAst = keyValuePair.Key;
+                                    }
+                                }
+                                if (mappedNodeInTheResultingAst == null)
+                                    throw new Exception("No mapped node found");
+
+                                var isUsed = false; 
+                                foreach (var insert in inserts)
+                                {
+                                    if (insert.ModifiedNode.Contains(mappedNodeInTheResultingAst))
+                                        isUsed = true;
+                                }
+                                if (!isUsed)
+                                {
+                                    //create an insert in the parent node
+                                    var insert = new Insert(child, root.TargetNode, 
+                                        mappedNodeInTheResultingAst.Parent.Children.IndexOf(mappedNodeInTheResultingAst));
+                                    edits.Add(insert);
+                                }
                             }
                         }
-                        else
-                        {
-                            newList.Add(root);
-                        }
-                    }
-                    else
-                    {
-                       newList.Add(root);
                     }
                 }
-
-
-                examples[input] = newList;
+                examples[input] = edits;
             }
             return new ExampleSpec(examples);
+        }
+
+        private static Tuple<List<Edit>, List<Edit>> SplitEditsByRootsAndNonRoots(EditDistance editDistance)
+        {
+
+            var roots = new List<Edit>();
+            var nonroots = new List<Edit>();
+
+            foreach (var edit in editDistance.Edits)
+            {
+                var isRoot = true;
+                //check if the target node is a resulting node of another edit. If so, 
+                //this edit is not root
+                foreach (var edit1 in editDistance.Edits)
+                {
+                    if (edit.TargetNode.Equals(edit1.ModifiedNode))
+                        isRoot = false;
+                }
+
+                //if the edit is performed on an node in the input tree
+                //add it as a root edit. Otherwise, it is a nonroot edit,
+                //that is, an edit that belongs to a parent edit.  
+                if (isRoot)
+                {
+                    if (edit is Insert)
+                    {
+                        var insert = (Insert) edit;
+                        insert.TargetNode = editDistance.Mapping[insert.TargetNode];
+                        insert.Index = insert.ModifiedNode.Parent.Children.IndexOf(insert.ModifiedNode);
+                    }
+                        
+                    roots.Add(edit);
+                }
+                else
+                {
+                    nonroots.Add(edit);
+                }
+            }
+            return Tuple.Create(roots,nonroots);
         }
 
         private static List<PythonNode> NotDeletedChildren(PythonNode node, IEnumerable<Edit> edits)
@@ -100,7 +126,7 @@ namespace Tutor.Transformation
                 var isDeleted = false;
                 foreach (var edit in edits)
                 {
-                    if (edit.NewNode.Equals(child))
+                    if (edit.ModifiedNode.Equals(child))
                         isDeleted = true;
                 }
                 if (!isDeleted)
@@ -170,7 +196,7 @@ namespace Tutor.Transformation
             foreach (var input in spec.ProvidedInputs)
             {
                 var edits = spec.Examples[input] as IEnumerable<Edit>;
-                examples[input] = edits.Select(e => e.Target);
+                examples[input] = edits.Select(e => e.TargetNode);
             }
             return new SubsequenceSpec(examples);
         }
@@ -269,7 +295,7 @@ namespace Tutor.Transformation
                 var operation = spec.Examples[input] as Update;
                 if (operation == null)
                     return null;
-                contextExamples[input] = operation.NewNode;
+                contextExamples[input] = operation.ModifiedNode;
             }
             return new ExampleSpec(contextExamples);
         }
@@ -283,7 +309,7 @@ namespace Tutor.Transformation
                 var operation = spec.Examples[input] as Insert;
                 if (operation == null)
                     return null;
-                contextExamples[input] = operation.NewNode;
+                contextExamples[input] = operation.ModifiedNode;
             }
             return new ExampleSpec(contextExamples);
         }
@@ -297,7 +323,7 @@ namespace Tutor.Transformation
                 var operation = spec.Examples[input] as Insert;
                 if (operation == null)
                     return null;
-                contextExamples[input] = operation.NewNode.Parent.Children.IndexOf(operation.NewNode);
+                contextExamples[input] = operation.Index;
             }
             return new ExampleSpec(contextExamples);
         }
@@ -311,7 +337,7 @@ namespace Tutor.Transformation
                 var operation = spec.Examples[input] as Delete;
                 if (operation == null)
                     return null;
-                contextExamples[input] = operation.NewNode;
+                contextExamples[input] = operation.ModifiedNode;
             }
             return new ExampleSpec(contextExamples);
         }

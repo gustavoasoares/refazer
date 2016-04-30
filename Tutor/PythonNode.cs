@@ -706,7 +706,7 @@ namespace Tutor
         {
             foreach (var operation in _operations)
             {
-                if (pythonNode.Equals(operation.NewNode))
+                if (pythonNode.Equals(operation.ModifiedNode))
                 {
                     SubOperations.Add(operation);
                     return true;

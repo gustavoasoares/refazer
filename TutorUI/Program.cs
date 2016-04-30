@@ -46,11 +46,9 @@ def identity(x):
                 {
                     var unparser = new Unparser();
                     var before = ASTHelper.ParseContent(mistake.before);
-                    var cleanbefore = unparser.Unparse(before);
-                    before = ASTHelper.ParseContent(cleanbefore);
+                    before = ASTHelper.ParseContent(unparser.Unparse(before));
                     var after = ASTHelper.ParseContent(mistake.after);
-                    var cleanAfter = unparser.Unparse(after);
-                    after = ASTHelper.ParseContent(cleanAfter);
+                    after = ASTHelper.ParseContent(unparser.Unparse(after));
                     var diff = new PythonZss(NodeWrapper.Wrap(before), NodeWrapper.Wrap(after));
                     var changes = diff.Compute();
                     //if (changes.Distance != 1)

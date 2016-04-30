@@ -38,8 +38,10 @@ namespace Tutor
             }
             else
             {
-                var nonEmptySets = EditSets.Where(e => e.Any());
-                List<Edit> firstEdits = nonEmptySets.Select(e => e.First()).ToList();
+                var hasEmptySet = EditSets.Any(e => !(e.Any()));
+                if (hasEmptySet)
+                    return null;
+                List<Edit> firstEdits = EditSets.Select(e => e.First()).ToList();
                 if (firstEdits.Any())
                 {
                     var rewriter = new Rewriter(firstEdits);

@@ -195,8 +195,38 @@ total *= term(i)";
 
             var before = @"n >= 1";
 
+            var after = @"n>1";
+
+            AssertCorrectTransformation(before, after);
+        }
+
+        [TestMethod]
+        public void TestLearn9()
+        {
+            var before = @"
+def product(n, term):
+    k, product = 1, 0
+    while k <= n:
+        product, k = (product * term(k)), k + 1
+    return product";
+
             var after = @"
-n > 1";
+def product(n, term):
+    k, product = 1, 1
+    while k<=n:
+        product, k = product*term(k), k+1
+    return product";
+
+            AssertCorrectTransformation(before, after);
+        }
+
+        [TestMethod]
+        public void TestLearn10()
+        {
+
+            var before = @"term(i)";
+
+            var after = @"term(i+1)";
 
             AssertCorrectTransformation(before, after);
         }

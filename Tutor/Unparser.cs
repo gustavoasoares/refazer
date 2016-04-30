@@ -34,6 +34,15 @@ namespace Tutor
             if (stmt is AugmentedAssignStatement) Write(stmt as AugmentedAssignStatement);
             if (stmt is ForStatement) Write(stmt as ForStatement);
             if (stmt is WhileStatement) Write(stmt as WhileStatement);
+            if (stmt is ExpressionStatement) Write(stmt as ExpressionStatement);
+        }
+
+        private void Write(ExpressionStatement stmt)
+        {
+            if (string.IsNullOrEmpty(stmt.Documentation))
+            {
+                Write(stmt.Expression);
+            }
         }
 
         private void Write(ForStatement stmt)
