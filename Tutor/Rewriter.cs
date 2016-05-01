@@ -305,7 +305,7 @@ namespace Tutor
         private Node VisitExpression(CallExpression exp)
         {
             var changed = false;
-            Node newCode = exp;
+            var newCode = exp;
             foreach (var edit in _edits)
             {
                 if (edit.CanApply(exp))
@@ -313,7 +313,7 @@ namespace Tutor
                     changed = true;
                     if (edit is Update)
                     {
-                        newCode = edit.ModifiedNode.InnerNode;
+                        newCode = (CallExpression) edit.ModifiedNode.InnerNode;
                     }
                     else if (edit is Insert)
                     {
@@ -335,12 +335,8 @@ namespace Tutor
                     }
                 }
             }
-            if (changed)
-                return VisitExpression((IronPython.Compiler.Ast.Expression) newCode);
 
-
-
-            var newArgs = exp.Args.Select(VisitArg);
+            var newArgs = newCode.Args.Select(VisitArg);
             return new CallExpression(VisitExpression(exp.Target), newArgs.ToArray());
         }
 

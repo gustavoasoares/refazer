@@ -30,60 +30,62 @@ namespace Tutor.Transformation
             return patch;
         }
 
-        public static Edit Delete(PythonNode parent, Node deleted)
+        public static Edit Delete(PythonNode parent, PythonNode deleted)
         {
-            var wrappedAfter = NodeWrapper.Wrap(deleted);
-            var delete = new Delete(wrappedAfter, parent);
+            var delete = new Delete(deleted, parent);
 
             return delete;
         }
 
-        public static Edit Update(PythonNode before, Node after)
+        public static Edit Update(PythonNode before, PythonNode after)
         {
-            var wrappedAfter = new PythonNode(after, false);    
-            var update = new Update(wrappedAfter, before);            
+            var update = new Update(after, before);            
             return update;
         }
 
-        public static Edit Insert(PythonNode parent, Node newNode, int index)
+        public static Edit Insert(PythonNode parent, PythonNode newNode, int index)
         {
-            var wrappedNewNode = new PythonNode(newNode, false);
-
-            var insert = new Insert(wrappedNewNode, parent, index);
+            var insert = new Insert(newNode, parent, index);
             return insert;
         }
 
-        public static Node LeafConstNode(NodeInfo info)
+        public static PythonNode LeafConstNode(NodeInfo info)
         {
-            return NodeBuilder.Create(info);
+            var wrapped = NodeWrapper.Wrap(NodeBuilder.Create(info));
+            wrapped.Reference = false;
+            return wrapped;
         }
 
-        public static Node ConstNode(NodeInfo info, IEnumerable<Node> children)
+        public static PythonNode ConstNode(NodeInfo info, IEnumerable<PythonNode> children)
         {
-            return NodeBuilder.Create(info, children.ToList());
+            var wrapped = NodeWrapper.Wrap(NodeBuilder.Create(info, children.ToList()));
+            wrapped.Reference = false;
+            return wrapped;
         }
 
-        public static Node ReferenceNode(PythonNode ast, PythonNode template)
+        public static PythonNode ReferenceNode(PythonNode ast, PythonNode template)
         {
             var match = new Match(template);
             if (match.HasMatch(ast))
             {
-                return match.MatchResult;
+                var wrapped = NodeWrapper.Wrap(match.MatchResult);
+                wrapped.Reference = true;
+                return wrapped;
             }
             return null;
         }
 
-        public static IEnumerable<Node> SingleChild(Node node)
+        public static IEnumerable<PythonNode> SingleChild(PythonNode node)
         {
-            return (node != null) ? new List<Node>() {node} : null;
+            return (node != null) ? new List<PythonNode>() {node} : null;
         }
 
-        public static IEnumerable<Node> Children(Node node, IEnumerable<Node> children)
+        public static IEnumerable<PythonNode> Children(PythonNode node, IEnumerable<PythonNode> children)
         {
             if (node == null || children == null)
                 return null;
 
-            var result = new List<Node> {node};
+            var result = new List<PythonNode> {node};
             result.AddRange(children);
             return result;
         }

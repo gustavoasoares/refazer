@@ -24,23 +24,40 @@ namespace Tutor
             return _code.ToString();
         }
 
-        private void Write(Statement stmt)
+        private void Write(Statement stmt, bool notlambda = true)
         {
             if (stmt is SuiteStatement) Write(stmt as SuiteStatement);
-            if (stmt is FunctionDefinition) Write(stmt as FunctionDefinition);
-            if (stmt is ReturnStatement) Write(stmt as ReturnStatement);
-            if (stmt is IfStatement) Write(stmt as IfStatement);
-            if (stmt is AssignmentStatement) Write(stmt as AssignmentStatement);
-            if (stmt is AugmentedAssignStatement) Write(stmt as AugmentedAssignStatement);
-            if (stmt is ForStatement) Write(stmt as ForStatement);
-            if (stmt is WhileStatement) Write(stmt as WhileStatement);
-            if (stmt is ExpressionStatement) Write(stmt as ExpressionStatement);
+            else if (stmt is FunctionDefinition) Write(stmt as FunctionDefinition);
+            else if (stmt is ReturnStatement) Write(stmt as ReturnStatement, notlambda);
+            else if (stmt is IfStatement) Write(stmt as IfStatement);
+            else if (stmt is AssignmentStatement) Write(stmt as AssignmentStatement);
+            else if (stmt is AugmentedAssignStatement) Write(stmt as AugmentedAssignStatement);
+            else if (stmt is ForStatement) Write(stmt as ForStatement);
+            else if (stmt is WhileStatement) Write(stmt as WhileStatement);
+            else if (stmt is ExpressionStatement) Write(stmt as ExpressionStatement, notlambda);
+            else if (stmt is ImportStatement) Write(stmt as ImportStatement);
+            else 
+                throw new NotImplementedException();
         }
 
-        private void Write(ExpressionStatement stmt)
+        private void Write(ImportStatement stmt)
+        {
+            Fill();
+            _code.Append("import ");
+            for (var i = 0; i < stmt.AsNames.Count; i++)
+            {
+                var name = stmt.AsNames[i];
+                _code.Append(name);
+                if (i < stmt.AsNames.Count - 1)
+                    _code.Append(", ");
+            }
+        }
+
+        private void Write(ExpressionStatement stmt, bool notlambda = true)
         {
             if (string.IsNullOrEmpty(stmt.Documentation))
             {
+                if (notlambda) Fill();
                 Write(stmt.Expression);
             }
         }
@@ -191,11 +208,44 @@ namespace Tutor
         private void Write(Expression exp)
         {
             if (exp is NameExpression) Write(exp as NameExpression);
-            if (exp is BinaryExpression) Write(exp as BinaryExpression);
-            if (exp is ConstantExpression) Write(exp as ConstantExpression);
-            if (exp is CallExpression) Write(exp as CallExpression);
-            if (exp is TupleExpression) Write(exp as TupleExpression);
-            if (exp is ParenthesisExpression) Write((ParenthesisExpression) exp);
+            else if (exp is BinaryExpression) Write(exp as BinaryExpression);
+            else if (exp is ConstantExpression) Write(exp as ConstantExpression);
+            else if (exp is CallExpression) Write(exp as CallExpression);
+            else if (exp is TupleExpression) Write(exp as TupleExpression);
+            else if (exp is ParenthesisExpression) Write((ParenthesisExpression) exp);
+            else if (exp is MemberExpression) Write((MemberExpression)exp);
+            else if (exp is LambdaExpression) Write((LambdaExpression)exp);
+            else if (exp is IndexExpression) Write((IndexExpression)exp);
+            else throw new NotImplementedException();
+        }
+
+        private void Write(LambdaExpression exp)
+        {
+            _code.Append("lambda ");
+            for (var i = 0; i < exp.Function.Parameters.Count; i++)
+            {
+                var arg = exp.Function.Parameters[i];
+                Write(arg);
+                if (i < exp.Function.Parameters.Count - 1)
+                    _code.Append(", ");
+            }
+            _code.Append(": ");
+            Write(exp.Function.Body, false);
+        }
+
+        private void Write(IndexExpression exp)
+        {
+            Write(exp.Target);
+            _code.Append("[");
+            Write(exp.Index);
+            _code.Append("]");
+        }
+
+        private void Write(MemberExpression exp)
+        {
+            Write(exp.Target);
+            _code.Append(".");
+            _code.Append(exp.Name);
         }
 
         private void Write(ParenthesisExpression exp)
@@ -250,10 +300,13 @@ namespace Tutor
             Write(arg.Expression);
         }
 
-        private void Write(ReturnStatement stmt)
+        private void Write(ReturnStatement stmt, bool notlambda = true)
         {
-            Fill();
-            _code.Append("return ");
+            if (notlambda)
+            {
+                Fill();
+                _code.Append("return ");
+            }
             Write(stmt.Expression);
         }
 

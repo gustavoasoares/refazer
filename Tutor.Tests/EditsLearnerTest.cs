@@ -195,7 +195,8 @@ total *= term(i)";
 
             var before = @"n >= 1";
 
-            var after = @"n>1";
+            var after = @"
+n>1";
 
             AssertCorrectTransformation(before, after);
         }
@@ -224,10 +225,54 @@ def product(n, term):
         public void TestLearn10()
         {
 
-            var before = @"term(i)";
+            var before = @"
+term(i)";
 
-            var after = @"term(i+1)";
+            var after = @"
+term(i+1)";
 
+            AssertCorrectTransformation(before, after);
+        }
+
+        [TestMethod]
+        public void TestLearn11()
+        {
+            var before = @"n, y = 0, 0";
+            var after = @"
+n, y = 1, 0";
+            AssertCorrectTransformation(before, after);
+        }
+
+        [TestMethod]
+        public void TestLearn12()
+        {
+            var before = @"helper(0,n)";
+            var after = @"
+helper(1, n)";
+            AssertCorrectTransformation(before, after);
+        }
+
+        [TestMethod]
+        public void TestLearn13()
+        {
+            var before = @"
+def product(n, term):
+    def helper(a,n):
+        if n==0:
+            return a
+        else:
+            a=a*term(n)
+        return helper(a,n-1)
+    return helper(0,n)";
+            var after = @"
+def product(n, term):
+    def helper(a, n):
+        if n==0:
+            return a
+        else:
+            a = a*term(n)
+        return helper(a, n-1)
+    return helper(1, n)";
             AssertCorrectTransformation(before, after);
         }
 
@@ -460,6 +505,18 @@ def product(n, term):
         return term(0)
     else:
         return term(n)*product((n-1), term)";
+            var ast = ParseContent(code, py);
+            ast.Bind();
+            var actual = new Unparser().Unparse(ast);
+            Assert.AreEqual(code, actual);
+        }
+
+        [TestMethod]
+        public void TestUnparser5()
+        {
+            var py = Python.CreateEngine();
+            var code = @"
+functools.reduce(lambda x, y: x*y, apply(term), a[1])";
             var ast = ParseContent(code, py);
             ast.Bind();
             var actual = new Unparser().Unparse(ast);

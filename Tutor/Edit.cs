@@ -12,11 +12,13 @@ namespace Tutor
         public PythonNode ModifiedNode { get; }
         public PythonNode TargetNode { get; set; }
 
+        public Boolean Applied { get; private set; }
+
         public Node Context { get; protected set; }
 
         public Edit()
         {
-            
+            Applied = false;
         }
 
         public Edit(PythonNode modifiedNode, PythonNode targetNode)
@@ -27,8 +29,17 @@ namespace Tutor
 
         public bool CanApply(Node node)
         {
-            var result = TargetNode.Match(node);
-            return result.Item1;
+            if (Applied)
+                return false;
+
+            var result = (node.Parent == null || !TargetNode.Reference) ? TargetNode.Match(node).Item1 : TargetNode.InnerNode.Equals(node);
+
+            if (result)
+            {
+                Applied = true;
+                return true;
+            }
+            return false;
         }
 
         public abstract Node Apply(Node node);

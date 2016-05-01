@@ -18,14 +18,14 @@ namespace Tutor
     {
         public List<IEnumerable<ProgramNode>> ProsePrograms { get; }
 
-        public HashSet<ProgramNode> UsedPrograms { get;  } 
+        public List<ProgramNode> UsedPrograms { get;  } 
 
         private Result<Grammar> _grammar = DSLCompiler.LoadGrammarFromFile(@"C:\Users\Gustavo\git\Tutor\Tutor\Transformation.grammar");
 
         public SubmissionFixer()
         {
             ProsePrograms = new List<IEnumerable<ProgramNode>>();
-            UsedPrograms = new HashSet<ProgramNode>();
+            UsedPrograms = new List<ProgramNode>();
         }
         public bool Fix(string program, string programAfter, Dictionary<string, int> tests)
         {

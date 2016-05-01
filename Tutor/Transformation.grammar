@@ -16,9 +16,9 @@ IEnumerable<Edit> editSet := EditMap(edit, selectednodes) = Map(\node : PythonNo
 IEnumerable<PythonNode> selectednodes := Selected(match, nodes) = Filter(\x : PythonNode => match,nodes); 
 bool match := Match(x, template);
 Edit edit := Update(node, n) | Insert(node, n, k) | Delete(node, r);
-Node r := ReferenceNode(node, template); 
-Node n := LeafConstNode(info) | ConstNode(info, children) | r;
-IEnumerable<Node> children := SingleChild(n) | Children(n, children);
+PythonNode r := ReferenceNode(node, template); 
+PythonNode n := LeafConstNode(info) | ConstNode(info, children) | r;
+IEnumerable<PythonNode> children := SingleChild(n) | Children(n, children);
 IEnumerable<PythonNode> nodes := InOrderSort(ast);
 
 

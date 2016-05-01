@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using IronPython.Compiler.Ast;
 using Microsoft.Scripting;
 using Tutor;
 
@@ -20,7 +21,6 @@ namespace TutorUI
                          orderby pair.Value.Count descending
                          select pair.Value;
             var biggest = values.First();
-
             var count = 0;
 
             var fixer = new SubmissionFixer();
@@ -42,34 +42,25 @@ def identity(x):
 
             foreach (var mistake in biggest)
             {
+                var unparser = new Unparser();
+                PythonAst before = null;
                 try
                 {
-                    var unparser = new Unparser();
-                    var before = ASTHelper.ParseContent(mistake.before);
+                    before = ASTHelper.ParseContent(mistake.before);
                     before = ASTHelper.ParseContent(unparser.Unparse(before));
-                    var after = ASTHelper.ParseContent(mistake.after);
-                    after = ASTHelper.ParseContent(unparser.Unparse(after));
-                    var diff = new PythonZss(NodeWrapper.Wrap(before), NodeWrapper.Wrap(after));
-                    var changes = diff.Compute();
-                    //if (changes.Distance != 1)
-                    //    continue;
-                    //if ((changes.Edits.Any(e => e is Delete)))
-                    //    continue;
-                    Console.Out.WriteLine("Diff =====================");
-                }
-                catch (NotImplementedException)
-                {
-                    //todo implemenent it
-                    continue;
+
                 }
                 catch (SyntaxErrorException)
                 {
-                    //skip input output with syntax error
+                    Console.Out.WriteLine("ERROR: INPUT DOES NOT COMPILE");
                     continue;
                 }
 
+                var after = ASTHelper.ParseContent(mistake.after);
+                after = ASTHelper.ParseContent(unparser.Unparse(after));
+                var diff = new PythonZss(NodeWrapper.Wrap(before), NodeWrapper.Wrap(after));
+                Console.Out.WriteLine("Diff =====================");
 
-                
                 Console.Out.WriteLine(mistake.diff);
                 Console.Out.WriteLine("Before ===================================");
                 Console.Out.WriteLine(mistake.before);
@@ -81,9 +72,10 @@ def identity(x):
                 }
                 else
                 {
-                    Console.Out.WriteLine("HELPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPP!");
+                    Console.Out.WriteLine("ERROR: PROGRAM NOT FIXED");
                 }
             }
+
             Console.Out.WriteLine("Total tested: " + biggest.Count);
             Console.Out.WriteLine("Fixed: " + count);
             Console.Out.WriteLine("Not Fixed: " + (biggest.Count - count));

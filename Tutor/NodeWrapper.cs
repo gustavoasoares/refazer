@@ -16,6 +16,7 @@ namespace Tutor
             var result = new PythonNode(ast, false);
             result.AddChild(Wrap(ast.Body, result));
             
+            result.Walk(new MakeReferenceNodeVisitor());
             return result;
         }
 
@@ -156,6 +157,7 @@ namespace Tutor
             if (exp is ParenthesisExpression) return Wrap((ParenthesisExpression) exp, parent);
             if (exp is MemberExpression) return Wrap((MemberExpression)exp, parent);
             if (exp is IndexExpression) return Wrap((IndexExpression)exp, parent);
+            if (exp is LambdaExpression) return Wrap((LambdaExpression)exp, parent);
             throw  new NotImplementedException();
         }
 
@@ -168,10 +170,18 @@ namespace Tutor
                 result.AddChild(Wrap(exp.Target, result));
             return result;
         }
+
+        private static PythonNode Wrap(LambdaExpression exp, PythonNode parent)
+        {
+            var result = new PythonNode(exp, false) { Parent = parent };
+            result.AddChild(Wrap(exp.Function, result));
+            return result;
+        }
+
         private static PythonNode Wrap(MemberExpression exp, PythonNode parent)
         {
             var result = new PythonNode(exp, false) { Parent = parent };
-            //todo add target child
+            result.AddChild(Wrap(exp.Target, result));
             return result;
         }
 
@@ -258,6 +268,15 @@ namespace Tutor
             result.AddChild(Wrap(test.Body, result));
             return result;
            
+        }
+    }
+
+    class MakeReferenceNodeVisitor : IVisitor
+    {
+        public bool Visit(PythonNode pythonNode)
+        {
+            pythonNode.Reference = true;
+            return true;
         }
     }
 }

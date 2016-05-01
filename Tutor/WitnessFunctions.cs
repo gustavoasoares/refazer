@@ -26,10 +26,6 @@ namespace Tutor.Transformation
                 var zss = new PythonZss(before, after);
                 var editDistance = zss.Compute();
 
-                //todo remove this limitation
-                if (editDistance.Distance >= 20)
-                    return null;
-
                 var rootAndNonRootEdits = SplitEditsByRootsAndNonRoots(editDistance);
                 var edits = new List<Edit>();
                 foreach (var root in rootAndNonRootEdits.Item1)

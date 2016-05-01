@@ -18,6 +18,7 @@ namespace Tutor
         public bool IsAbstract { get; }
         public List<PythonNode> Children { get; }
         public PythonNode Parent { get; set; }
+        public bool Reference { get; set; }
 
         public PythonNode(Node innerNode, bool isAbstract)
         {
@@ -25,6 +26,7 @@ namespace Tutor
             IsAbstract = isAbstract;
             Children = new List<PythonNode>();
             Value = "";
+            Reference = false;
         }
 
         public PythonNode(Node innerNode, bool isAbstract, int editId) : this(innerNode, isAbstract)

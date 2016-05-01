@@ -21,36 +21,51 @@ namespace Tutor
             EditSets = new List<List<Edit>> {editSet};
         }
 
+
         public IEnumerable<PythonAst> Run(PythonNode ast)
         {
             var results = new List<PythonAst>();
 
-            if (EditSets.Count == 1)
+            //if it does not find a match to some edit, return null
+            //one edit may depends of another one.
+            var hasEmptySet = EditSets.Any(e => !(e.Any()));
+            if (hasEmptySet)
+                return null;
+
+            var combinations = GetAllCombinations();
+            foreach (var combination in combinations)
             {
-                var edits = EditSets.First();
-                foreach (var edit in edits)
-                {
-                    var rewriter = new Rewriter(new List<Edit>() { edit });
-                    var newAst = rewriter.Rewrite(ast.InnerNode);
-                    results.Add((PythonAst)newAst);
-                }
-                return results;
+                var rewriter = new Rewriter(combination);
+                var newAst = rewriter.Rewrite(ast.InnerNode);
+                results.Add((PythonAst)newAst);
+            }
+            return results;
+        }
+
+        private List<List<Edit>> GetAllCombinations()
+        {
+            var combinations = new List<List<Edit>>();
+            GetAllCombinationsUtil(combinations, new List<Edit>(), 0);
+            return combinations;
+        }
+
+        private void GetAllCombinationsUtil(ICollection<List<Edit>> combinations, List<Edit> edits, int editSetIndex)
+        {
+            if (edits.Count.Equals(EditSets.Count))
+            {
+                combinations.Add(edits);
             }
             else
             {
-                var hasEmptySet = EditSets.Any(e => !(e.Any()));
-                if (hasEmptySet)
-                    return null;
-                List<Edit> firstEdits = EditSets.Select(e => e.First()).ToList();
-                if (firstEdits.Any())
+                var editSet = EditSets[editSetIndex];
+                foreach (var edit in editSet)
                 {
-                    var rewriter = new Rewriter(firstEdits);
-                    var newAst = rewriter.Rewrite(ast.InnerNode);
-                    results.Add((PythonAst)newAst);
-                    return results;
+                    var newEdits = new List<Edit>(edits);
+                    newEdits.Add(edit);
+                    var newIndex = editSetIndex + 1;
+                    GetAllCombinationsUtil(combinations, newEdits, newIndex);
                 }
             }
-            return null;
         }
     }
 }
