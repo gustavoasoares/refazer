@@ -16,6 +16,11 @@ namespace Tutor
             EditSets = new List<List<Edit>>();
         }
 
+        public Patch(List<List<Edit>> editSets)
+        {
+            EditSets = editSets;
+        }
+
         public Patch(List<Edit> editSet)
         {
             EditSets = new List<List<Edit>> {editSet};

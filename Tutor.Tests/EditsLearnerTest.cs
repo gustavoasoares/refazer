@@ -43,7 +43,7 @@ namespace Tutor.Tests
 
             var secondOutput = first.Invoke(State.Create(grammar.Value.InputSymbol,
                 NodeWrapper.Wrap(ASTHelper.ParseContent("1 == 0")))) as IEnumerable<PythonAst>;
-            Assert.IsTrue(!secondOutput.Any());
+            Assert.IsTrue(secondOutput == null);
         }
 
         [TestMethod]

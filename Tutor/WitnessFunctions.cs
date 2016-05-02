@@ -27,52 +27,61 @@ namespace Tutor.Transformation
                 var editDistance = zss.Compute();
 
                 var rootAndNonRootEdits = SplitEditsByRootsAndNonRoots(editDistance);
-                var edits = new List<Edit>();
-                foreach (var root in rootAndNonRootEdits.Item1)
+                var edits = ExtractPrimaryEdits(rootAndNonRootEdits, editDistance);
+
+                var patch = new Patch();
+                edits.ForEach(e => patch.EditSets.Add(new List<Edit>() {e}));
+                examples[input] = patch;
+            }
+            return new ExampleSpec(examples);
+        }
+
+        private static List<Edit> ExtractPrimaryEdits(Tuple<List<Edit>, List<Edit>> rootAndNonRootEdits, EditDistance editDistance)
+        {
+            var edits = new List<Edit>();
+            foreach (var root in rootAndNonRootEdits.Item1)
+            {
+                edits.Add(root);
+                if (root is Delete)
                 {
-                    edits.Add(root);
-                    if (root is Delete)
+                    var children = NotDeletedChildren(root.ModifiedNode,
+                        rootAndNonRootEdits.Item2.Where(e => e is Delete));
+                    if (children.Any())
                     {
-                        var children = NotDeletedChildren(root.ModifiedNode,
-                            rootAndNonRootEdits.Item2.Where(e => e is Delete));
-                        if (children.Any())
+                        foreach (var child in children)
                         {
-                            foreach (var child in children)
+                            var inserts = rootAndNonRootEdits.Item1.Where(
+                                e => (e is Insert) && e.TargetNode.Equals(root.TargetNode));
+
+                            PythonNode mappedNodeInTheResultingAst = null;
+                            foreach (var keyValuePair in editDistance.Mapping)
                             {
-                                var inserts = rootAndNonRootEdits.Item1.Where(
-                                    e => (e is Insert) && e.TargetNode.Equals(root.TargetNode));
+                                if (keyValuePair.Value.Equals(child))
+                                {
+                                    mappedNodeInTheResultingAst = keyValuePair.Key;
+                                }
+                            }
+                            if (mappedNodeInTheResultingAst == null)
+                                throw new Exception("No mapped node found");
 
-                                PythonNode mappedNodeInTheResultingAst = null;
-                                foreach (var keyValuePair in editDistance.Mapping)
-                                {
-                                    if (keyValuePair.Value.Equals(child))
-                                    {
-                                        mappedNodeInTheResultingAst = keyValuePair.Key;
-                                    }
-                                }
-                                if (mappedNodeInTheResultingAst == null)
-                                    throw new Exception("No mapped node found");
-
-                                var isUsed = false; 
-                                foreach (var insert in inserts)
-                                {
-                                    if (insert.ModifiedNode.Contains(mappedNodeInTheResultingAst))
-                                        isUsed = true;
-                                }
-                                if (!isUsed)
-                                {
-                                    //create an insert in the parent node
-                                    var insert = new Insert(child, root.TargetNode, 
-                                        mappedNodeInTheResultingAst.Parent.Children.IndexOf(mappedNodeInTheResultingAst));
-                                    edits.Add(insert);
-                                }
+                            var isUsed = false;
+                            foreach (var insert in inserts)
+                            {
+                                if (insert.ModifiedNode.Contains(mappedNodeInTheResultingAst))
+                                    isUsed = true;
+                            }
+                            if (!isUsed)
+                            {
+                                //create an insert in the parent node
+                                var insert = new Insert(child, root.TargetNode,
+                                    mappedNodeInTheResultingAst.Parent.Children.IndexOf(mappedNodeInTheResultingAst));
+                                edits.Add(insert);
                             }
                         }
                     }
                 }
-                examples[input] = edits;
             }
-            return new ExampleSpec(examples);
+            return edits;
         }
 
         private static Tuple<List<Edit>, List<Edit>> SplitEditsByRootsAndNonRoots(EditDistance editDistance)
@@ -143,10 +152,10 @@ namespace Tutor.Transformation
             var examples = new Dictionary<State, IEnumerable<object>>();
             foreach (var input in spec.ProvidedInputs)
             {
-                var edits = spec.Examples[input] as IEnumerable<Edit>;
-                if (edits == null || edits.Count() > 1)
+                var edits = spec.Examples[input] as Patch;
+                if (edits == null || edits.EditSets.Count() > 1)
                     return null;
-                examples[input] = new List<Edit>() {edits.First()};
+                examples[input] = edits.EditSets.First();
             }
             return new SubsequenceSpec(examples);
         }
@@ -158,10 +167,10 @@ namespace Tutor.Transformation
             var examples = new Dictionary<State, IEnumerable<object>>();
             foreach (var input in spec.ProvidedInputs)
             {
-                var edits = spec.Examples[input] as IEnumerable<Edit>;
-                if (edits == null || edits.Count() < 2)
+                var patch = spec.Examples[input] as Patch;
+                if (patch == null || patch.EditSets.Count() < 2)
                     return null;
-                examples[input] = new List<Edit>() { edits.First() };
+                examples[input] = patch.EditSets.First();
             }
             return new SubsequenceSpec(examples);
         }
@@ -173,12 +182,13 @@ namespace Tutor.Transformation
             var examples = new Dictionary<State, object>();
             foreach (var input in spec.ProvidedInputs)
             {
-                var edits = spec.Examples[input] as IEnumerable<Edit>;
-                if (edits == null || edits.Count() < 2)
+                var patch = spec.Examples[input] as Patch;
+                if (patch == null || patch.EditSets.Count() < 2)
                     return null;
-                var tail = new List<Edit>(edits);
+                var tail = new List<List<Edit>>(patch.EditSets);
                 tail.RemoveAt(0);
-                examples[input] = tail;
+                var newPatch = new Patch(tail);
+                examples[input] = newPatch;
             }
             return new ExampleSpec(examples);
         }

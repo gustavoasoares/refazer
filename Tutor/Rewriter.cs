@@ -4,7 +4,6 @@ using System.Linq;
 using System.Linq.Expressions;
 using IronPython.Compiler.Ast;
 using IronPython.Runtime;
-using BinaryExpression = System.Linq.Expressions.BinaryExpression;
 using ConstantExpression = IronPython.Compiler.Ast.ConstantExpression;
 using Expression = System.Linq.Expressions.Expression;
 
