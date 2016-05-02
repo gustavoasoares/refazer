@@ -304,13 +304,11 @@ namespace Tutor
 
         private Node VisitExpression(CallExpression exp)
         {
-            var changed = false;
             var newCode = exp;
             foreach (var edit in _edits)
             {
                 if (edit.CanApply(exp))
                 {
-                    changed = true;
                     if (edit is Update)
                     {
                         newCode = (CallExpression) edit.ModifiedNode.InnerNode;
@@ -342,13 +340,11 @@ namespace Tutor
 
         private Arg VisitArg(Arg arg)
         {
-            var changed = false;
             var newCode = arg;
             foreach (var edit in _edits)
             {
                 if (edit.CanApply(arg))
                 {
-                    changed = true;
                     if (edit is Update)
                     {
                         newCode = (Arg)edit.ModifiedNode.InnerNode;
@@ -376,13 +372,11 @@ namespace Tutor
 
         private Node VisitExpression(TupleExpression exp)
         {
-            var changed = false;
             var newCode = exp;
             foreach (var edit in _edits)
             {
                 if (edit.CanApply(exp))
                 {
-                    changed = true;
                     if (edit is Update)
                     {
                         newCode = (TupleExpression) edit.ModifiedNode.InnerNode;
@@ -465,13 +459,11 @@ namespace Tutor
 
         private Node VisitStatement(AugmentedAssignStatement stmt)
         {
-            var changed = false;
             AugmentedAssignStatement newCode = stmt;
             foreach (var edit in _edits)
             {
                 if (edit.CanApply(stmt))
                 {
-                    changed = true;
                     if (edit is Update)
                     {
                         newCode = (AugmentedAssignStatement) edit.ModifiedNode.InnerNode;
@@ -567,13 +559,11 @@ namespace Tutor
 
         private Node VisitStatement(AssignmentStatement stmt)
         {
-            var changed = false;
             var newCode = stmt;
             foreach (var edit in _edits)
             {
                 if (edit.CanApply(stmt))
                 {
-                    changed = true;
                     if (edit is Update)
                     {
                         newCode = (AssignmentStatement) edit.ModifiedNode.InnerNode;
@@ -724,13 +714,11 @@ namespace Tutor
 
         private Node VisitStatement(IfStatement stmt)
         {
-            var changed = false;
             var newCode = stmt;
             foreach (var edit in _edits)
             {
                 if (edit.CanApply(stmt))
                 {
-                    changed = true;
                     if (edit is Update)
                     {
                         newCode = (IfStatement) edit.ModifiedNode.InnerNode;
