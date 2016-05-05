@@ -6,6 +6,7 @@ using IronPython.Compiler.Ast;
 using IronPython.Runtime;
 using ConstantExpression = IronPython.Compiler.Ast.ConstantExpression;
 using Expression = System.Linq.Expressions.Expression;
+using MemberExpression = IronPython.Compiler.Ast.MemberExpression;
 
 namespace Tutor
 {
@@ -44,7 +45,7 @@ namespace Tutor
             return node;
         }
 
-        private Node VisitStatement(SuiteStatement node)
+        public Node VisitStatement(SuiteStatement node)
         {
             var changed = false;
             Node newCode = node;
@@ -85,7 +86,7 @@ namespace Tutor
             return new SuiteStatement(node.Statements.Select(VisitStatement).ToArray());
         }
 
-        private Node VisitStatement(ExpressionStatement node)
+        public Node VisitStatement(ExpressionStatement node)
         {
             var changed = false;
             Node newCode = node;
@@ -114,7 +115,7 @@ namespace Tutor
             return new ExpressionStatement(VisitExpression(node.Expression));
         }
 
-        private Node VisitExpression(IronPython.Compiler.Ast.BinaryExpression node)
+        public Node VisitExpression(IronPython.Compiler.Ast.BinaryExpression node)
         {
             var changed = false;
             Node newCode = node;
@@ -165,7 +166,7 @@ namespace Tutor
             return new IronPython.Compiler.Ast.BinaryExpression(node.Operator, left, right);
         }
 
-        private Node VisitExpression(NameExpression node)
+        public Node VisitExpression(NameExpression node)
         {
             var changed = false;
             Node newCode = node;
@@ -194,7 +195,7 @@ namespace Tutor
             return new NameExpression(node.Name);
         }
 
-        private Node VisitExpression(IronPython.Compiler.Ast.ConstantExpression node)
+        public Node VisitExpression(IronPython.Compiler.Ast.ConstantExpression node)
         {
             var changed = false;
             Node newCode = node;
@@ -222,7 +223,7 @@ namespace Tutor
             return node;
         }
 
-        private IronPython.Compiler.Ast.Expression VisitExpression(IronPython.Compiler.Ast.Expression expression)
+        public IronPython.Compiler.Ast.Expression VisitExpression(IronPython.Compiler.Ast.Expression expression)
         {
             if (expression is IronPython.Compiler.Ast.BinaryExpression)
                 return  (IronPython.Compiler.Ast.Expression) VisitExpression(expression as IronPython.Compiler.Ast.BinaryExpression);
@@ -238,11 +239,105 @@ namespace Tutor
                 return (IronPython.Compiler.Ast.Expression) VisitExpression(expression as ParenthesisExpression);
             if (expression is IronPython.Compiler.Ast.IndexExpression)
                 return (IronPython.Compiler.Ast.Expression) VisitExpression(expression as IronPython.Compiler.Ast.IndexExpression);
+            if (expression is OrExpression)
+                return (IronPython.Compiler.Ast.Expression)VisitExpression(expression as OrExpression);
+            if (expression is MemberExpression)
+                return (IronPython.Compiler.Ast.Expression)VisitExpression(expression as MemberExpression);
+            if (expression is IronPython.Compiler.Ast.LambdaExpression)
+                return (IronPython.Compiler.Ast.Expression)VisitExpression(expression as IronPython.Compiler.Ast.LambdaExpression);
             throw new Exception("Transformation not implemented yet: " + expression.NodeName);
 
         }
 
-        private Node VisitExpression(IronPython.Compiler.Ast.IndexExpression exp)
+        public Node VisitExpression(IronPython.Compiler.Ast.LambdaExpression exp)
+        {
+            var changed = false;
+            var newCode = exp;
+            foreach (var edit in _edits)
+            {
+                if (edit.CanApply(exp))
+                {
+                    changed = true;
+                    if (edit is Update)
+                    {
+                        newCode = (IronPython.Compiler.Ast.LambdaExpression)edit.ModifiedNode.InnerNode;
+                    }
+                    else if (edit is Insert)
+                    {
+                        throw new NotImplementedException();
+                    }
+                    else
+                    {
+                        throw new NotImplementedException();
+                    }
+                }
+            }
+            if (changed)
+                return newCode;
+
+            return new IronPython.Compiler.Ast.LambdaExpression(newCode.Function);
+        }
+
+        public Node VisitExpression(MemberExpression exp)
+        {
+            var changed = false;
+            var newCode = exp;
+            foreach (var edit in _edits)
+            {
+                if (edit.CanApply(exp))
+                {
+                    changed = true;
+                    if (edit is Update)
+                    {
+                        newCode = (MemberExpression) edit.ModifiedNode.InnerNode;
+                    }
+                    else if (edit is Insert)
+                    {
+                        throw new NotImplementedException();
+                    }
+                    else
+                    {
+                        throw new NotImplementedException();
+                    }
+                }
+            }
+            if (changed)
+                return newCode;
+
+            return new MemberExpression(VisitExpression(exp.Target), newCode.Name);
+        }
+
+        public Node VisitExpression(OrExpression exp)
+        {
+            var changed = false;
+            Node newCode = exp;
+            foreach (var edit in _edits)
+            {
+                if (edit.CanApply(exp))
+                {
+                    changed = true;
+                    if (edit is Update)
+                    {
+                        newCode = edit.ModifiedNode.InnerNode;
+                    }
+                    else if (edit is Insert)
+                    {
+                        throw new NotImplementedException();
+                    }
+                    else
+                    {
+                        throw new NotImplementedException();
+                    }
+                }
+            }
+            if (changed)
+                return newCode;
+
+            return new OrExpression(VisitExpression(exp.Left),
+                VisitExpression(exp.Right));
+        }
+
+        public Node VisitExpression(IronPython.Compiler.Ast.IndexExpression exp)
         {
             var changed = false;
             Node newCode = exp;
@@ -272,7 +367,7 @@ namespace Tutor
                 VisitExpression(exp.Index));
         }
 
-        private Node VisitExpression(ParenthesisExpression exp)
+        public Node VisitExpression(ParenthesisExpression exp)
         {
             var changed = false;
             Node newCode = exp;
@@ -301,7 +396,7 @@ namespace Tutor
             return new ParenthesisExpression(VisitExpression(exp.Expression));
         }
 
-        private Node VisitExpression(CallExpression exp)
+        public Node VisitExpression(CallExpression exp)
         {
             var newCode = exp;
             foreach (var edit in _edits)
@@ -337,7 +432,7 @@ namespace Tutor
             return new CallExpression(VisitExpression(exp.Target), newArgs.ToArray());
         }
 
-        private Arg VisitArg(Arg arg)
+        public Arg VisitArg(Arg arg)
         {
             var newCode = arg;
             foreach (var edit in _edits)
@@ -369,7 +464,7 @@ namespace Tutor
             return new Arg(newCode.Name, VisitExpression(newCode.Expression));
         }
 
-        private Node VisitExpression(TupleExpression exp)
+        public Node VisitExpression(TupleExpression exp)
         {
             var newCode = exp;
             foreach (var edit in _edits)
@@ -402,7 +497,7 @@ namespace Tutor
             return new TupleExpression(newCode.IsExpandable, newExpressions.ToArray());
         }
 
-        private Statement VisitStatement(Statement stmt)
+        public Statement VisitStatement(Statement stmt)
         {
             if (stmt == null)
                 return stmt;
@@ -427,7 +522,7 @@ namespace Tutor
             throw new Exception("Not implemented yet!");
         }
 
-        private Node VisitStatement(ForStatement stmt)
+        public Node VisitStatement(ForStatement stmt)
         {
             var changed = false;
             Node newCode = stmt;
@@ -456,7 +551,7 @@ namespace Tutor
                 VisitStatement(stmt.Else));
         }
 
-        private Node VisitStatement(AugmentedAssignStatement stmt)
+        public Node VisitStatement(AugmentedAssignStatement stmt)
         {
             AugmentedAssignStatement newCode = stmt;
             foreach (var edit in _edits)
@@ -485,16 +580,9 @@ namespace Tutor
                         }
                         else if (insert.Index == 1)
                         {
-                            var deleted = newCode.Right as IronPython.Compiler.Ast.ConstantExpression;
-                            if (deleted != null && deleted.Value.Equals("Tutor:deletedNode"))
-                            {
-                                newCode = new AugmentedAssignStatement(newCode.Operator,
-                                    newCode.Left, (IronPython.Compiler.Ast.Expression)insert.ModifiedNode.InnerNode);
-                            }
-                            else
-                            {
-                                throw new Exception("Not possible to insert a node. There is already a node at this position");
-                            }
+
+                            newCode = new AugmentedAssignStatement(newCode.Operator,
+                                newCode.Left, (IronPython.Compiler.Ast.Expression)insert.ModifiedNode.InnerNode);
                         } else
                         {
                             throw new Exception("Index out of bound");
@@ -519,7 +607,7 @@ namespace Tutor
             return new AugmentedAssignStatement(newCode.Operator, VisitExpression(newCode.Left), VisitExpression(newCode.Right));
         }
 
-        private Node VisitStatement(WhileStatement stmt)
+        public Node VisitStatement(WhileStatement stmt)
         {
             var changed = false;
             Node newCode = stmt;
@@ -556,7 +644,7 @@ namespace Tutor
             return new WhileStatement(VisitExpression(stmt.Test), VisitStatement(stmt.Body), VisitStatement(stmt.ElseStatement));
         }
 
-        private Node VisitStatement(AssignmentStatement stmt)
+        public Node VisitStatement(AssignmentStatement stmt)
         {
             var newCode = stmt;
             foreach (var edit in _edits)
@@ -565,7 +653,20 @@ namespace Tutor
                 {
                     if (edit is Update)
                     {
-                        newCode = (AssignmentStatement) edit.ModifiedNode.InnerNode;
+                        newCode = edit.ModifiedNode.InnerNode as AssignmentStatement;
+                        if (newCode == null)
+                        {
+                            if (edit.ModifiedNode.InnerNode is Statement)
+                            {
+                                return VisitStatement((Statement)edit.ModifiedNode.InnerNode);
+                            }
+                            if (edit.ModifiedNode.InnerNode is IronPython.Compiler.Ast.Expression)
+                            {
+                                return new ExpressionStatement(VisitExpression((IronPython.Compiler.Ast.Expression)edit.ModifiedNode.InnerNode));
+                            }
+                            throw  new NotImplementedException();
+                        }
+                           
                     }
                     else if (edit is Insert)
                     {
@@ -618,7 +719,7 @@ namespace Tutor
             return new AssignmentStatement(expressions.ToArray(), VisitExpression(newCode.Right));
         }
 
-        private Node VisitStatement(ReturnStatement stmt)
+        public Node VisitStatement(ReturnStatement stmt)
         {
             var changed = false;
             var newCode = stmt;
@@ -645,7 +746,7 @@ namespace Tutor
             return new ReturnStatement(VisitExpression(stmt.Expression));
         }
 
-        private Node VisitStatement(FunctionDefinition stmt)
+        public Node VisitStatement(FunctionDefinition stmt)
         {
             var changed = false;
             Node newCode = stmt;
@@ -679,7 +780,7 @@ namespace Tutor
             return def;
         }
 
-        private Node VisitExpression(Parameter parameter)
+        public Node VisitExpression(Parameter parameter)
         {
             var changed = false;
             Node newCode = parameter;
@@ -711,7 +812,7 @@ namespace Tutor
             return newParam;
         }
 
-        private Node VisitStatement(IfStatement stmt)
+        public Node VisitStatement(IfStatement stmt)
         {
             var newCode = stmt;
             foreach (var edit in _edits)

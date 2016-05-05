@@ -158,6 +158,8 @@ namespace Tutor
             if (exp is MemberExpression) return Wrap((MemberExpression)exp, parent);
             if (exp is IndexExpression) return Wrap((IndexExpression)exp, parent);
             if (exp is LambdaExpression) return Wrap((LambdaExpression)exp, parent);
+            if (exp is OrExpression) return Wrap((OrExpression)exp, parent);
+            if (exp is UnaryExpression) return Wrap((UnaryExpression)exp, parent);
             throw  new NotImplementedException();
         }
 
@@ -168,6 +170,21 @@ namespace Tutor
                 result.AddChild(Wrap(exp.Index, result));
             if (exp.Target != null)
                 result.AddChild(Wrap(exp.Target, result));
+            return result;
+        }
+
+        private static PythonNode Wrap(UnaryExpression exp, PythonNode parent)
+        {
+            var result = new PythonNode(exp, false) { Parent = parent };
+            result.AddChild(Wrap(exp.Expression, result));
+            return result;
+        }
+
+        private static PythonNode Wrap(OrExpression exp, PythonNode parent)
+        {
+            var result = new PythonNode(exp, false) { Parent = parent };
+            result.AddChild(Wrap(exp.Left, result));
+            result.AddChild(Wrap(exp.Right, result));
             return result;
         }
 

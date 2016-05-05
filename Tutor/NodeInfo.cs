@@ -37,6 +37,9 @@ namespace Tutor
                 case "literal":
                     nodeValue = ((ConstantExpression) node.InnerNode).Value;
                     break;
+                case "AugmentedAssignStatement":
+                    nodeValue = ((AugmentedAssignStatement)node.InnerNode).Operator;
+                    break;
                 case "BinaryExpression":
                     nodeValue = ((BinaryExpression) node.InnerNode).Operator;
                     break;
@@ -45,6 +48,9 @@ namespace Tutor
                     break;
                 case "TupleExpression":
                     nodeValue = ((TupleExpression) node.InnerNode).IsExpandable;
+                    break;
+                case "Parameter":
+                    nodeValue = ((Parameter)node.InnerNode).Name;
                     break;
                 case "Arg":
                 case "CallExpression":
@@ -55,6 +61,7 @@ namespace Tutor
                 case "ReturnStatement":
                 case "ExpressionStatement":
                 case "WhileStatement":
+                case "ParenthesisExpression":
                     nodeValue = null;
                     break;
                 default: 

@@ -123,8 +123,17 @@ namespace Tutor
                 case PythonOperator.Divide:
                     _code.Append("/");
                     break;
+                case PythonOperator.Power:
+                    _code.Append("**");
+                    break;
+                case PythonOperator.NotEqual:
+                    _code.Append("!=");
+                    break;
+                case PythonOperator.Not:
+                    _code.Append("not");
+                    break;
                 default:
-                    throw new Exception("Operator string not defined: " + op);
+                    throw new NotImplementedException("Operator string not defined: " + op);
             }
         }
 
@@ -216,6 +225,8 @@ namespace Tutor
             else if (exp is MemberExpression) Write((MemberExpression)exp);
             else if (exp is LambdaExpression) Write((LambdaExpression)exp);
             else if (exp is IndexExpression) Write((IndexExpression)exp);
+            else if (exp is OrExpression) Write((OrExpression)exp);
+            else if (exp is UnaryExpression) Write((UnaryExpression)exp);
             else throw new NotImplementedException();
         }
 
@@ -231,6 +242,20 @@ namespace Tutor
             }
             _code.Append(": ");
             Write(exp.Function.Body, false);
+        }
+
+        private void Write(UnaryExpression exp)
+        {
+            Write(exp.Op);
+            _code.Append(" ");
+            Write(exp.Expression);
+        }
+
+        private void Write(OrExpression exp)
+        {
+            Write(exp.Left);
+            _code.Append(" or ");
+            Write(exp.Right);
         }
 
         private void Write(IndexExpression exp)
@@ -324,8 +349,7 @@ namespace Tutor
                 if (i < stmt.Tests.Count - 1)
                 {
                     Fill();
-                    _code.Append("elif");
-                    Enter();
+                    _code.Append("elif ");
                 }
             }
             if (stmt.ElseStatement != null)

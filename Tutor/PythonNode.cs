@@ -204,6 +204,32 @@ namespace Tutor
                 return Tuple.Create<bool, Node>(true, matchResult);
             }
 
+            if (node is LambdaExpression)
+            {
+                var convertedNode = (LambdaExpression)node;
+                if (Children.Count != 1)
+                    return Tuple.Create<bool, Node>(false, null);
+
+                var result = Children[0].Match(convertedNode.Function);
+                if (!result.Item1)
+                    return Tuple.Create<bool, Node>(false, null);
+                matchResult = AddMatchResult(matchResult, result.Item2);
+                return Tuple.Create(true, matchResult);
+            }
+
+            if (node is MemberExpression)
+            {
+                var convertedNode = (MemberExpression)node;
+                if (Children.Count != 1)
+                    return Tuple.Create<bool, Node>(false, null);
+
+                var result = Children[0].Match(convertedNode.Target);
+                if (!result.Item1)
+                    return Tuple.Create<bool, Node>(false, null);
+                matchResult = AddMatchResult(matchResult, result.Item2);
+                return Tuple.Create(true, matchResult);
+            }
+
             if (node is Parameter)
             {
                 var convertedNode = (Parameter)node;
@@ -541,6 +567,19 @@ namespace Tutor
                     return false;
                 return inner.IsLambda == comparedNode.IsLambda;
             }
+            if (InnerNode is LambdaExpression)
+            {
+                var comparedNode = node as LambdaExpression;
+                if (comparedNode == null) return false;
+                return true;
+            }
+            if (InnerNode is MemberExpression)
+            {
+                var comparedNode = node as MemberExpression;
+                if (comparedNode == null) return false;
+                var inner = (MemberExpression)InnerNode;
+                return inner.Name.Equals(comparedNode.Name);
+            }
             throw new NotImplementedException();
         }
 
@@ -665,6 +704,7 @@ namespace Tutor
         {
             if (Match(node.InnerNode).Item1)
                 return true;
+
             foreach (var child in Children)
             {
                 var contains = child.Contains(node);
@@ -685,6 +725,38 @@ namespace Tutor
                     return result;
             }
             return Tuple.Create(false, height);
+        }
+
+        public int GetHeight()
+        {
+            var maxChildHeight = 0; 
+            foreach (var child in Children)
+            {
+                var childHeight = child.GetHeight();
+                maxChildHeight = childHeight > maxChildHeight ? childHeight : maxChildHeight;
+            }
+            return 1 + maxChildHeight;
+        }
+
+        public PythonNode GetCorrespondingNode(PythonNode node)
+        {
+            if (Match(node.InnerNode).Item1)
+                return this;
+
+            foreach (var child in Children)
+            {
+                var childResult = child.GetCorrespondingNode(node);
+                if (childResult != null)
+                    return childResult;
+            }
+            return null;
+        }
+
+        public int CountAbstract()
+        {
+            var value = IsAbstract ? 1 : 0;
+            var numberOfAbsChildren = Children.Sum(e => e.CountAbstract());
+            return value + numberOfAbsChildren; 
         }
     }
 

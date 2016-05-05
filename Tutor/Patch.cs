@@ -40,6 +40,7 @@ namespace Tutor
             var combinations = GetAllCombinations();
             foreach (var combination in combinations)
             {
+                combination.ForEach(e => e.Applied = false);
                 var rewriter = new Rewriter(combination);
                 var newAst = rewriter.Rewrite(ast.InnerNode);
                 results.Add((PythonAst)newAst);

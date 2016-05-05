@@ -12,7 +12,7 @@ namespace Tutor
         public PythonNode ModifiedNode { get; }
         public PythonNode TargetNode { get; set; }
 
-        public Boolean Applied { get; private set; }
+        public Boolean Applied { get; set; }
 
         public Node Context { get; protected set; }
 

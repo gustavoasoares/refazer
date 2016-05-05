@@ -11,30 +11,65 @@ namespace Tutor.Transformation
     {
         public const double VariableScore = 0;
 
-        [FeatureCalculator("SubStr")]
-        public static double Score_SubStr(double x, double pp) => Math.Log(pp);
+        [FeatureCalculator("Apply")]
+        public static double Score_Apply(double x, double patch) => Math.Log(patch);
 
-        [FeatureCalculator("PosPair")]
-        public static double Score_PosPair(double pp1, double pp2) => pp1 * pp2;
+        [FeatureCalculator("InOrderSort")]
+        public static double Score_InOrderSort(double document) => document;
 
-        [FeatureCalculator("AbsPos")]
-        public static double Score_AbsPos(double x, double k)
+        [FeatureCalculator("SingleChild")]
+        public static double Score_SingleChild(double n) => n;
+
+        [FeatureCalculator("Children", Method = CalculationMethod.FromChildrenFeatureValues)]
+        public static double Score_Children(double n, double children) => n + children;
+
+        [FeatureCalculator("Update")]
+        public static double Score_Update(double n, double node) => n + node;
+
+        [FeatureCalculator("Insert")]
+        public static double Score_Insert(double n, double node, double k) => n +  node + k;
+
+        [FeatureCalculator("Delete")]
+        public static double Score_Delete(double n, double r) => n +  r;
+
+        [FeatureCalculator("Match")]
+        public static double Score_Match(double x, double template) => x + template;
+
+        [FeatureCalculator("Selected")]
+        public static double Score_Selected(double match, double nodes) => match + nodes;
+
+        [FeatureCalculator("EditMap", Method = CalculationMethod.FromChildrenFeatureValues)]
+        public static double Score_EditMap(double edit, double selectednodes) => edit + selectednodes;
+
+        [FeatureCalculator("Patch")]
+        public static double Score_Patch(double editset) => editset;
+
+        [FeatureCalculator("ConcatPatch", Method = CalculationMethod.FromChildrenFeatureValues)]
+        public static double Score_ConcatPatch(double editSet, double patch) => editSet + patch;
+
+        [FeatureCalculator("ReferenceNode")]
+        public static double Score_ReferenceNode(double node, double template) => node + template;
+
+        [FeatureCalculator("LeafConstNode")]
+        public static double Score_LeafConstNode(double info)
         {
-            k = 1 / k - 1;
-            // Prefer absolute positions to regex positions if k is small
-            return Math.Max(10 * Token.MinScore - (k - 1) * 3 * Token.MinScore, 1 / k);
+            return info; 
+        }
+
+        [FeatureCalculator("ConstNode")]
+        public static double Score_ConstNode(double info, double children)
+        {
+            return info + children;
         }
 
         [FeatureCalculator(Method = CalculationMethod.FromLiteral)]
-        public static double KScore(int k) => k >= 0 ? 1.0 / (k + 1.0) : 1.0 / (-k + 1.1);
-
-        [FeatureCalculator("BoundaryPair")]
-        public static double Score_BoundaryPair(double r1, double r2) => r1 + r2;
-
-        [FeatureCalculator("RegPos")]
-        public static double Score_RegPos(double x, double rr, double k) => rr * k;
+        public static double KScore(int k) => 1;
 
         [FeatureCalculator(Method = CalculationMethod.FromLiteral)]
-        public static double RegexScore(RegularExpression r) => r.Score;
+        public static double InfoScore(NodeInfo info) => 1;
+
+        [FeatureCalculator(Method = CalculationMethod.FromLiteral)]
+        public static double TemplateScore(PythonNode template) => template.GetHeight() * 10 + template.CountAbstract();
+
     }
 }

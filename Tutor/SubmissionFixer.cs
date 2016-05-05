@@ -18,15 +18,16 @@ namespace Tutor
     {
         public List<IEnumerable<ProgramNode>> ProsePrograms { get; }
 
-        public List<ProgramNode> UsedPrograms { get;  } 
+        public Dictionary<ProgramNode, int> UsedPrograms { get;  } 
 
         private Result<Grammar> _grammar = DSLCompiler.LoadGrammarFromFile(@"C:\Users\Gustavo\git\Tutor\Tutor\Transformation.grammar");
 
         public SubmissionFixer()
         {
             ProsePrograms = new List<IEnumerable<ProgramNode>>();
-            UsedPrograms = new List<ProgramNode>();
+            UsedPrograms = new Dictionary<ProgramNode, int>();
         }
+
         public bool Fix(string program, string programAfter, Dictionary<string, int> tests)
         {
             PythonAst ast = null;
@@ -45,9 +46,12 @@ namespace Tutor
 
             foreach (var proseProgram in ProsePrograms)
             {
+                var size = proseProgram.Count();
                 if (TryFix(tests, proseProgram.First(), input, unparser)) return true;
-                if (TryFix(tests, proseProgram.ElementAt(1), input, unparser)) return true;
-                if (TryFix(tests, proseProgram.ElementAt(2), input, unparser)) return true;
+                if (size > 1) 
+                    if (TryFix(tests, proseProgram.ElementAt(1), input, unparser)) return true;
+                if (size > 2)
+                    if (TryFix(tests, proseProgram.ElementAt(2), input, unparser)) return true;
             }
 
             //learn a new program
@@ -55,11 +59,11 @@ namespace Tutor
             var examples = new Dictionary<State, object> { { input, astAfter } };
             var spec = new ExampleSpec(examples);
             var prose = new SynthesisEngine(_grammar.Value);
-            var learned = prose.LearnGrammar(spec);
-            if (learned.RealizedPrograms.Any())
+            var learned = prose.LearnGrammarTopK(spec, "Score");
+            if (learned.Any())
             {
-                ProsePrograms.Add(learned.RealizedPrograms);
-                if (TryFix(tests, learned.RealizedPrograms.First(), input, unparser)) return true;
+                ProsePrograms.Add(learned);
+                if (TryFix(tests, learned.First(), input, unparser)) return true;
             }
             return false;
         }
@@ -71,7 +75,15 @@ namespace Tutor
             Console.Out.WriteLine(current);
             Console.Out.WriteLine("===================");
 
-            var output = current.Invoke(input);
+            object output = null;
+            try
+            {
+                output = current.Invoke(input);
+            }
+            catch (Exception)
+            {
+                return false; 
+            }
             if (output != null)
             {
                 var programSet = output as IEnumerable<PythonAst>;
@@ -104,7 +116,16 @@ namespace Tutor
                     }
                     if (isFixed)
                     {
-                        UsedPrograms.Add(current);
+                        if (UsedPrograms.ContainsKey(current))
+                        {
+                            var count = UsedPrograms[current];
+                            UsedPrograms.Remove(current);
+                            UsedPrograms.Add(current, count + 1);
+                        }
+                        else
+                        {
+                            UsedPrograms.Add(current, 1);
+                        }
                         return true;
                     }
                 }

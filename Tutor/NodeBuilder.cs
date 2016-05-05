@@ -26,6 +26,7 @@ namespace Tutor
 
         internal static Node Create(NodeInfo info, List<PythonNode> Children)
         {
+            var rewriter = new Rewriter(new List<Edit>());
             switch (info.NodeType)
             {
                 case "CallExpression":
@@ -35,31 +36,42 @@ namespace Tutor
                     {
                         for (var i = 1; i < Children.Count; i++)
                         {
-                            args.Add((Arg)Children[i].InnerNode);
+                            args.Add(rewriter.VisitArg((Arg)Children[i].InnerNode));
                         }
                     }
-                    return new CallExpression(target, args.ToArray());
+                    return new CallExpression(rewriter.VisitExpression(target), args.ToArray());
                 case "Arg":
                     var expression = (Expression)Children[0].InnerNode;
-                    return (info.NodeValue == null) ? new Arg(expression) :
+                    return (info.NodeValue == null) ? new Arg(rewriter.VisitExpression(expression)) :
                         new Arg(info.NodeType, expression);
                 case "BinaryExpression":
                     var left = (Expression)Children[0].InnerNode;
                     var right = (Expression)Children[1].InnerNode;
                     PythonOperator op = info.NodeValue;
-                    return new BinaryExpression(op, left, right);
+                    return new BinaryExpression(op, rewriter.VisitExpression(left), rewriter.VisitExpression(right));
+                case "AugmentedAssignStatement":
+                    var left1 = (Expression)Children[0].InnerNode;
+                    var right1 = (Expression)Children[1].InnerNode;
+                    PythonOperator op1 = info.NodeValue;
+                    return new AugmentedAssignStatement(op1, rewriter.VisitExpression(left1), rewriter.VisitExpression(right1));
                 case "SuiteStatement":
-                    var statements = Children.Select(e => (Statement) e.InnerNode);
+                    var statements = Children.Select(e => rewriter.VisitStatement((Statement)e.InnerNode));
                     return new SuiteStatement(statements.ToArray());
                 case "WhileStatement":
                     var test = (Expression) Children[0].InnerNode;
                     var body = (Statement) Children[1].InnerNode;
-                    Statement else_ = (Children.Count == 3) ? (Statement) Children[2].InnerNode : null; 
-                    return new WhileStatement(test, body, else_);
+                    Statement else_ = (Children.Count == 3) ? rewriter.VisitStatement((Statement)Children[2].InnerNode) : null; 
+                    return new WhileStatement(rewriter.VisitExpression(test), rewriter.VisitStatement(body), else_);
                 case "ReturnStatement":
-                    return new ReturnStatement((Expression) Children[0].InnerNode);
+                    return new ReturnStatement(rewriter.VisitExpression((Expression)Children[0].InnerNode));
+                case "Parameter":
+                    var parameter = new Parameter(info.NodeValue);
+                    if (Children.Any()) parameter.DefaultValue = rewriter.VisitExpression((Expression)Children[0].InnerNode);
+                    return parameter;
                 case "ExpressionStatement":
-                    return new ReturnStatement((Expression)Children[0].InnerNode);
+                    return new ReturnStatement(rewriter.VisitExpression((Expression)Children[0].InnerNode));
+                case "ParenthesisExpression":
+                    return new ParenthesisExpression(rewriter.VisitExpression((Expression)Children[0].InnerNode));  
                 case "IfStatement":
                     if (Children.Last().InnerNode is IfStatementTest)
                     {
@@ -67,14 +79,14 @@ namespace Tutor
                     }
                     var tests = Children.GetRange(0, Children.Count - 1).Select(e => (IfStatementTest) e.InnerNode);
                     var elseStmt = Children.Last().InnerNode;
-                    return new IfStatement(tests.ToArray(), (Statement) elseStmt);
+                    return new IfStatement(tests.ToArray(), rewriter.VisitStatement((Statement)elseStmt));
                 case "IfStatementTest":
-                    return new IfStatementTest((Expression) Children[0].InnerNode, (Statement) Children[1].InnerNode);
+                    return new IfStatementTest(rewriter.VisitExpression((Expression)Children[0].InnerNode), rewriter.VisitStatement((Statement)Children[1].InnerNode));
                 case "AssignmentStatement":
-                    IEnumerable<Expression> leftAssign = Children.GetRange(0, Children.Count - 1).Select(e => (Expression) e.InnerNode);
-                    return new AssignmentStatement(leftAssign.ToArray(), (Expression) Children.Last().InnerNode);
+                    IEnumerable<Expression> leftAssign = Children.GetRange(0, Children.Count - 1).Select(e => rewriter.VisitExpression((Expression)e.InnerNode));
+                    return new AssignmentStatement(leftAssign.ToArray(), rewriter.VisitExpression((Expression)Children.Last().InnerNode));
                 case "TupleExpression":
-                    IEnumerable<Expression> expressions = Children.Select(e => (Expression) e.InnerNode);
+                    IEnumerable<Expression> expressions = Children.Select(e => rewriter.VisitExpression((Expression)e.InnerNode));
                     return new TupleExpression(info.NodeValue, expressions.ToArray());
                 default:
                     throw new NotImplementedException(info.NodeType);

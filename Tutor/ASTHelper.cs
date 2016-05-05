@@ -57,7 +57,7 @@ namespace Tutor
             try
             {
                 var serviceResult = _serviceProxy.Execute(s);
-                if (serviceResult.Equals("aborted"))
+                if (serviceResult != null && serviceResult.Equals("aborted"))
                     _timeout = true;
                 else
                     _timeout = false;

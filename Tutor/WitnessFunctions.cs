@@ -29,6 +29,10 @@ namespace Tutor.Transformation
                 var rootAndNonRootEdits = SplitEditsByRootsAndNonRoots(editDistance);
                 var edits = ExtractPrimaryEdits(rootAndNonRootEdits, editDistance);
 
+                //todo fix this bug
+                if (edits.Count > 18)
+                    return null;
+
                 var patch = new Patch();
                 edits.ForEach(e => patch.EditSets.Add(new List<Edit>() {e}));
                 examples[input] = patch;
@@ -412,18 +416,22 @@ namespace Tutor.Transformation
                 if (!ast.Contains(node))
                     return null;
 
+                node = ast.GetCorrespondingNode(node);
+
+                node.EditId = 1;
                 var t3 = node.GetCopy();
-                t3.EditId = 1; 
+                t3.Parent = null;
                 templateTrees.Add(t3);
+
                 var t4 = node.GetAbstractCopy();
-                t4.EditId = 1;
+                t4.Parent = null;
                 templateTrees.Add(t4);
 
-                var t1 = t3.Parent.GetCopy();
+                var t1 = node.Parent.GetCopy();
                 templateTrees.Add(t1);
-                var t2 = t3.Parent.GetAbstractCopy();
+                var t2 = node.Parent.GetAbstractCopy();
                 templateTrees.Add(t2);
-
+                node.EditId = 0;
                 templateExamples[input] = templateTrees;
             }
             return DisjunctiveExamplesSpec.From(templateExamples);

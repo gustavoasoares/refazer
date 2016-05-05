@@ -8,7 +8,12 @@ using IronPython.Compiler.Ast;
 using semantics Tutor.Transformation.Semantics;
 using learners Tutor.Transformation.WitnessFunctions;
 
+
+
 language Transformation;
+
+@vardefault[VariableScore]
+feature double Score = RankingScore;
 
 @start IEnumerable<PythonAst> transformation := Apply(ast, patch);
 Patch patch := Patch(editSet) | ConcatPatch(editSet, patch);
@@ -17,12 +22,13 @@ IEnumerable<PythonNode> selectednodes := Selected(match, nodes) = Filter(\x : Py
 bool match := Match(x, template);
 Edit edit := Update(node, n) | Insert(node, n, k) | Delete(node, r);
 PythonNode r := ReferenceNode(node, template); 
-PythonNode n := LeafConstNode(info) | ConstNode(info, children) | r;
+PythonNode n := c | r;
+PythonNode c := LeafConstNode(info) | ConstNode(info, children);
 IEnumerable<PythonNode> children := SingleChild(n) | Children(n, children);
 IEnumerable<PythonNode> nodes := InOrderSort(ast);
 
 
 @input PythonNode ast;
-PythonNode template;
-NodeInfo info; 
-int k;
+@feature[Score=TemplateScore] PythonNode template;
+@feature[Score=InfoScore] NodeInfo info; 
+@feature[Score=KScore] int k;

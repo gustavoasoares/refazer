@@ -1,4 +1,5 @@
-﻿using IronPython;
+﻿using System;
+using IronPython;
 using IronPython.Compiler;
 using IronPython.Compiler.Ast;
 using IronPython.Hosting;
@@ -10,6 +11,7 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 using System.Collections.Generic;
 using System.Linq;
 using Microsoft.ProgramSynthesis;
+using Microsoft.ProgramSynthesis.AST;
 using Microsoft.ProgramSynthesis.Compiler;
 using Microsoft.ProgramSynthesis.Learning;
 using Microsoft.ProgramSynthesis.Specifications;
@@ -276,6 +278,33 @@ def product(n, term):
             AssertCorrectTransformation(before, after);
         }
 
+        [TestMethod]
+        public void TestLearn14()
+        {
+            var before = @"
+def product(n, term):
+    x = n
+    y = 1
+    while x>1: 
+        x -= 1
+        y = y*term(x)
+    return y";
+            var after = @"
+def product(n, term):
+    x, y = n, 1
+    while x>=1:
+        x, y = x-1, y*term(x)
+    return y
+    x = n
+    y = 1
+    while x>=1: 
+        temp = x 
+        x -= 1
+        y = y*term(temp)
+    return y";
+            AssertCorrectTransformation(before, after);
+        }
+
         private static void AssertCorrectTransformation(string before, string after)
         {
             var grammar = DSLCompiler.LoadGrammarFromFile(@"C:\Users\Gustavo\git\Tutor\Tutor\Transformation.grammar");
@@ -289,13 +318,21 @@ def product(n, term):
             var spec = new ExampleSpec(examples);
 
             var prose = new SynthesisEngine(grammar.Value);
-            var learned = prose.LearnGrammar(spec);
-            var first = learned.RealizedPrograms.First();
+            var learned = prose.LearnGrammarTopK(spec,"Score", k:1);
+
+            var first = learned.First();
             var output = first.Invoke(input) as IEnumerable<PythonAst>;
-            var fixedProgram = output.First();
-            var unparser = new Unparser();
-            var newCode = unparser.Unparse(fixedProgram);
-            Assert.AreEqual(after, newCode);
+
+            var isFixed = false;
+            foreach (var fixedProgram in output)
+            {
+                var unparser = new Unparser();
+                var newCode = unparser.Unparse(fixedProgram);
+                 isFixed = after.Equals(newCode);
+                if (isFixed)
+                    break; 
+            }
+            Assert.IsTrue(isFixed);
         }
 
 
