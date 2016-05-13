@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 using IronPython.Compiler;
 using IronPython.Compiler.Ast;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
+using Tutor.ast;
 
 namespace Tutor
 {
@@ -13,7 +14,7 @@ namespace Tutor
     {
         public static PythonNode Wrap(PythonAst ast)
         {
-            var result = new PythonNode(ast, false);
+            var result = new PythonAstNode(ast, false);
             result.AddChild(Wrap(ast.Body, result));
             
             result.Walk(new MakeReferenceNodeVisitor());
@@ -53,7 +54,7 @@ namespace Tutor
 
         private static PythonNode Wrap(PrintStatement stmt, PythonNode parent)
         {
-            var result = new PythonNode(stmt, false) { Parent = parent };
+            var result = new PrintStatementNode(stmt, false) { Parent = parent };
             result.AddChild(Wrap(stmt.Destination, result));
             stmt.Expressions.ForEach(e => result.AddChild(Wrap(e,result)));
             return result;
@@ -61,19 +62,19 @@ namespace Tutor
 
         private static PythonNode Wrap(ImportStatement stmt, PythonNode parent)
         {
-            var result = new PythonNode(stmt, false) { Parent = parent };
+            var result = new ImportStatementNode(stmt, false) { Parent = parent };
             return result;
         }
         private static PythonNode Wrap(ExpressionStatement stmt, PythonNode parent)
         {
-            var result = new PythonNode(stmt, false) { Parent = parent };
+            var result = new ExpressionStatementNode(stmt, false) { Parent = parent };
             result.AddChild(Wrap(stmt.Expression, result));
             return result;
         }
 
         private static PythonNode Wrap(ForStatement stmt, PythonNode parent)
         {
-            var result = new PythonNode(stmt, false) {Parent = parent};
+            var result = new ForStatementNode(stmt, false) {Parent = parent};
             result.AddChild(Wrap(stmt.Left,result));
             result.AddChild(Wrap(stmt.List, result));
             result.AddChild(Wrap(stmt.Body, result));
@@ -86,7 +87,7 @@ namespace Tutor
 
         private static PythonNode Wrap(AugmentedAssignStatement stmt, PythonNode parent)
         {
-            var result = new PythonNode(stmt, false) { Parent = parent, Value = stmt.Operator.ToString()};
+            var result = new AugmentedAssignStatementNode(stmt, false) { Parent = parent, Value = stmt.Operator.ToString()};
             result.AddChild(Wrap(stmt.Left, result));
             result.AddChild(Wrap(stmt.Right, result));
             return result;
@@ -94,7 +95,7 @@ namespace Tutor
 
         private static PythonNode Wrap(WhileStatement stmt, PythonNode parent)
         {
-            var result = new PythonNode(stmt, false) { Parent = parent };
+            var result = new WhileStatementNode(stmt, false) { Parent = parent };
             result.AddChild(Wrap(stmt.Test, result));
             result.AddChild(Wrap(stmt.Body, result));
             if (stmt.ElseStatement != null)
@@ -107,7 +108,7 @@ namespace Tutor
 
         private static PythonNode Wrap(AssignmentStatement stmt, PythonNode parent)
         {
-            var result = new PythonNode(stmt, false) { Parent = parent };
+            var result = new AssignmentStatementNode(stmt, false) { Parent = parent };
             foreach (var expression in stmt.Left)
             {
                 result.AddChild(Wrap(expression, result));
@@ -118,7 +119,7 @@ namespace Tutor
 
         private static PythonNode Wrap(SuiteStatement stmt, PythonNode parent)
         {
-            var result = new PythonNode(stmt, false) { Parent = parent };
+            var result = new SuiteStatementNode(stmt, false) { Parent = parent };
             foreach (var statement in stmt.Statements)
             {
                 result.AddChild(Wrap(statement, result));
@@ -128,7 +129,7 @@ namespace Tutor
 
         private static PythonNode Wrap(FunctionDefinition stmt, PythonNode parent)
         {
-            var result = new PythonNode(stmt, false) { Parent = parent };
+            var result = new FunctionDefinitionNode(stmt, false) { Parent = parent };
             if (stmt.Decorators != null)
             {
                 foreach (var exp in stmt.Decorators)
@@ -147,7 +148,7 @@ namespace Tutor
 
         private static PythonNode Wrap(Parameter parameter, PythonNode parent)
         {
-            var result = new PythonNode(parameter, false) { Parent = parent, Value = parameter.Name};
+            var result = new ParameterNode(parameter, false) { Parent = parent, Value = parameter.Name};
             if (parameter.DefaultValue != null)
             {
                 result.AddChild(Wrap(parameter.DefaultValue, result));
@@ -173,7 +174,7 @@ namespace Tutor
 
         private static PythonNode Wrap(IndexExpression exp, PythonNode parent)
         {
-            var result = new PythonNode(exp, false) { Parent = parent };
+            var result = new IndexExpressionNode(exp, false) { Parent = parent };
             if (exp.Index != null)
                 result.AddChild(Wrap(exp.Index, result));
             if (exp.Target != null)
@@ -183,14 +184,14 @@ namespace Tutor
 
         private static PythonNode Wrap(UnaryExpression exp, PythonNode parent)
         {
-            var result = new PythonNode(exp, false) { Parent = parent };
+            var result = new UnaryExpressionNode(exp, false) { Parent = parent };
             result.AddChild(Wrap(exp.Expression, result));
             return result;
         }
 
         private static PythonNode Wrap(OrExpression exp, PythonNode parent)
         {
-            var result = new PythonNode(exp, false) { Parent = parent };
+            var result = new OrExpressionNode(exp, false) { Parent = parent };
             result.AddChild(Wrap(exp.Left, result));
             result.AddChild(Wrap(exp.Right, result));
             return result;
@@ -198,28 +199,28 @@ namespace Tutor
 
         private static PythonNode Wrap(LambdaExpression exp, PythonNode parent)
         {
-            var result = new PythonNode(exp, false) { Parent = parent };
+            var result = new LambdaExpressionNode(exp, false) { Parent = parent };
             result.AddChild(Wrap(exp.Function, result));
             return result;
         }
 
         private static PythonNode Wrap(MemberExpression exp, PythonNode parent)
         {
-            var result = new PythonNode(exp, false) { Parent = parent };
+            var result = new MemberExpressionNode(exp, false) { Parent = parent };
             result.AddChild(Wrap(exp.Target, result));
             return result;
         }
 
         private static PythonNode Wrap(ParenthesisExpression exp, PythonNode parent)
         {
-            var result = new PythonNode(exp, false) { Parent = parent };
+            var result = new ParenthesisExpressionNode(exp, false) { Parent = parent };
             result.AddChild(Wrap(exp.Expression, result));
             return result;
         }
 
         private static PythonNode Wrap(TupleExpression exp, PythonNode parent)
         {
-            var result = new PythonNode(exp, false) { Parent = parent };
+            var result = new TupleExpressionNode(exp, false) { Parent = parent };
             foreach (var item in exp.Items)
             {
                 result.AddChild(Wrap(item, result));
@@ -229,11 +230,11 @@ namespace Tutor
 
         private static PythonNode Wrap(NameExpression exp, PythonNode parent)
         {
-            return new PythonNode(exp, false) { Parent = parent, Value = exp.Name};
+            return new NameExpressionNode(exp, false) { Parent = parent, Value = exp.Name};
         }
         private static PythonNode Wrap(BinaryExpression exp, PythonNode parent)
         {
-            var result = new PythonNode(exp, false) { Parent = parent, Value = exp.Operator.ToString()};
+            var result = new BinaryExpressionNode(exp, false) { Parent = parent, Value = exp.Operator.ToString()};
             result.AddChild(Wrap(exp.Left, result));
             result.AddChild(Wrap(exp.Right, result));
             return result;
@@ -241,12 +242,12 @@ namespace Tutor
 
         private static PythonNode Wrap(ConstantExpression exp, PythonNode parent)
         {
-            return new PythonNode(exp, false) { Parent = parent, Value = exp.Value.ToString()};
+            return new ConstantExpressionNode(exp, false) { Parent = parent, Value = exp.Value.ToString()};
         }
 
         private static PythonNode Wrap(CallExpression exp, PythonNode parent)
         {
-            var result = new PythonNode(exp, false) { Parent = parent};
+            var result = new CallExpressionNode(exp, false) { Parent = parent};
             result.AddChild(Wrap(exp.Target, result));
             for (var i = 0; i < exp.Args.Count; i++)
             {
@@ -258,21 +259,21 @@ namespace Tutor
 
         private static PythonNode Wrap(Arg arg, PythonNode parent)
         {
-            var result = new PythonNode(arg, false) {Parent = parent, Value = arg.Name};
+            var result = new ArgNode(arg, false) {Parent = parent, Value = arg.Name};
             result.AddChild(Wrap(arg.Expression, result));
             return result;
         }
 
         private static PythonNode Wrap(ReturnStatement stmt, PythonNode parent)
         {
-            var result = new PythonNode(stmt, false) { Parent = parent };
+            var result = new ReturnStatementNode(stmt, false) { Parent = parent };
             result.AddChild(Wrap(stmt.Expression, result));
             return result;
         }
 
         private static PythonNode Wrap(IfStatement stmt, PythonNode parent)
         {
-            var result = new PythonNode(stmt, false) { Parent = parent };
+            var result = new IfStatementNode(stmt, false) { Parent = parent };
             for (var i = 0; i < stmt.Tests.Count; i++)
             {
                 var test = stmt.Tests[i];
@@ -288,7 +289,7 @@ namespace Tutor
 
         private static PythonNode Wrap(IfStatementTest test, PythonNode parent)
         {
-            var result = new PythonNode(test, false) { Parent = parent };
+            var result = new IfStatementTestNode(test, false) { Parent = parent };
             result.AddChild(Wrap(test.Test, result));
             result.AddChild(Wrap(test.Body, result));
             return result;
