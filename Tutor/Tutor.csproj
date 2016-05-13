@@ -220,9 +220,8 @@
     <Compile Include="EditsLearner.cs" />
     <Compile Include="Patch.cs" />
     <Compile Include="PythonNode.cs" />
-    <Compile Include="RankingScore.cs" />
-    <Compile Include="RegexUtils.cs" />
-    <Compile Include="Semantics.cs" />
+    <Compile Include="synthesis\RankingScore.cs" />
+    <Compile Include="synthesis\Semantics.cs" />
     <Compile Include="SubmissionFixer.cs" />
     <Compile Include="NodeSynthesizer.cs" />
     <Compile Include="TestBasedCluster.cs" />
@@ -233,13 +232,13 @@
     <Compile Include="TestCaseException.cs" />
     <Compile Include="Unparser.cs" />
     <Compile Include="Rewriter.cs" />
-    <Compile Include="WitnessFunctions.cs" />
+    <Compile Include="synthesis\WitnessFunctions.cs" />
     <Compile Include="Zss.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="App.config" />
     <None Include="packages.config" />
-    <None Include="Transformation.grammar">
+    <None Include="synthesis\Transformation.grammar">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
   </ItemGroup>

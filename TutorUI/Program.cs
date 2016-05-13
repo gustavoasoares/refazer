@@ -6,15 +6,9 @@ using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
 using IronPython.Compiler.Ast;
-using Microsoft.ProgramSynthesis;
 using Microsoft.ProgramSynthesis.AST;
-using Microsoft.ProgramSynthesis.Compiler;
-using Microsoft.ProgramSynthesis.Diagnostics;
-using Microsoft.ProgramSynthesis.Learning;
-using Microsoft.ProgramSynthesis.Specifications;
 using Microsoft.Scripting;
 using Newtonsoft.Json;
-using Newtonsoft.Json.Linq;
 using Tutor;
 
 namespace TutorUI
@@ -77,9 +71,9 @@ namespace TutorUI
 
             var cluster = new TestBasedCluster();
             cluster.GenerateCluster(questionLogs);
-            var clusters = cluster.Clusters[TestBasedCluster.Question.Repeated];
+            var clusters = cluster.Clusters[TestBasedCluster.Question.Product];
 
-            var tests = GetTests("repeated");
+            var tests = GetTests("product");
 
 
             var values = from pair in clusters

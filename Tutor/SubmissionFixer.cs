@@ -23,7 +23,7 @@ namespace Tutor
 
         public Dictionary<string, int> UsedPrograms { get;  } 
 
-        private Result<Grammar> _grammar = DSLCompiler.LoadGrammarFromFile(@"C:\Users\Gustavo\git\Tutor\Tutor\Transformation.grammar");
+        private Result<Grammar> _grammar = DSLCompiler.LoadGrammarFromFile(@"C:\Users\Gustavo\git\Tutor\Tutor\synthesis\Transformation.grammar");
 
         public SubmissionFixer(List<Tuple<List<Mistake>, ProgramNode>> classification)
         {
@@ -99,7 +99,7 @@ namespace Tutor
         }
 
         private static Result<Grammar> grammar =
-            DSLCompiler.LoadGrammarFromFile(@"C:\Users\Gustavo\git\Tutor\Tutor\Transformation.grammar");
+            DSLCompiler.LoadGrammarFromFile(@"C:\Users\Gustavo\git\Tutor\Tutor\synthesis\Transformation.grammar");
 
         public static ProgramNode LearnProgram(List<Mistake> list, Mistake next)
         {
