@@ -76,7 +76,6 @@ total = term(i)*total";
         [TestMethod]
         public void TestLearn5()
         {
-
             var before = @"
 def product(n, term):
     item, Total = 0, 1
