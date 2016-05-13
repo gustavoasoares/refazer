@@ -17,7 +17,7 @@ namespace Tutor.ast
         {
         }
 
-        protected override bool IsEqualToInnerNode2(Node node)
+        protected override bool IsEqualToInnerNode(Node node)
         {
             throw new NotImplementedException();
         }

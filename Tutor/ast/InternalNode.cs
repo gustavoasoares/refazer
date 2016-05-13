@@ -17,7 +17,7 @@ namespace Tutor.ast
         {
         }
 
-        public override Tuple<bool, Node> Match2(Node node)
+        public override Tuple<bool, Node> Match(Node node)
         {
             Node matchResult = null;
             if (!MatchInternalNode(node)) return Tuple.Create<bool, Node>(false, null);

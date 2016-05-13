@@ -238,6 +238,7 @@
     <Compile Include="ast\PrintStatementNode.cs" />
     <Compile Include="ast\PythonAstNode.cs" />
     <Compile Include="ast\ReturnStatementNode.cs" />
+    <Compile Include="ast\Rewriter.cs" />
     <Compile Include="ast\SuiteStatementNode.cs" />
     <Compile Include="ast\TupleExpressionNode.cs" />
     <Compile Include="ast\UnaryExpressionNode.cs" />
@@ -259,7 +260,6 @@
     <Compile Include="feedback\Report.cs" />
     <Compile Include="ast\TestCaseException.cs" />
     <Compile Include="ast\Unparser.cs" />
-    <Compile Include="ast\Rewriter.cs" />
     <Compile Include="synthesis\WitnessFunctions.cs" />
     <Compile Include="treediff\Zss.cs" />
   </ItemGroup>

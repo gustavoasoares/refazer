@@ -45,7 +45,7 @@ namespace Tutor.ast
             return Tuple.Create(true, binding);
         }
 
-        protected override bool IsEqualToInnerNode2(Node node)
+        protected override bool IsEqualToInnerNode(Node node)
         {
             var comparedNode = node as WhileStatement;
             if (comparedNode == null) return false;

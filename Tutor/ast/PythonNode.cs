@@ -5,6 +5,7 @@ using System.Text;
 using System.Threading.Tasks;
 using CsQuery.ExtensionMethods;
 using IronPython.Compiler.Ast;
+using Tutor.ast;
 
 namespace Tutor
 {
@@ -43,7 +44,7 @@ namespace Tutor
         }
 
 
-        public abstract Tuple<bool, Node> Match2(Node node);
+        public abstract Tuple<bool, Node> Match(Node node);
         
 
         protected bool MatchInternalNode(Node node)
@@ -55,19 +56,13 @@ namespace Tutor
             }
             else
             {
-                if (!IsEqualToInnerNode2(node))
+                if (!IsEqualToInnerNode(node))
                     return false;
             }
             return true;
         }
 
-        protected abstract bool IsEqualToInnerNode2(Node node);
-
-
-        public Tuple<bool, Node> Match(Node node)
-        {
-            return Match2(node);
-        }
+        protected abstract bool IsEqualToInnerNode(Node node);
 
         protected Node AddBindingNode(Node current, Node matchresult)
         {
@@ -153,6 +148,7 @@ namespace Tutor
                 return ((Value != null ? Value.GetHashCode() : 0) * 397) ^ (InnerNode!= null ? InnerNode.GetHashCode() : 0);
             }
         }
+
 
         public bool Similar(PythonNode node1)
         {

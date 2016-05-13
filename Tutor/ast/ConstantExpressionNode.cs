@@ -17,7 +17,7 @@ namespace Tutor.ast
         {
         }
 
-        protected override bool IsEqualToInnerNode2(Node node)
+        protected override bool IsEqualToInnerNode(Node node)
         {
             var inner = InnerNode as ConstantExpression;
             var comparedNode = node as ConstantExpression;
