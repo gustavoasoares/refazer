@@ -212,28 +212,28 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="ASTHelper.cs" />
-    <Compile Include="NodeBuilder.cs" />
-    <Compile Include="NodeInfo.cs" />
-    <Compile Include="NodeWrapper.cs" />
-    <Compile Include="Edit.cs" />
-    <Compile Include="EditsLearner.cs" />
-    <Compile Include="Patch.cs" />
-    <Compile Include="PythonNode.cs" />
+    <Compile Include="ast\ASTHelper.cs" />
+    <Compile Include="ast\NodeBuilder.cs" />
+    <Compile Include="synthesis\NodeInfo.cs" />
+    <Compile Include="ast\NodeWrapper.cs" />
+    <Compile Include="synthesis\Edit.cs" />
+    <Compile Include="cluster\EditsLearner.cs" />
+    <Compile Include="synthesis\Patch.cs" />
+    <Compile Include="ast\PythonNode.cs" />
     <Compile Include="synthesis\RankingScore.cs" />
     <Compile Include="synthesis\Semantics.cs" />
     <Compile Include="SubmissionFixer.cs" />
-    <Compile Include="NodeSynthesizer.cs" />
-    <Compile Include="TestBasedCluster.cs" />
-    <Compile Include="Cluster.cs" />
-    <Compile Include="EditClusters.cs" />
+    <Compile Include="ast\NodeSynthesizer.cs" />
+    <Compile Include="cluster\TestBasedCluster.cs" />
+    <Compile Include="cluster\Cluster.cs" />
+    <Compile Include="cluster\EditClusters.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Report.cs" />
-    <Compile Include="TestCaseException.cs" />
-    <Compile Include="Unparser.cs" />
-    <Compile Include="Rewriter.cs" />
+    <Compile Include="ast\TestCaseException.cs" />
+    <Compile Include="ast\Unparser.cs" />
+    <Compile Include="ast\Rewriter.cs" />
     <Compile Include="synthesis\WitnessFunctions.cs" />
-    <Compile Include="Zss.cs" />
+    <Compile Include="treediff\Zss.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="App.config" />
@@ -252,6 +252,7 @@
       <Name>TutorGradeService</Name>
     </ProjectReference>
   </ItemGroup>
+  <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.
