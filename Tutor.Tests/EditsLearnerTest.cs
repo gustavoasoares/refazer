@@ -14,6 +14,7 @@ using Microsoft.ProgramSynthesis;
 using Microsoft.ProgramSynthesis.AST;
 using Microsoft.ProgramSynthesis.Compiler;
 using Microsoft.ProgramSynthesis.Learning;
+using Microsoft.ProgramSynthesis.Learning.Logging;
 using Microsoft.ProgramSynthesis.Specifications;
 
 namespace Tutor.Tests
@@ -203,6 +204,7 @@ n>1";
             AssertCorrectTransformation(before, after);
         }
 
+
         [TestMethod]
         public void TestLearn9()
         {
@@ -305,6 +307,58 @@ def product(n, term):
             AssertCorrectTransformation(before, after);
         }
 
+        [TestMethod]
+        public void TestLearnMultipleExamples1()
+        {
+            var examples = new List<Tuple<string, string>>();
+            var before = @"i = 0";
+            var after = @"
+i = 1";
+            examples.Add(Tuple.Create(before, after));
+            before = @"i, j = 0, 1";
+            after = @"
+i, j = 1, 1";
+            examples.Add(Tuple.Create(before, after));
+            AssertCorrectTransformation(examples);
+        }
+
+        private static void AssertCorrectTransformation(IEnumerable<Tuple<string,string>> mistakes) 
+        {
+            var grammar = DSLCompiler.LoadGrammarFromFile(@"C:\Users\Gustavo\git\Tutor\Tutor\Transformation.grammar");
+
+            var examples = new Dictionary<State, object>();
+            foreach (var mistake in mistakes)
+            {
+                var astBefore = NodeWrapper.Wrap(ASTHelper.ParseContent(mistake.Item1));
+
+                var input = State.Create(grammar.Value.InputSymbol, astBefore);
+                var astAfter = NodeWrapper.Wrap(ASTHelper.ParseContent(mistake.Item2));
+                examples.Add(input,astAfter);
+            }
+            var spec = new ExampleSpec(examples);
+            var prose = new SynthesisEngine(grammar.Value);
+            var learned = prose.LearnGrammarTopK(spec, "Score", k: 1);
+            var first = learned.First();
+
+            foreach (var mistake in mistakes)
+            {
+                var astBefore = NodeWrapper.Wrap(ASTHelper.ParseContent(mistake.Item1));
+                var input = State.Create(grammar.Value.InputSymbol, astBefore);
+                var output = first.Invoke(input) as IEnumerable<PythonAst>;
+
+                var isFixed = false;
+                foreach (var fixedProgram in output)
+                {
+                    var unparser = new Unparser();
+                    var newCode = unparser.Unparse(fixedProgram);
+                    isFixed = mistake.Item2.Equals(newCode);
+                    if (isFixed)
+                        break;
+                }
+                Assert.IsTrue(isFixed);
+            }
+        }
+
         private static void AssertCorrectTransformation(string before, string after)
         {
             var grammar = DSLCompiler.LoadGrammarFromFile(@"C:\Users\Gustavo\git\Tutor\Tutor\Transformation.grammar");
@@ -317,9 +371,10 @@ def product(n, term):
             var examples = new Dictionary<State, object> {{input, astAfter}};
             var spec = new ExampleSpec(examples);
 
-            var prose = new SynthesisEngine(grammar.Value);
+            
+            var prose = new SynthesisEngine(grammar.Value, new SynthesisEngine.Config { LogListener = new LogListener() });
             var learned = prose.LearnGrammarTopK(spec,"Score", k:1);
-
+            prose.Configuration.LogListener.SaveLogToXML("log.xml");
             var first = learned.First();
             var output = first.Invoke(input) as IEnumerable<PythonAst>;
 

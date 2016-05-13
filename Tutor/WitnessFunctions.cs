@@ -29,7 +29,7 @@ namespace Tutor.Transformation
                 var rootAndNonRootEdits = SplitEditsByRootsAndNonRoots(editDistance);
                 var edits = ExtractPrimaryEdits(rootAndNonRootEdits, editDistance);
 
-                //todo fix this bug
+                //todo fix some big examples that are not working 
                 if (edits.Count > 18)
                     return null;
 
@@ -228,13 +228,17 @@ namespace Tutor.Transformation
                 if (selectedNode.Parent != null)
                 {
                     var t1 = selectedNode.Parent.GetCopy();
+                    t1.IsTemplate = true;
                     templateTrees.Add(t1);
                     var t2 = selectedNode.Parent.GetAbstractCopy();
+                    t2.IsTemplate = true;
                     templateTrees.Add(t2);
                 }
                 var t3 = selectedNode.GetCopy();
+                t3.IsTemplate = true;
                 templateTrees.Add(t3);
                 var t4 = selectedNode.GetAbstractCopy();
+                t4.IsTemplate = true;
                 templateTrees.Add(t4);
                 examples[input] = templateTrees;
                 selectedNode.EditId = 0;
@@ -242,59 +246,6 @@ namespace Tutor.Transformation
             return DisjunctiveExamplesSpec.From(examples);
         }
 
-        [WitnessFunction("Single", 0)]
-        public static ExampleSpec WitnessSingleChange(GrammarRule rule, int parameter, ExampleSpec spec)
-        {
-            var editExamples = new Dictionary<State, object>();
-            foreach (var input in spec.ProvidedInputs)
-            {
-                var operations = spec.Examples[input] as IEnumerable<Edit>;
-                if (operations.Count().Equals(1))
-                    editExamples[input] = operations.First();
-                else
-                    return null;
-            }
-            return new ExampleSpec(editExamples);
-        }
-
-        [WitnessFunction("Changes", 0)]
-        public static ExampleSpec WitnessChange(GrammarRule rule, int parameter, ExampleSpec spec)
-        {
-            var editExamples = new Dictionary<State, object>();
-            foreach (var input in spec.ProvidedInputs)
-            {
-                var operations = spec.Examples[input] as IEnumerable<Edit>;
-
-
-                if (operations.Count() > 1)
-                    editExamples[input] = operations.First();
-                else
-                    return null;
-            }
-            return new ExampleSpec(editExamples);
-        }
-
-        [WitnessFunction("Changes", 1)]
-        public static ExampleSpec WitnessChanges(GrammarRule rule, int parameter, ExampleSpec spec)
-        {
-            var editExamples = new Dictionary<State, object>();
-            foreach (var input in spec.ProvidedInputs)
-            {
-                var operations = spec.Examples[input] as IEnumerable<Edit>;
-
-                var newList = operations.ToList();
-                if (newList.Count > 1)
-                {
-                    newList.RemoveAt(0);
-                    editExamples[input] = newList;
-                }
-                else
-                {
-                    return null;
-                }
-            }
-            return new ExampleSpec(editExamples);
-        }
 
         [WitnessFunction("Update", 1)]
         public static DisjunctiveExamplesSpec WitnessN2(GrammarRule rule, int parameter, ExampleSpec spec)
@@ -420,18 +371,24 @@ namespace Tutor.Transformation
 
                 node.EditId = 1;
                 var t3 = node.GetCopy();
+                t3.IsTemplate = true;
                 t3.Parent = null;
                 templateTrees.Add(t3);
 
                 var t4 = node.GetAbstractCopy();
+                t4.IsTemplate = true;
                 t4.Parent = null;
                 templateTrees.Add(t4);
 
                 var t1 = node.Parent.GetCopy();
+                t1.IsTemplate = true;
                 templateTrees.Add(t1);
+                
                 var t2 = node.Parent.GetAbstractCopy();
+                t2.IsTemplate = true;
                 templateTrees.Add(t2);
                 node.EditId = 0;
+                
                 templateExamples[input] = templateTrees;
             }
             return DisjunctiveExamplesSpec.From(templateExamples);

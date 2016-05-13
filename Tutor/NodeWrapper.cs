@@ -47,9 +47,17 @@ namespace Tutor
             if (stmt is WhileStatement) return Wrap(stmt as WhileStatement, parent);
             if (stmt is ExpressionStatement) return Wrap(stmt as ExpressionStatement, parent);
             if (stmt is ImportStatement) return Wrap(stmt as ImportStatement, parent);
+            if (stmt is PrintStatement) return Wrap(stmt as PrintStatement, parent);
             throw new NotImplementedException(stmt.NodeName);
         }
 
+        private static PythonNode Wrap(PrintStatement stmt, PythonNode parent)
+        {
+            var result = new PythonNode(stmt, false) { Parent = parent };
+            result.AddChild(Wrap(stmt.Destination, result));
+            stmt.Expressions.ForEach(e => result.AddChild(Wrap(e,result)));
+            return result;
+        }
 
         private static PythonNode Wrap(ImportStatement stmt, PythonNode parent)
         {

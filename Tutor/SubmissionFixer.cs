@@ -1,10 +1,12 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using IronPython.Compiler.Ast;
 using IronPython.Modules;
+using Microsoft.CSharp.RuntimeBinder;
 using Microsoft.ProgramSynthesis;
 using Microsoft.ProgramSynthesis.AST;
 using Microsoft.ProgramSynthesis.Compiler;
@@ -16,59 +18,114 @@ namespace Tutor
 {
     public class SubmissionFixer
     {
+        private readonly List<Tuple<List<Mistake>, ProgramNode>> _classification;
         public List<IEnumerable<ProgramNode>> ProsePrograms { get; }
 
-        public Dictionary<ProgramNode, int> UsedPrograms { get;  } 
+        public Dictionary<string, int> UsedPrograms { get;  } 
 
         private Result<Grammar> _grammar = DSLCompiler.LoadGrammarFromFile(@"C:\Users\Gustavo\git\Tutor\Tutor\Transformation.grammar");
 
-        public SubmissionFixer()
+        public SubmissionFixer(List<Tuple<List<Mistake>, ProgramNode>> classification)
         {
+            _classification = classification;
             ProsePrograms = new List<IEnumerable<ProgramNode>>();
-            UsedPrograms = new Dictionary<ProgramNode, int>();
+            UsedPrograms = new Dictionary<string, int>();
         }
 
-        public bool Fix(string program, string programAfter, Dictionary<string, int> tests)
+        public bool Fix(Mistake mistake, Dictionary<string, long> tests)
         {
             PythonAst ast = null;
             try
             {
-                ast = ASTHelper.ParseContent(program);
+                ast = ASTHelper.ParseContent(mistake.before);
             }
             catch (Exception e)
             {
                 Console.Error.WriteLine(e.Message);
                 return false;
             }
-                var input = State.Create(_grammar.Value.InputSymbol, NodeWrapper.Wrap(ast));
+                var input = State.Create(grammar.Value.InputSymbol, NodeWrapper.Wrap(ast));
 
             var unparser = new Unparser();
 
-            foreach (var proseProgram in ProsePrograms)
+            long totalTime = 0;
+            foreach (var tuple in _classification)
             {
-                var size = proseProgram.Count();
-                if (TryFix(tests, proseProgram.First(), input, unparser)) return true;
-                if (size > 1) 
-                    if (TryFix(tests, proseProgram.ElementAt(1), input, unparser)) return true;
-                if (size > 2)
-                    if (TryFix(tests, proseProgram.ElementAt(2), input, unparser)) return true;
-            }
+                mistake.Time = totalTime;
+                var belongs = false;
+                foreach (var mistake1 in tuple.Item1)
+                {
+                    if (mistake.Equals(mistake1))
+                        belongs = true;
+                }
+                if (belongs)
+                {
+                    var listWithoutCurrentMistake = tuple.Item1.Where(e => !e.Equals(mistake));
+                    if (!listWithoutCurrentMistake.Any()) return false;
+                    var program = LearnProgram(listWithoutCurrentMistake.ToList());
+                    if (program == null) return false;
 
-            //learn a new program
-            var astAfter = NodeWrapper.Wrap(ASTHelper.ParseContent(programAfter));
-            var examples = new Dictionary<State, object> { { input, astAfter } };
-            var spec = new ExampleSpec(examples);
-            var prose = new SynthesisEngine(_grammar.Value);
-            var learned = prose.LearnGrammarTopK(spec, "Score");
-            if (learned.Any())
-            {
-                ProsePrograms.Add(learned);
-                if (TryFix(tests, learned.First(), input, unparser)) return true;
+                    var watch = new Stopwatch();
+                    watch.Start();
+                    var fixedCode = TryFix(tests, program, input, unparser);
+                    watch.Stop();
+                    totalTime += watch.ElapsedMilliseconds;
+                    if (fixedCode != null)
+                    {
+                        mistake.Time = totalTime;
+                        mistake.UsedFix = program.ToString();
+                        mistake.SynthesizedAfter = fixedCode;
+                        return true;
+                    }
+                }
+                else
+                {
+                    var watch = new Stopwatch();
+                    watch.Start();
+                    var fixedCode = TryFix(tests, tuple.Item2, input, unparser);
+                    watch.Stop();
+                    totalTime += watch.ElapsedMilliseconds;
+                    if (fixedCode != null)
+                    {
+                        mistake.Time = totalTime;
+                        mistake.UsedFix = tuple.Item2.ToString();
+                        mistake.SynthesizedAfter = fixedCode;
+                        return true;
+                    }
+                }
             }
+            mistake.Time = totalTime;
             return false;
         }
 
-        private bool TryFix(Dictionary<string, int> tests, ProgramNode current, State input, Unparser unparser)
+        private static Result<Grammar> grammar =
+            DSLCompiler.LoadGrammarFromFile(@"C:\Users\Gustavo\git\Tutor\Tutor\Transformation.grammar");
+
+        public static ProgramNode LearnProgram(List<Mistake> list, Mistake next)
+        {
+            var mistakes = new List<Mistake>(list) { next };
+            return LearnProgram(mistakes);
+        }
+
+        public static ProgramNode LearnProgram(List<Mistake> mistakes)
+        {
+            var examples = new Dictionary<State, object>();
+            foreach (var mistake in mistakes)
+            {
+                var astBefore = NodeWrapper.Wrap(ASTHelper.ParseContent(mistake.before));
+
+                var input = State.Create(grammar.Value.InputSymbol, astBefore);
+                var astAfter = NodeWrapper.Wrap(ASTHelper.ParseContent(mistake.after));
+                examples.Add(input, astAfter);
+            }
+            var spec = new ExampleSpec(examples);
+            var prose = new SynthesisEngine(grammar.Value);
+            var learned = prose.LearnGrammarTopK(spec, "Score", k: 1);
+            return learned.Any() ? learned.First() : null;
+        }
+
+
+        private string TryFix(Dictionary<string, long> tests, ProgramNode current, State input, Unparser unparser)
         {
             Console.Out.WriteLine("===================");
             Console.Out.WriteLine("TRY:");
@@ -82,7 +139,7 @@ namespace Tutor
             }
             catch (Exception)
             {
-                return false; 
+                return null; 
             }
             if (output != null)
             {
@@ -111,26 +168,30 @@ namespace Tutor
                         {
                             isFixed = false;
                         }
+                        catch (RuntimeBinderException)
+                        {
+                            isFixed = false;
+                        }
                         if (!isFixed)
                             break;
                     }
                     if (isFixed)
                     {
-                        if (UsedPrograms.ContainsKey(current))
+                        if (UsedPrograms.ContainsKey(current.ToString()))
                         {
-                            var count = UsedPrograms[current];
-                            UsedPrograms.Remove(current);
-                            UsedPrograms.Add(current, count + 1);
+                            var count = UsedPrograms[current.ToString()];
+                            UsedPrograms.Remove(current.ToString());
+                            UsedPrograms.Add(current.ToString(), count + 1);
                         }
                         else
                         {
-                            UsedPrograms.Add(current, 1);
+                            UsedPrograms.Add(current.ToString(), 1);
                         }
-                        return true;
+                        return newCode;
                     }
                 }
             }
-            return false;
+            return null;
         }
     }
 }

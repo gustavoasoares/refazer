@@ -18,6 +18,27 @@ namespace Tutor
             NodeValue = nodeValue;
         }
 
+        protected bool Equals(NodeInfo other)
+        {
+            return string.Equals(NodeType, other.NodeType) && Equals(NodeValue, other.NodeValue);
+        }
+
+        public override bool Equals(object obj)
+        {
+            if (ReferenceEquals(null, obj)) return false;
+            if (ReferenceEquals(this, obj)) return true;
+            if (obj.GetType() != this.GetType()) return false;
+            return Equals((NodeInfo) obj);
+        }
+
+        public override int GetHashCode()
+        {
+            unchecked
+            {
+                return ((NodeType != null ? NodeType.GetHashCode() : 0)*397) ^ (NodeValue != null ? NodeValue.GetHashCode() : 0);
+            }
+        }
+
         public NodeInfo(string type)
         {
             NodeType = type;

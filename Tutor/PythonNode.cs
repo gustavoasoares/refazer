@@ -14,6 +14,8 @@ namespace Tutor
 
         public string Value { get; set; }
 
+        public bool IsTemplate { get; set; }
+
         public Node InnerNode { get;}
         public bool IsAbstract { get; }
         public List<PythonNode> Children { get; }
@@ -22,6 +24,7 @@ namespace Tutor
 
         public PythonNode(Node innerNode, bool isAbstract)
         {
+            IsTemplate = false;
             InnerNode = innerNode;
             IsAbstract = isAbstract;
             Children = new List<PythonNode>();
@@ -595,7 +598,8 @@ namespace Tutor
 
         protected bool Equals(PythonNode other)
         {
-            return Equals(InnerNode, other.InnerNode) && this.IsAbstract == other.IsAbstract && 
+            var isEqual = IsTemplate ? Match(other.InnerNode).Item1 : Equals(InnerNode, other.InnerNode);
+            return isEqual && this.IsAbstract == other.IsAbstract && 
                 EditId == other.EditId;
         }
 
