@@ -242,7 +242,7 @@ i, j = 1, 1";
 
         private static void AssertCorrectTransformation(IEnumerable<Tuple<string,string>> mistakes) 
         {
-            var grammar = DSLCompiler.LoadGrammarFromFile(@"C:\Users\Gustavo\git\Tutor\Tutor\synthesis\Transformation.grammar");
+            var grammar = DSLCompiler.LoadGrammarFromFile(@"..\..\..\Tutor\synthesis\Transformation.grammar");
 
             var examples = new Dictionary<State, object>();
             foreach (var mistake in mistakes)
@@ -279,7 +279,7 @@ i, j = 1, 1";
 
         private static void AssertCorrectTransformation(string before, string after)
         {
-            var grammar = DSLCompiler.LoadGrammarFromFile(@"C:\Users\Gustavo\git\Tutor\Tutor\synthesis\Transformation.grammar");
+            var grammar = DSLCompiler.LoadGrammarFromFile(@"..\..\..\Tutor\synthesis\Transformation.grammar");
 
             var astBefore = NodeWrapper.Wrap(ASTHelper.ParseContent(before));
 
