@@ -5,7 +5,6 @@ using System.Text;
 using System.Threading.Tasks;
 using IronPython.Compiler;
 using IronPython.Compiler.Ast;
-using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Tutor.ast;
 
 namespace Tutor

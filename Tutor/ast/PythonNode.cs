@@ -11,6 +11,9 @@ namespace Tutor
 {
     public abstract class PythonNode
     {
+        public static int IdCount = 0; 
+
+        public int Id { get; }
         public int EditId { get; set; }
 
         public string Value { get; set; }
@@ -25,6 +28,7 @@ namespace Tutor
 
         public PythonNode(Node innerNode, bool isAbstract)
         {
+            Id = IdCount++;
             IsTemplate = false;
             InnerNode = innerNode;
             IsAbstract = isAbstract;
@@ -148,7 +152,6 @@ namespace Tutor
                 return ((Value != null ? Value.GetHashCode() : 0) * 397) ^ (InnerNode!= null ? InnerNode.GetHashCode() : 0);
             }
         }
-
 
         public bool Similar(PythonNode node1)
         {
