@@ -11,7 +11,7 @@ using MemberExpression = IronPython.Compiler.Ast.MemberExpression;
 namespace Tutor
 {
     
-    public class Rewriter : ExpressionVisitor
+    public class Rewriter
     {
         private List<Edit> _edits;
 
@@ -25,7 +25,7 @@ namespace Tutor
             _edits = edits;
         }
 
-        protected override Expression VisitExtension(Expression exp)
+        public Node VisitStatement(PythonAst exp)
         {
             var node = exp as Node;
             if (node == null)
@@ -887,8 +887,8 @@ namespace Tutor
 
         public Node Rewrite(Node code)
         {
-            var newAst = Visit(code);
-            return newAst as Node;
+            var newAst = VisitStatement((PythonAst) code);
+            return newAst;
         }
     }
 }
