@@ -25,19 +25,13 @@ namespace Tutor.ast
             return inner.Name.Equals(comparedNode.Name);
         }
 
-        protected override Tuple<bool, Node> CompareChildren(Node node, Node binding)
+        public override PythonNode Clone()
         {
-            var convertedNode = (MemberExpression)node;
-            if (convertedNode == null) return Tuple.Create<bool, Node>(false, null);
-
-            if (Children.Count != 1)
-                return Tuple.Create<bool, Node>(false, null);
-
-            var result = Children[0].Match(convertedNode.Target);
-            if (!result.Item1)
-                return Tuple.Create<bool, Node>(false, null);
-            binding = AddBindingNode(binding, result.Item2);
-            return Tuple.Create(true, binding);
+            var pythonNode = new MemberExpressionNode(InnerNode, IsAbstract, EditId);
+            pythonNode.Children = Children;
+            pythonNode.Id = Id;
+            if (Value != null) pythonNode.Value = Value;
+            return pythonNode;
         }
     }
 }

@@ -24,5 +24,13 @@ namespace Tutor.ast
             if (comparedNode == null) return false;
             return inner.Value.Equals(comparedNode.Value);
         }
+
+        public override PythonNode Clone()
+        {
+            var pythonNode = new ConstantExpressionNode(InnerNode, IsAbstract, EditId);
+            pythonNode.Id = Id;
+            if (Value != null) pythonNode.Value = Value;
+            return pythonNode;
+        }
     }
 }

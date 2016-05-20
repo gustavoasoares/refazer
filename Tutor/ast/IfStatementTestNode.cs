@@ -24,21 +24,14 @@ namespace Tutor.ast
             return true;
         }
 
-        protected override Tuple<bool, Node> CompareChildren(Node node, Node binding)
+        public override PythonNode Clone()
         {
-            var convertedNode = (IfStatementTest)node;
-            if (convertedNode == null) return Tuple.Create<bool, Node>(false, null);
-
-            var result = Children[0].Match(convertedNode.Test);
-            if (!result.Item1)
-                return Tuple.Create<bool, Node>(false, null);
-            binding = AddBindingNode(binding, result.Item2);
-
-            result = Children[1].Match(convertedNode.Body);
-            if (!result.Item1)
-                return Tuple.Create<bool, Node>(false, null);
-            binding = AddBindingNode(binding, result.Item2);
-            return Tuple.Create<bool, Node>(true, binding);
+            var pythonNode = new IfStatementTestNode(InnerNode, IsAbstract, EditId);
+            pythonNode.Children = Children;
+            pythonNode.Id = Id;
+            if (Value != null) pythonNode.Value = Value;
+            return pythonNode;
         }
+
     }
 }

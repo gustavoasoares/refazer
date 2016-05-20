@@ -9,6 +9,8 @@ namespace Tutor.ast
 {
     class ImportStatementNode : InternalNode
     {
+        public IList<string> Names { set; get; }
+         
         public ImportStatementNode(Node innerNode, bool isAbstract) : base(innerNode, isAbstract)
         {
         }
@@ -21,10 +23,13 @@ namespace Tutor.ast
         {
             throw new NotImplementedException();
         }
-
-        protected override Tuple<bool, Node> CompareChildren(Node node, Node binding)
+        public override PythonNode Clone()
         {
-            throw new NotImplementedException();
+            var pythonNode = new ImportStatementNode(InnerNode, IsAbstract, EditId);
+            pythonNode.Names = Names;
+            pythonNode.Id = Id;
+            if (Value != null) pythonNode.Value = Value;
+            return pythonNode;
         }
     }
 }

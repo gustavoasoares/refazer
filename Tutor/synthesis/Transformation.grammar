@@ -15,7 +15,7 @@ language Transformation;
 @vardefault[VariableScore]
 feature double Score = RankingScore;
 
-@start IEnumerable<PythonAst> transformation := Apply(ast, patch);
+@start IEnumerable<PythonNode> transformation := Apply(ast, patch);
 Patch patch := Patch(editSet) | ConcatPatch(editSet, patch);
 IEnumerable<Edit> editSet := EditMap(edit, selectednodes) = Map(\node : PythonNode => edit, selectednodes);
 IEnumerable<PythonNode> selectednodes := Selected(match, nodes) = Filter(\x : PythonNode => match,nodes); 

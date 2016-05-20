@@ -1,197 +1,197 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Diagnostics;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using IronPython.Compiler.Ast;
-using IronPython.Modules;
-using Microsoft.CSharp.RuntimeBinder;
-using Microsoft.ProgramSynthesis;
-using Microsoft.ProgramSynthesis.AST;
-using Microsoft.ProgramSynthesis.Compiler;
-using Microsoft.ProgramSynthesis.Diagnostics;
-using Microsoft.ProgramSynthesis.Learning;
-using Microsoft.ProgramSynthesis.Specifications;
+﻿//using System;
+//using System.Collections.Generic;
+//using System.Diagnostics;
+//using System.Linq;
+//using System.Text;
+//using System.Threading.Tasks;
+//using IronPython.Compiler.Ast;
+//using IronPython.Modules;
+//using Microsoft.CSharp.RuntimeBinder;
+//using Microsoft.ProgramSynthesis;
+//using Microsoft.ProgramSynthesis.AST;
+//using Microsoft.ProgramSynthesis.Compiler;
+//using Microsoft.ProgramSynthesis.Diagnostics;
+//using Microsoft.ProgramSynthesis.Learning;
+//using Microsoft.ProgramSynthesis.Specifications;
 
-namespace Tutor
-{
-    public class SubmissionFixer
-    {
-        private readonly List<Tuple<List<Mistake>, ProgramNode>> _classification;
-        public List<IEnumerable<ProgramNode>> ProsePrograms { get; }
+//namespace Tutor
+//{
+//    public class SubmissionFixer
+//    {
+//        private readonly List<Tuple<List<Mistake>, ProgramNode>> _classification;
+//        public List<IEnumerable<ProgramNode>> ProsePrograms { get; }
 
-        public Dictionary<string, int> UsedPrograms { get;  } 
+//        public Dictionary<string, int> UsedPrograms { get;  } 
 
-        private Result<Grammar> _grammar = DSLCompiler.LoadGrammarFromFile(@"C:\Users\Gustavo\git\Tutor\Tutor\synthesis\Transformation.grammar");
+//        private Result<Grammar> _grammar = DSLCompiler.LoadGrammarFromFile(@"C:\Users\Gustavo\git\Tutor\Tutor\synthesis\Transformation.grammar");
 
-        public SubmissionFixer(List<Tuple<List<Mistake>, ProgramNode>> classification)
-        {
-            _classification = classification;
-            ProsePrograms = new List<IEnumerable<ProgramNode>>();
-            UsedPrograms = new Dictionary<string, int>();
-        }
+//        public SubmissionFixer(List<Tuple<List<Mistake>, ProgramNode>> classification)
+//        {
+//            _classification = classification;
+//            ProsePrograms = new List<IEnumerable<ProgramNode>>();
+//            UsedPrograms = new Dictionary<string, int>();
+//        }
 
-        public bool Fix(Mistake mistake, Dictionary<string, long> tests)
-        {
-            PythonAst ast = null;
-            try
-            {
-                ast = ASTHelper.ParseContent(mistake.before);
-            }
-            catch (Exception e)
-            {
-                Console.Error.WriteLine(e.Message);
-                return false;
-            }
-                var input = State.Create(grammar.Value.InputSymbol, NodeWrapper.Wrap(ast));
+//        public bool Fix(Mistake mistake, Dictionary<string, long> tests)
+//        {
+//            PythonAst ast = null;
+//            try
+//            {
+//                ast = ASTHelper.ParseContent(mistake.before);
+//            }
+//            catch (Exception e)
+//            {
+//                Console.Error.WriteLine(e.Message);
+//                return false;
+//            }
+//                var input = State.Create(grammar.Value.InputSymbol, NodeWrapper.Wrap(ast));
 
-            var unparser = new Unparser();
+//            var unparser = new Unparser();
 
-            long totalTime = 0;
-            foreach (var tuple in _classification)
-            {
-                mistake.Time = totalTime;
-                var belongs = false;
-                foreach (var mistake1 in tuple.Item1)
-                {
-                    if (mistake.Equals(mistake1))
-                        belongs = true;
-                }
-                if (belongs)
-                {
-                    var listWithoutCurrentMistake = tuple.Item1.Where(e => !e.Equals(mistake));
-                    if (!listWithoutCurrentMistake.Any()) return false;
-                    var program = LearnProgram(listWithoutCurrentMistake.ToList());
-                    if (program == null) return false;
+//            long totalTime = 0;
+//            foreach (var tuple in _classification)
+//            {
+//                mistake.Time = totalTime;
+//                var belongs = false;
+//                foreach (var mistake1 in tuple.Item1)
+//                {
+//                    if (mistake.Equals(mistake1))
+//                        belongs = true;
+//                }
+//                if (belongs)
+//                {
+//                    var listWithoutCurrentMistake = tuple.Item1.Where(e => !e.Equals(mistake));
+//                    if (!listWithoutCurrentMistake.Any()) return false;
+//                    var program = LearnProgram(listWithoutCurrentMistake.ToList());
+//                    if (program == null) return false;
 
-                    var watch = new Stopwatch();
-                    watch.Start();
-                    var fixedCode = TryFix(tests, program, input, unparser);
-                    watch.Stop();
-                    totalTime += watch.ElapsedMilliseconds;
-                    if (fixedCode != null)
-                    {
-                        mistake.Time = totalTime;
-                        mistake.UsedFix = program.ToString();
-                        mistake.SynthesizedAfter = fixedCode;
-                        return true;
-                    }
-                }
-                else
-                {
-                    var watch = new Stopwatch();
-                    watch.Start();
-                    var fixedCode = TryFix(tests, tuple.Item2, input, unparser);
-                    watch.Stop();
-                    totalTime += watch.ElapsedMilliseconds;
-                    if (fixedCode != null)
-                    {
-                        mistake.Time = totalTime;
-                        mistake.UsedFix = tuple.Item2.ToString();
-                        mistake.SynthesizedAfter = fixedCode;
-                        return true;
-                    }
-                }
-            }
-            mistake.Time = totalTime;
-            return false;
-        }
+//                    var watch = new Stopwatch();
+//                    watch.Start();
+//                    var fixedCode = TryFix(tests, program, input, unparser);
+//                    watch.Stop();
+//                    totalTime += watch.ElapsedMilliseconds;
+//                    if (fixedCode != null)
+//                    {
+//                        mistake.Time = totalTime;
+//                        mistake.UsedFix = program.ToString();
+//                        mistake.SynthesizedAfter = fixedCode;
+//                        return true;
+//                    }
+//                }
+//                else
+//                {
+//                    var watch = new Stopwatch();
+//                    watch.Start();
+//                    var fixedCode = TryFix(tests, tuple.Item2, input, unparser);
+//                    watch.Stop();
+//                    totalTime += watch.ElapsedMilliseconds;
+//                    if (fixedCode != null)
+//                    {
+//                        mistake.Time = totalTime;
+//                        mistake.UsedFix = tuple.Item2.ToString();
+//                        mistake.SynthesizedAfter = fixedCode;
+//                        return true;
+//                    }
+//                }
+//            }
+//            mistake.Time = totalTime;
+//            return false;
+//        }
 
-        private static Result<Grammar> grammar =
-            DSLCompiler.LoadGrammarFromFile(@"C:\Users\Gustavo\git\Tutor\Tutor\synthesis\Transformation.grammar");
+//        private static Result<Grammar> grammar =
+//            DSLCompiler.LoadGrammarFromFile(@"C:\Users\Gustavo\git\Tutor\Tutor\synthesis\Transformation.grammar");
 
-        public static ProgramNode LearnProgram(List<Mistake> list, Mistake next)
-        {
-            var mistakes = new List<Mistake>(list) { next };
-            return LearnProgram(mistakes);
-        }
+//        public static ProgramNode LearnProgram(List<Mistake> list, Mistake next)
+//        {
+//            var mistakes = new List<Mistake>(list) { next };
+//            return LearnProgram(mistakes);
+//        }
 
-        public static ProgramNode LearnProgram(List<Mistake> mistakes)
-        {
-            var examples = new Dictionary<State, object>();
-            foreach (var mistake in mistakes)
-            {
-                var astBefore = NodeWrapper.Wrap(ASTHelper.ParseContent(mistake.before));
+//        public static ProgramNode LearnProgram(List<Mistake> mistakes)
+//        {
+//            var examples = new Dictionary<State, object>();
+//            foreach (var mistake in mistakes)
+//            {
+//                var astBefore = NodeWrapper.Wrap(ASTHelper.ParseContent(mistake.before));
 
-                var input = State.Create(grammar.Value.InputSymbol, astBefore);
-                var astAfter = NodeWrapper.Wrap(ASTHelper.ParseContent(mistake.after));
-                examples.Add(input, astAfter);
-            }
-            var spec = new ExampleSpec(examples);
-            var prose = new SynthesisEngine(grammar.Value);
-            var learned = prose.LearnGrammarTopK(spec, "Score", k: 1);
-            return learned.Any() ? learned.First() : null;
-        }
+//                var input = State.Create(grammar.Value.InputSymbol, astBefore);
+//                var astAfter = NodeWrapper.Wrap(ASTHelper.ParseContent(mistake.after));
+//                examples.Add(input, astAfter);
+//            }
+//            var spec = new ExampleSpec(examples);
+//            var prose = new SynthesisEngine(grammar.Value);
+//            var learned = prose.LearnGrammarTopK(spec, "Score", k: 1);
+//            return learned.Any() ? learned.First() : null;
+//        }
 
 
-        private string TryFix(Dictionary<string, long> tests, ProgramNode current, State input, Unparser unparser)
-        {
-            Console.Out.WriteLine("===================");
-            Console.Out.WriteLine("TRY:");
-            Console.Out.WriteLine(current);
-            Console.Out.WriteLine("===================");
+//        private string TryFix(Dictionary<string, long> tests, ProgramNode current, State input, Unparser unparser)
+//        {
+//            Console.Out.WriteLine("===================");
+//            Console.Out.WriteLine("TRY:");
+//            Console.Out.WriteLine(current);
+//            Console.Out.WriteLine("===================");
 
-            object output = null;
-            try
-            {
-                output = current.Invoke(input);
-            }
-            catch (Exception)
-            {
-                return null; 
-            }
-            if (output != null)
-            {
-                var programSet = output as IEnumerable<PythonAst>;
+//            object output = null;
+//            try
+//            {
+//                output = current.Invoke(input);
+//            }
+//            catch (Exception)
+//            {
+//                return null; 
+//            }
+//            if (output != null)
+//            {
+//                var programSet = output as IEnumerable<PythonAst>;
 
-                foreach (var changedProgram in programSet)
-                {
-                    var newCode = unparser.Unparse(changedProgram);
+//                foreach (var changedProgram in programSet)
+//                {
+//                    var newCode = unparser.Unparse(changedProgram);
 
-                    Console.Out.WriteLine(changedProgram);
-                    Console.Out.WriteLine("===================");
-                    Console.Out.WriteLine("Fixed:");
-                    Console.Out.WriteLine(newCode);
+//                    Console.Out.WriteLine(changedProgram);
+//                    Console.Out.WriteLine("===================");
+//                    Console.Out.WriteLine("Fixed:");
+//                    Console.Out.WriteLine(newCode);
 
-                    var isFixed = true;
-                    foreach (var test in tests)
-                    {
-                        var script = newCode + Environment.NewLine + test.Key;
-                        try
-                        {
-                            var result = ASTHelper.Run(script);
-                            if (result != test.Value)
-                                isFixed = false;
-                        }
-                        catch (TestCaseException)
-                        {
-                            isFixed = false;
-                        }
-                        catch (RuntimeBinderException)
-                        {
-                            isFixed = false;
-                        }
-                        if (!isFixed)
-                            break;
-                    }
-                    if (isFixed)
-                    {
-                        if (UsedPrograms.ContainsKey(current.ToString()))
-                        {
-                            var count = UsedPrograms[current.ToString()];
-                            UsedPrograms.Remove(current.ToString());
-                            UsedPrograms.Add(current.ToString(), count + 1);
-                        }
-                        else
-                        {
-                            UsedPrograms.Add(current.ToString(), 1);
-                        }
-                        return newCode;
-                    }
-                }
-            }
-            return null;
-        }
-    }
-}
+//                    var isFixed = true;
+//                    foreach (var test in tests)
+//                    {
+//                        var script = newCode + Environment.NewLine + test.Key;
+//                        try
+//                        {
+//                            var result = ASTHelper.Run(script);
+//                            if (result != test.Value)
+//                                isFixed = false;
+//                        }
+//                        catch (TestCaseException)
+//                        {
+//                            isFixed = false;
+//                        }
+//                        catch (RuntimeBinderException)
+//                        {
+//                            isFixed = false;
+//                        }
+//                        if (!isFixed)
+//                            break;
+//                    }
+//                    if (isFixed)
+//                    {
+//                        if (UsedPrograms.ContainsKey(current.ToString()))
+//                        {
+//                            var count = UsedPrograms[current.ToString()];
+//                            UsedPrograms.Remove(current.ToString());
+//                            UsedPrograms.Add(current.ToString(), count + 1);
+//                        }
+//                        else
+//                        {
+//                            UsedPrograms.Add(current.ToString(), 1);
+//                        }
+//                        return newCode;
+//                    }
+//                }
+//            }
+//            return null;
+//        }
+//    }
+//}

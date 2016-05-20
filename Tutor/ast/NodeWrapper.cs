@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using CsQuery.ExtensionMethods.Internal;
 using IronPython.Compiler;
 using IronPython.Compiler.Ast;
 using Tutor.ast;
@@ -62,11 +63,14 @@ namespace Tutor
         private static PythonNode Wrap(ImportStatement stmt, PythonNode parent)
         {
             var result = new ImportStatementNode(stmt, false) { Parent = parent };
+            result.Names = stmt.AsNames;
             return result;
         }
         private static PythonNode Wrap(ExpressionStatement stmt, PythonNode parent)
         {
             var result = new ExpressionStatementNode(stmt, false) { Parent = parent };
+            if (!stmt.Documentation.IsNullOrEmpty())
+                result.Documentation = stmt.Documentation;
             result.AddChild(Wrap(stmt.Expression, result));
             return result;
         }
@@ -89,6 +93,7 @@ namespace Tutor
             var result = new AugmentedAssignStatementNode(stmt, false) { Parent = parent, Value = stmt.Operator.ToString()};
             result.AddChild(Wrap(stmt.Left, result));
             result.AddChild(Wrap(stmt.Right, result));
+            result.Value = stmt.Operator;
             return result;
         }
 
@@ -129,6 +134,8 @@ namespace Tutor
         private static PythonNode Wrap(FunctionDefinition stmt, PythonNode parent)
         {
             var result = new FunctionDefinitionNode(stmt, false) { Parent = parent };
+            if (!stmt.Name.IsNullOrEmpty())
+                result.Value = stmt.Name;
             if (stmt.Decorators != null)
             {
                 foreach (var exp in stmt.Decorators)
@@ -152,6 +159,7 @@ namespace Tutor
             {
                 result.AddChild(Wrap(parameter.DefaultValue, result));
             }
+            result.Value = parameter.Name;
             return result;
         }
 
@@ -174,10 +182,10 @@ namespace Tutor
         private static PythonNode Wrap(IndexExpression exp, PythonNode parent)
         {
             var result = new IndexExpressionNode(exp, false) { Parent = parent };
-            if (exp.Index != null)
-                result.AddChild(Wrap(exp.Index, result));
             if (exp.Target != null)
                 result.AddChild(Wrap(exp.Target, result));
+            if (exp.Index != null)
+                result.AddChild(Wrap(exp.Index, result));
             return result;
         }
 
@@ -185,6 +193,7 @@ namespace Tutor
         {
             var result = new UnaryExpressionNode(exp, false) { Parent = parent };
             result.AddChild(Wrap(exp.Expression, result));
+            result.Value = exp.Op;
             return result;
         }
 
@@ -207,6 +216,7 @@ namespace Tutor
         {
             var result = new MemberExpressionNode(exp, false) { Parent = parent };
             result.AddChild(Wrap(exp.Target, result));
+            result.Value = exp.Name;
             return result;
         }
 
@@ -233,7 +243,7 @@ namespace Tutor
         }
         private static PythonNode Wrap(BinaryExpression exp, PythonNode parent)
         {
-            var result = new BinaryExpressionNode(exp, false) { Parent = parent, Value = exp.Operator.ToString()};
+            var result = new BinaryExpressionNode(exp, false) { Parent = parent, Value = exp.Operator};
             result.AddChild(Wrap(exp.Left, result));
             result.AddChild(Wrap(exp.Right, result));
             return result;
@@ -281,6 +291,7 @@ namespace Tutor
             }
             if (stmt.ElseStatement != null)
             {
+                result.HasElse = true;
                 result.AddChild(Wrap(stmt.ElseStatement,result));
             }
             return result;

@@ -19,11 +19,11 @@ namespace Tutor
         public string NodeType { set; get; }
         public List<string> Children { set; get; }
 
-        public Node MatchResult { get; private set; }
+        public PythonNode MatchResult { get; private set; }
 
         public Match(PythonNode template)
         {
-            this._template = template;
+            _template = template;
         }
 
         public bool Run(PythonNode code, bool exact)
@@ -39,10 +39,10 @@ namespace Tutor
             }
 
             var checkTemplateWaker = new CheckTemplateWalker(_template, exact);
-            root.InnerNode.Walk(checkTemplateWaker);
+            root.Walk(checkTemplateWaker);
             MatchResult = checkTemplateWaker.MatchResult;
             if (exact)
-                return checkTemplateWaker.HasMatch && MatchResult.Equals(code.InnerNode);
+                return checkTemplateWaker.HasMatch && code.MatchTemplate(MatchResult);
             return checkTemplateWaker.HasMatch;
         }
 
@@ -60,12 +60,12 @@ namespace Tutor
 
 
 
-        class CheckTemplateWalker : PythonWalker
+        class CheckTemplateWalker : IVisitor
         {
             private readonly PythonNode _template;
             private bool _exact;
 
-            public Node MatchResult { get; private set; }
+            public PythonNode MatchResult { get; private set; }
 
             public bool HasMatch { get; private set; }
 
@@ -76,95 +76,12 @@ namespace Tutor
                 _exact = exact;
             }
 
-            public override bool Walk(SuiteStatement node)
+            public bool Visit(PythonNode pythonNode)
             {
-                return CheckTemplate(node);
+                return CheckTemplate(pythonNode);
             }
 
-            public override bool Walk(IfStatement node)
-            {
-                return CheckTemplate(node);
-            }
-
-            public override bool Walk(ExpressionStatement node)
-            {
-                return CheckTemplate(node);
-            }
-
-            public override bool Walk(FunctionDefinition node)
-            {
-                return CheckTemplate(node);
-            }
-
-            public override bool Walk(AugmentedAssignStatement node)
-            {
-                return CheckTemplate(node);
-            }
-
-            public override bool Walk(IfStatementTest node)
-            {
-                return CheckTemplate(node);
-            }
-
-            public override bool Walk(BinaryExpression node)
-            {
-                return CheckTemplate(node);
-            }
-            public override bool Walk(AssignmentStatement node)
-            {
-                return CheckTemplate(node);
-            }
-
-            public override bool Walk(ForStatement node)
-            {
-                return CheckTemplate(node);
-            }
-
-            public override bool Walk(WhileStatement node)
-            {
-                return CheckTemplate(node);
-            }
-            public override bool Walk(ReturnStatement node)
-            {
-                return CheckTemplate(node);
-            }
-
-            public override bool Walk(ConstantExpression node)
-            {
-                return CheckTemplate(node);
-            }
-
-            public override bool Walk(NameExpression node)
-            {
-                return CheckTemplate(node);
-            }
-
-            public override bool Walk(Parameter node)
-            {
-                return CheckTemplate(node);
-            }
-
-            public override bool Walk(ParenthesisExpression node)
-            {
-                return CheckTemplate(node);
-            }
-
-            public override bool Walk(TupleExpression node)
-            {
-                return CheckTemplate(node);
-            }
-
-            public override bool Walk(CallExpression node)
-            {
-                return CheckTemplate(node);
-            }
-
-            public override bool Walk(Arg node)
-            {
-                return CheckTemplate(node);
-            }
-
-            private bool CheckTemplate(Node node)
+            private bool CheckTemplate(PythonNode node)
             {
                 var result = _template.Match(node);
                 if (result.Item1)

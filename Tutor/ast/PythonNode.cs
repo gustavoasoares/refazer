@@ -13,16 +13,16 @@ namespace Tutor
     {
         public static int IdCount = 0; 
 
-        public int Id { get; }
+        public int Id { get; set; }
         public int EditId { get; set; }
 
-        public string Value { get; set; }
+        public dynamic Value { get; set; }
 
         public bool IsTemplate { get; set; }
 
         public Node InnerNode { get;}
         public bool IsAbstract { get; }
-        public List<PythonNode> Children { get; }
+        public List<PythonNode> Children { get; set; }
         public PythonNode Parent { get; set; }
         public bool Reference { get; set; }
 
@@ -47,8 +47,29 @@ namespace Tutor
             Children.Add(node);
         }
 
+        public bool MatchTemplate(PythonNode node)
+        {
+            if (node.GetType() != GetType())
+            {
+                return false;
+            }
+            if (!IsAbstract)
+            {
+                if (Value != null && node.Value != null && Value != node.Value)
+                    return false;
+            }
+            if (Children.Count != node.Children.Count)
+                return false;
+            for (var i = 0; i < Children.Count; i++)
+            {
+                if (!Children[i].MatchTemplate(node.Children[i]))
+                    return false;
+            }
+            return true;
+        }
 
-        public abstract Tuple<bool, Node> Match(Node node);
+
+        public abstract Tuple<bool, PythonNode> Match(PythonNode node);
         
 
         protected bool MatchInternalNode(Node node)
@@ -68,7 +89,7 @@ namespace Tutor
 
         protected abstract bool IsEqualToInnerNode(Node node);
 
-        protected Node AddBindingNode(Node current, Node matchresult)
+        protected PythonNode AddBindingNode(PythonNode current, PythonNode matchresult)
         {
             return (matchresult != null && current == null) ? matchresult : current;
         }
@@ -85,7 +106,7 @@ namespace Tutor
 
         protected bool Equals(PythonNode other)
         {
-            var isEqual = IsTemplate ? Match(other.InnerNode).Item1 : Equals(InnerNode, other.InnerNode);
+            var isEqual = IsTemplate ? Match(other).Item1 : Equals(InnerNode, other.InnerNode);
             return isEqual && this.IsAbstract == other.IsAbstract && 
                 EditId == other.EditId;
         }
@@ -122,7 +143,7 @@ namespace Tutor
             {
                 str.Append("Abstract"); 
             }
-            else
+            else if (Value != null)
             {
                 str.Append(Value);
             }
@@ -193,9 +214,16 @@ namespace Tutor
                 Children.ForEach(child => child.Walk(visitor));
         }
 
+        public PythonNode Rewrite(IRewriter visitor)
+        {
+            var result = visitor.Rewrite(this);
+            result.Children = result.Children.Select(child => child.Rewrite(visitor)).ToList();
+            return result;
+        }
+
         public bool Contains(PythonNode node)
         {
-            if (Match(node.InnerNode).Item1)
+            if (Match(node).Item1)
                 return true;
 
             foreach (var child in Children)
@@ -233,7 +261,7 @@ namespace Tutor
 
         public PythonNode GetCorrespondingNode(PythonNode node)
         {
-            if (Match(node.InnerNode).Item1)
+            if (Match(node).Item1)
                 return this;
 
             foreach (var child in Children)
@@ -250,6 +278,15 @@ namespace Tutor
             var value = IsAbstract ? 1 : 0;
             var numberOfAbsChildren = Children.Sum(e => e.CountAbstract());
             return value + numberOfAbsChildren; 
+        }
+
+        public abstract PythonNode Clone();
+
+        public PythonNode CloneTree()
+        {
+            var result = Clone();
+            result.Children = Children.Select(e => e.CloneTree()).ToList();
+            return result;
         }
     }
 

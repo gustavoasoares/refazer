@@ -4,6 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using IronPython.Compiler.Ast;
+using Tutor.ast;
 
 namespace Tutor
 {
@@ -27,9 +28,9 @@ namespace Tutor
         }
 
 
-        public IEnumerable<PythonAst> Run(PythonNode ast)
+        public IEnumerable<PythonNode> Run(PythonNode ast)
         {
-            var results = new List<PythonAst>();
+            var results = new List<PythonNode>();
 
             //if it does not find a match to some edit, return null
             //one edit may depends of another one.
@@ -41,9 +42,9 @@ namespace Tutor
             foreach (var combination in combinations)
             {
                 combination.ForEach(e => e.Applied = false);
-                var rewriter = new Rewriter(combination);
-                var newAst = rewriter.Rewrite(ast.InnerNode);
-                results.Add((PythonAst)newAst);
+                var rewriter = new Rewriter2(combination);
+                var newAst = ast.Rewrite(rewriter);
+                results.Add(newAst);
             }
             return results;
         }

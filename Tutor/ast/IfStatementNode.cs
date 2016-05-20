@@ -9,6 +9,7 @@ namespace Tutor.ast
 {
     class IfStatementNode : InternalNode
     {
+        public bool HasElse { set; get; } = false;
         public IfStatementNode(Node innerNode, bool isAbstract) : base(innerNode, isAbstract)
         {
         }
@@ -24,43 +25,14 @@ namespace Tutor.ast
             return true;
         }
 
-        protected override Tuple<bool, Node> CompareChildren(Node node, Node binding)
+        public override PythonNode Clone()
         {
-            var convertedNode = (IfStatement)node;
-            if (convertedNode == null) return Tuple.Create<bool, Node>(false, null);
-
-            if (convertedNode.ElseStatement != null)
-            {
-                if (Children.Count != convertedNode.Tests.Count + 1)
-                    return Tuple.Create<bool, Node>(false, null);
-
-                for (var i = 0; i < Children.Count - 1; i++)
-                {
-                    var result = Children[i].Match(convertedNode.Tests[i]);
-                    if (!result.Item1)
-                        return Tuple.Create<bool, Node>(false, null);
-                    binding = AddBindingNode(binding, result.Item2);
-                }
-                var result2 = Children.Last().Match(convertedNode.ElseStatement);
-                if (!result2.Item1)
-                    return Tuple.Create<bool, Node>(false, null);
-                binding = AddBindingNode(binding, result2.Item2);
-                return Tuple.Create<bool, Node>(true, binding);
-
-            }
-            else
-            {
-                if (Children.Count != convertedNode.Tests.Count)
-                    return Tuple.Create<bool, Node>(false, null);
-                for (var i = 1; i < Children.Count; i++)
-                {
-                    var result = Children[i].Match(convertedNode.Tests[i]);
-                    if (!result.Item1)
-                        return Tuple.Create<bool, Node>(false, null);
-                    binding = AddBindingNode(binding, result.Item2);
-                }
-                return Tuple.Create<bool, Node>(true, binding);
-            }
+            var pythonNode = new IfStatementNode(InnerNode, IsAbstract, EditId);
+            pythonNode.Children = Children;
+            pythonNode.Id = Id;
+            pythonNode.HasElse = HasElse;
+            if (Value != null) pythonNode.Value = Value;
+            return pythonNode;
         }
     }
 }

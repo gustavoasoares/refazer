@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -17,10 +18,10 @@ namespace Tutor.ast
         {
         }
 
-        public override Tuple<bool, Node> Match(Node node)
+        public override Tuple<bool, PythonNode> Match(PythonNode node)
         {
-            Node matchResult = null;
-            if (!MatchInternalNode(node)) return Tuple.Create<bool, Node>(false, null);
+            PythonNode matchResult = null;
+            if (!MatchInternalNode(node.InnerNode)) return Tuple.Create<bool, PythonNode>(false, null);
 
             if (EditId != 0)
             {
@@ -28,7 +29,20 @@ namespace Tutor.ast
             }
             return CompareChildren(node, matchResult);
         }
-        protected abstract Tuple<bool, Node> CompareChildren(Node node, Node binding);
 
+        protected Tuple<bool, PythonNode> CompareChildren(PythonNode node, PythonNode binding)
+        {
+            if (Children.Count != node.Children.Count)
+                return Tuple.Create<bool, PythonNode>(false, null);
+
+            for (var i = 0; i < Children.Count; i++)
+            {
+                var childResult = Children[i].Match(node.Children[i]);
+                if (!childResult.Item1)
+                    return Tuple.Create<bool, PythonNode>(false, null);
+                binding = AddBindingNode(binding, childResult.Item2);
+            }
+            return Tuple.Create(true, binding);
+        }
     }
 }

@@ -205,7 +205,7 @@ def product(n, term):
 def product(n, term):
     x = n
     y = 1
-    while x>1: 
+    while x>1:
         x -= 1
         y = y*term(x)
     return y";
@@ -217,8 +217,8 @@ def product(n, term):
     return y
     x = n
     y = 1
-    while x>=1: 
-        temp = x 
+    while x>=1:
+        temp = x
         x -= 1
         y = y*term(temp)
     return y";
@@ -262,7 +262,7 @@ i, j = 1, 1";
             {
                 var astBefore = NodeWrapper.Wrap(ASTHelper.ParseContent(mistake.Item1));
                 var input = State.Create(grammar.Value.InputSymbol, astBefore);
-                var output = first.Invoke(input) as IEnumerable<PythonAst>;
+                var output = first.Invoke(input) as IEnumerable<PythonNode>;
 
                 var isFixed = false;
                 foreach (var fixedProgram in output)
@@ -294,7 +294,7 @@ i, j = 1, 1";
             var learned = prose.LearnGrammarTopK(spec,"Score", k:1);
             prose.Configuration.LogListener.SaveLogToXML("log.xml");
             var first = learned.First();
-            var output = first.Invoke(input) as IEnumerable<PythonAst>;
+            var output = first.Invoke(input) as IEnumerable<PythonNode>;
 
             var isFixed = false;
             foreach (var fixedProgram in output)
@@ -314,7 +314,6 @@ i, j = 1, 1";
         {
             var py = Python.CreateEngine();
             var code = ParseContent("def identity(n) : \n    return n", py);
-            code.Bind();
 
             var executed = py.Execute(new Unparser().Unparse(code) + "\nidentity(2)");
             Assert.AreEqual(2, executed);
@@ -325,7 +324,6 @@ i, j = 1, 1";
         {
             var py = Python.CreateEngine();
             var code = ParseContent("def identity(n) : \n    return n", py);
-            code.Bind();
             Assert.AreEqual("\r\ndef identity(n):\r\n    return n", new Unparser().Unparse(code));
 
         }
@@ -335,7 +333,6 @@ i, j = 1, 1";
         {
             var py = Python.CreateEngine();
             var code = ParseContent("def identity(n) : \n    return n == 0", py);
-            code.Bind();
             Assert.AreEqual("\r\ndef identity(n):\r\n    return n==0", new Unparser().Unparse(code));
         }
 
@@ -350,7 +347,6 @@ def accumulate(combiner, base, n, term):
     else:
         return combiner(term(n), accumulate(combiner, base, n-1, term))";
             var ast = ParseContent(code, py);
-            ast.Bind();
             var actual = new Unparser().Unparse(ast);
             Assert.AreEqual(code, actual);
         }
@@ -366,7 +362,6 @@ def product(n, term):
     else:
         return term(n)*product((n-1), term)";
             var ast = ParseContent(code, py);
-            ast.Bind();
             var actual = new Unparser().Unparse(ast);
             Assert.AreEqual(code, actual);
         }
@@ -378,15 +373,14 @@ def product(n, term):
             var code = @"
 functools.reduce(lambda x, y: x*y, apply(term), a[1])";
             var ast = ParseContent(code, py);
-            ast.Bind();
             var actual = new Unparser().Unparse(ast);
             Assert.AreEqual(code, actual);
         }
 
-        private PythonAst ParseContent(string content, ScriptEngine py)
+        private PythonNode ParseContent(string content, ScriptEngine py)
         {
             var src = HostingHelpers.GetSourceUnit(py.CreateScriptSourceFromString(content));
-            return Parse(py, src);
+            return NodeWrapper.Wrap(Parse(py, src));
         }
 
         private PythonAst ParseFile(string path, ScriptEngine py)

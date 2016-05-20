@@ -1,10 +1,12 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading.Tasks;
 using IronPython.Compiler;
 using IronPython.Compiler.Ast;
+using Tutor.ast;
 
 namespace Tutor
 {
@@ -17,79 +19,94 @@ namespace Tutor
         private int _indent = 0;
 
 
-        public string Unparse(PythonAst ast)
+        public string Unparse(PythonNode ast)
         {
             _code = new StringBuilder();
-            Write(ast.Body);
+            ast.Children.ForEach(e => Write(e));
             return _code.ToString();
         }
 
-        private void Write(Statement stmt, bool notlambda = true)
+        private void Write(PythonNode stmt, bool notlambda = true)
         {
-            if (stmt is SuiteStatement) Write(stmt as SuiteStatement);
-            else if (stmt is FunctionDefinition) Write(stmt as FunctionDefinition);
-            else if (stmt is ReturnStatement) Write(stmt as ReturnStatement, notlambda);
-            else if (stmt is IfStatement) Write(stmt as IfStatement);
-            else if (stmt is AssignmentStatement) Write(stmt as AssignmentStatement);
-            else if (stmt is AugmentedAssignStatement) Write(stmt as AugmentedAssignStatement);
-            else if (stmt is ForStatement) Write(stmt as ForStatement);
-            else if (stmt is WhileStatement) Write(stmt as WhileStatement);
-            else if (stmt is ExpressionStatement) Write(stmt as ExpressionStatement, notlambda);
-            else if (stmt is ImportStatement) Write(stmt as ImportStatement);
-            else 
+            if (stmt is SuiteStatementNode) Write(stmt as SuiteStatementNode);
+            else if (stmt is FunctionDefinitionNode) Write(stmt as FunctionDefinitionNode);
+            else if (stmt is ReturnStatementNode) Write(stmt as ReturnStatementNode, notlambda);
+            else if (stmt is IfStatementNode) Write(stmt as IfStatementNode);
+            else if (stmt is AssignmentStatementNode) Write(stmt as AssignmentStatementNode);
+            else if (stmt is AugmentedAssignStatementNode) Write(stmt as AugmentedAssignStatementNode);
+            else if (stmt is ForStatementNode) Write(stmt as ForStatementNode);
+            else if (stmt is WhileStatementNode) Write(stmt as WhileStatementNode);
+            else if (stmt is ExpressionStatementNode) Write(stmt as ExpressionStatementNode, notlambda);
+            else if (stmt is ImportStatementNode) Write(stmt as ImportStatementNode);
+            else if (stmt is NameExpressionNode) Write(stmt as NameExpressionNode);
+            else if (stmt is BinaryExpressionNode) Write(stmt as BinaryExpressionNode);
+            else if (stmt is ConstantExpressionNode) Write(stmt as ConstantExpressionNode);
+            else if (stmt is CallExpressionNode) Write(stmt as CallExpressionNode);
+            else if (stmt is ArgNode) Write((ArgNode)stmt);
+            else if (stmt is TupleExpressionNode) Write(stmt as TupleExpressionNode);
+            else if (stmt is ParenthesisExpressionNode) Write((ParenthesisExpressionNode)stmt);
+            else if (stmt is MemberExpressionNode) Write((MemberExpressionNode)stmt);
+            else if (stmt is LambdaExpressionNode) Write((LambdaExpressionNode)stmt);
+            else if (stmt is IndexExpressionNode) Write((IndexExpressionNode)stmt);
+            else if (stmt is OrExpressionNode) Write((OrExpressionNode)stmt);
+            else if (stmt is UnaryExpressionNode) Write((UnaryExpressionNode)stmt);
+            else if (stmt is ParameterNode) Write((ParameterNode)stmt);
+
+
+            else
                 throw new NotImplementedException();
         }
 
-        private void Write(ImportStatement stmt)
+        private void Write(ImportStatementNode stmt)
         {
             Fill();
             _code.Append("import ");
-            for (var i = 0; i < stmt.AsNames.Count; i++)
+            for (var i = 0; i < stmt.Names.Count; i++)
             {
-                var name = stmt.AsNames[i];
+                var name = stmt.Names[i];
                 _code.Append(name);
-                if (i < stmt.AsNames.Count - 1)
+                if (i < stmt.Names.Count - 1)
                     _code.Append(", ");
             }
         }
 
-        private void Write(ExpressionStatement stmt, bool notlambda = true)
+        private void Write(ExpressionStatementNode stmt, bool notlambda = true)
         {
             if (string.IsNullOrEmpty(stmt.Documentation))
             {
                 if (notlambda) Fill();
-                Write(stmt.Expression);
+                Write(stmt.Children[0]);
             }
         }
 
-        private void Write(ForStatement stmt)
+        private void Write(ForStatementNode stmt)
         {
             Fill();
             _code.Append("for ");
-            Write(stmt.Left);
+            Write(stmt.Children[0]);
             _code.Append(" in ");
-            Write(stmt.List);
+            Write(stmt.Children[1]);
             Enter();
-            Write(stmt.Body);
+            Write(stmt.Children[2]);
             Leave();
-            if (stmt.Else != null)
+            if (stmt.Children.Count == 4)
             {
                 Fill();
                 _code.Append("else");
                 Enter();
-                Write(stmt.Else);
+                Write(stmt.Children[3]);
                 Leave();
             }
         }
 
-        private void Write(AugmentedAssignStatement stmt)
+        private void Write(AugmentedAssignStatementNode stmt)
         {
             Fill();
-            Write(stmt.Left);
+            Write(stmt.Children[0]);
             _code.Append(" ");
-            Write(stmt.Operator);
+            Write(stmt.Value);
             _code.Append("= ");
-            Write(stmt.Right);
+            Write(stmt.Children[1]);
         }
 
         private void Write(PythonOperator op)
@@ -137,59 +154,59 @@ namespace Tutor
             }
         }
 
-        private void Write(WhileStatement stmt)
+        private void Write(WhileStatementNode stmt)
         {
             Fill();
             _code.Append("while ");
-            Write(stmt.Test);
+            Write(stmt.Children[0]);
             Enter();
-            Write(stmt.Body);
+            Write(stmt.Children[1]);
             Leave();
-            if (stmt.ElseStatement != null)
+            if (stmt.Children.Count == 3)
             {
                 Fill();
                 _code.Append("else");
                 Enter();
-                Write(stmt.ElseStatement);
+                Write(stmt.Children[2]);
                 Leave();
             }
         }
 
-        
-        private void Write(AssignmentStatement stmt)
+
+        private void Write(AssignmentStatementNode stmt)
         {
             Fill();
-            foreach (var expression in stmt.Left)
+            foreach (var expression in stmt.Children.GetRange(0,stmt.Children.Count-1))
             {
                 Write(expression);
                 _code.Append(" = ");
             }
-            Write(stmt.Right);
+            Write(stmt.Children.Last());
         }
 
-        private void Write(SuiteStatement stmt)
+        private void Write(SuiteStatementNode stmt)
         {
-            foreach (var statement in stmt.Statements)
+            foreach (var statement in stmt.Children)
             {
                 Write(statement);
             }
         }
 
-        private void Write(FunctionDefinition stmt)
+        private void Write(FunctionDefinitionNode stmt)
         {
             //todo add decorator?
             Fill();
-            _code.Append("def " + stmt.Name + "(");
-            for (var i = 0; i < stmt.Parameters.Count; i++)
+            _code.Append("def " + stmt.Value + "(");
+            for (var i = 0; i < stmt.Children.Count - 1; i++)
             {
-                var parameter = stmt.Parameters[i];
+                var parameter = stmt.Children[i];
                 Write(parameter);
-                if (i < stmt.Parameters.Count - 1)
+                if (i < stmt.Children.Count - 2)
                     _code.Append(", ");
             }
             _code.Append(")");
             Enter();
-            Write(stmt.Body);
+            Write(stmt.Children.Last());
             Leave();
         }
 
@@ -204,168 +221,153 @@ namespace Tutor
             _indent += 1;
         }
 
-        private void Write(Parameter parameter)
+        private void Write(ParameterNode parameter)
         {
-            _code.Append(parameter.Name);
-            if (parameter.DefaultValue != null)
+            _code.Append(parameter.Value);
+            if (parameter.Children.Any())
             {
                 _code.Append(" = ");
-                Write(parameter.DefaultValue);
+                Write(parameter.Children[0]);
             }
         }
 
-        private void Write(Expression exp)
-        {
-            if (exp is NameExpression) Write(exp as NameExpression);
-            else if (exp is BinaryExpression) Write(exp as BinaryExpression);
-            else if (exp is ConstantExpression) Write(exp as ConstantExpression);
-            else if (exp is CallExpression) Write(exp as CallExpression);
-            else if (exp is TupleExpression) Write(exp as TupleExpression);
-            else if (exp is ParenthesisExpression) Write((ParenthesisExpression) exp);
-            else if (exp is MemberExpression) Write((MemberExpression)exp);
-            else if (exp is LambdaExpression) Write((LambdaExpression)exp);
-            else if (exp is IndexExpression) Write((IndexExpression)exp);
-            else if (exp is OrExpression) Write((OrExpression)exp);
-            else if (exp is UnaryExpression) Write((UnaryExpression)exp);
-            else throw new NotImplementedException();
-        }
 
-        private void Write(LambdaExpression exp)
+
+        private void Write(LambdaExpressionNode exp)
         {
             _code.Append("lambda ");
-            for (var i = 0; i < exp.Function.Parameters.Count; i++)
+            var function = exp.Children[0];
+            var numberOfParameters = function.Children.Count - 1;
+            for (var i = 0; i < numberOfParameters; i++)
             {
-                var arg = exp.Function.Parameters[i];
+                var arg = function.Children[i];
                 Write(arg);
-                if (i < exp.Function.Parameters.Count - 1)
+                if (i < numberOfParameters - 1)
                     _code.Append(", ");
             }
             _code.Append(": ");
-            Write(exp.Function.Body, false);
+            Write(function.Children.Last(), false);
         }
 
-        private void Write(UnaryExpression exp)
+        private void Write(UnaryExpressionNode exp)
         {
-            Write(exp.Op);
+            Write(exp.Value);
             _code.Append(" ");
-            Write(exp.Expression);
+            Write(exp.Children[0]);
         }
 
-        private void Write(OrExpression exp)
+        private void Write(OrExpressionNode exp)
         {
-            Write(exp.Left);
+            Write(exp.Children[0]);
             _code.Append(" or ");
-            Write(exp.Right);
+            Write(exp.Children[1]);
         }
 
-        private void Write(IndexExpression exp)
+        private void Write(IndexExpressionNode exp)
         {
-            Write(exp.Target);
+            Write(exp.Children[0]);
             _code.Append("[");
-            Write(exp.Index);
+            Write(exp.Children[1]);
             _code.Append("]");
         }
 
-        private void Write(MemberExpression exp)
+        private void Write(MemberExpressionNode exp)
         {
-            Write(exp.Target);
+            Write(exp.Children[0]);
             _code.Append(".");
-            _code.Append(exp.Name);
+            _code.Append(exp.Value);
         }
 
-        private void Write(ParenthesisExpression exp)
+        private void Write(ParenthesisExpressionNode exp)
         {
             _code.Append("(");
-            Write(exp.Expression);
+            Write(exp.Children[0]);
             _code.Append(")");
         }
 
-        private void Write(TupleExpression exp)
+        private void Write(TupleExpressionNode exp)
         {
-            for (var i = 0; i < exp.Items.Count; i++)
+            for (var i = 0; i < exp.Children.Count; i++)
             {
-                Write(exp.Items[i]);
-                if (i < exp.Items.Count - 1)
+                Write(exp.Children[i]);
+                if (i < exp.Children.Count - 1)
                     _code.Append(", ");
             }
         }
 
-        private void Write(NameExpression exp)
+        private void Write(NameExpressionNode exp)
         {
-            _code.Append(exp.Name);
+            _code.Append(exp.Value);
         }
-        private void Write(BinaryExpression exp)
+        private void Write(BinaryExpressionNode exp)
         {
-            Write(exp.Left);
-            Write(exp.Operator);
-            Write(exp.Right);
+            Write(exp.Children[0]);
+            Write((PythonOperator) exp.Value);
+            Write(exp.Children[1]);
         }
 
-        private void Write(ConstantExpression exp)
+        private void Write(ConstantExpressionNode exp)
         {
             _code.Append(exp.Value);
         }
 
-        private void Write(CallExpression exp)
+        private void Write(CallExpressionNode exp)
         {
-            Write(exp.Target);
+            Write(exp.Children[0]);
             _code.Append("(");
-            for (var i = 0; i < exp.Args.Count; i++)
+            for (var i = 1; i < exp.Children.Count; i++)
             {
-                var arg = exp.Args[i];
+                var arg = exp.Children[i];
                 Write(arg);
-                if (i < exp.Args.Count - 1)
+                if (i < exp.Children.Count - 1)
                     _code.Append(", ");
             }
             _code.Append(")");
         }
 
-        private void Write(Arg arg)
+        private void Write(ArgNode arg)
         {
-            Write(arg.Expression);
+            Write(arg.Children[0]);
         }
 
-        private void Write(ReturnStatement stmt, bool notlambda = true)
+        private void Write(ReturnStatementNode stmt, bool notlambda = true)
         {
             if (notlambda)
             {
                 Fill();
                 _code.Append("return ");
             }
-            Write(stmt.Expression);
+            Write(stmt.Children[0]);
         }
 
-        private void Write(IfStatement stmt)
+        private void Write(IfStatementNode stmt)
         {
             Fill();
             _code.Append("if ");
-            for (var i = 0; i < stmt.Tests.Count; i++)
+            var numberOfIfs = (stmt.HasElse) ? stmt.Children.Count - 1 : stmt.Children.Count;
+            for (var i = 0; i < numberOfIfs; i++)
             {
-                var test = stmt.Tests[i];
-                Write(test);
+                var test = stmt.Children[i];
+                Write(test.Children[0]);
                 Enter();
-                Write(test.Body);
+                Write(test.Children[1]);
                 Leave();
-                if (i < stmt.Tests.Count - 1)
+                if (i < numberOfIfs - 1)
                 {
                     Fill();
                     _code.Append("elif ");
                 }
             }
-            if (stmt.ElseStatement != null)
+            if (stmt.HasElse)
             {
                 Fill();
                 _code.Append("else");
                 Enter();
-                Write(stmt.ElseStatement);
+                Write(stmt.Children.Last());
                 Leave();
             }
         }
 
-        private void Write(IfStatementTest test)
-        {
-            Write(test.Test);
-        }
 
         private void Fill()
         {
@@ -376,4 +378,5 @@ namespace Tutor
             }
         }
     }
+   
 }

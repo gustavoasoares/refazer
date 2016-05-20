@@ -226,6 +226,7 @@
     <Compile Include="ast\IfStatementTestNode.cs" />
     <Compile Include="ast\ImportStatementNode.cs" />
     <Compile Include="ast\IndexExpressionNode.cs" />
+    <Compile Include="ast\IRewriter.cs" />
     <Compile Include="ast\LambdaExpressionNode.cs" />
     <Compile Include="ast\LeafNode.cs" />
     <Compile Include="ast\InternalNode.cs" />
@@ -239,6 +240,7 @@
     <Compile Include="ast\PythonAstNode.cs" />
     <Compile Include="ast\ReturnStatementNode.cs" />
     <Compile Include="ast\Rewriter.cs" />
+    <Compile Include="ast\Rewriter2.cs" />
     <Compile Include="ast\SuiteStatementNode.cs" />
     <Compile Include="ast\TupleExpressionNode.cs" />
     <Compile Include="ast\UnaryExpressionNode.cs" />
