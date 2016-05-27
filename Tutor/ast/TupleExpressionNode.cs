@@ -11,10 +11,12 @@ namespace Tutor.ast
     {
         public TupleExpressionNode(Node innerNode, bool isAbstract) : base(innerNode, isAbstract)
         {
+            InsertStrategy = new InsertNodeInDynamicList();
         }
 
         public TupleExpressionNode(Node innerNode, bool isAbstract, int editId) : base(innerNode, isAbstract, editId)
         {
+            InsertStrategy = new InsertNodeInDynamicList();
         }
 
         protected override bool IsEqualToInnerNode(Node node)

@@ -48,6 +48,12 @@ namespace Tutor.Transformation
             return insert;
         }
 
+        public static Edit Move(PythonNode parent, PythonNode movedNode, int index)
+        {
+            var move = new Move(movedNode, parent, index);
+            return move;
+        }
+
         public static PythonNode LeafConstNode(NodeInfo info)
         {
             var wrapped = NodeWrapper.Wrap(NodeBuilder.Create(info));

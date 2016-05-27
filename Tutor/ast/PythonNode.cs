@@ -11,7 +11,9 @@ namespace Tutor
 {
     public abstract class PythonNode
     {
-        public static int IdCount = 0; 
+        public static int IdCount = 0;
+
+        protected InsertStrategy InsertStrategy { set; get; }
 
         public int Id { get; set; }
         public int EditId { get; set; }
@@ -102,13 +104,26 @@ namespace Tutor
             }
             visitor.Nodes.Add(this);
         }
-        
 
+
+        private bool MatchEditId(PythonNode other)
+        {
+            if (EditId != other.EditId)
+                return false;
+            if (Children.Count != other.Children.Count)
+                return false;
+            for (var i = 0; i < Children.Count; i++)
+            {
+                if (!Children[i].MatchEditId(other.Children[i]))
+                    return false;
+            }
+            return true;
+        }
         protected bool Equals(PythonNode other)
         {
             var isEqual = IsTemplate ? Match(other).Item1 : Equals(InnerNode, other.InnerNode);
             return isEqual && this.IsAbstract == other.IsAbstract && 
-                EditId == other.EditId;
+                MatchEditId(other);
         }
 
         public override bool Equals(object obj)
@@ -217,6 +232,7 @@ namespace Tutor
         public PythonNode Rewrite(IRewriter visitor)
         {
             var result = visitor.Rewrite(this);
+
             result.Children = result.Children.Select(child => child.Rewrite(visitor)).ToList();
             return result;
         }
@@ -229,6 +245,21 @@ namespace Tutor
             foreach (var child in Children)
             {
                 var contains = child.Contains(node);
+                if (contains)
+                    return true;
+            }
+            return false;
+        }
+
+
+        public bool Contains2(PythonNode node)
+        {
+            if (Equals(node))
+                return true;
+
+            foreach (var child in Children)
+            {
+                var contains = child.Contains2(node);
                 if (contains)
                     return true;
             }
@@ -261,7 +292,7 @@ namespace Tutor
 
         public PythonNode GetCorrespondingNode(PythonNode node)
         {
-            if (Match(node).Item1)
+            if(Equals(node))
                 return this;
 
             foreach (var child in Children)
@@ -280,6 +311,13 @@ namespace Tutor
             return value + numberOfAbsChildren; 
         }
 
+        public int CountNodes()
+        {
+            var value = 1;
+            var numberOfNodes = Children.Sum(e => e.CountNodes());
+            return value + numberOfNodes;
+        }
+
         public abstract PythonNode Clone();
 
         public PythonNode CloneTree()
@@ -287,6 +325,11 @@ namespace Tutor
             var result = Clone();
             result.Children = Children.Select(e => e.CloneTree()).ToList();
             return result;
+        }
+
+        public virtual void Insert(PythonNode inserted, int index)
+        {
+            Children = InsertStrategy.Insert(this, inserted, index);
         }
     }
 

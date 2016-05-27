@@ -11,10 +11,12 @@ namespace Tutor.ast
     {
         public IfStatementTestNode(Node innerNode, bool isAbstract) : base(innerNode, isAbstract)
         {
+            InsertStrategy = new InsertFixedList();
         }
 
         public IfStatementTestNode(Node innerNode, bool isAbstract, int editId) : base(innerNode, isAbstract, editId)
         {
+            InsertStrategy = new InsertFixedList();
         }
 
         protected override bool IsEqualToInnerNode(Node node)

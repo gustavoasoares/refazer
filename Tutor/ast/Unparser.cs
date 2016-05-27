@@ -344,7 +344,7 @@ namespace Tutor
         {
             Fill();
             _code.Append("if ");
-            var numberOfIfs = (stmt.HasElse) ? stmt.Children.Count - 1 : stmt.Children.Count;
+            var numberOfIfs = (stmt.Children.Last() is IfStatementTestNode) ? stmt.Children.Count : stmt.Children.Count - 1;
             for (var i = 0; i < numberOfIfs; i++)
             {
                 var test = stmt.Children[i];
@@ -358,7 +358,7 @@ namespace Tutor
                     _code.Append("elif ");
                 }
             }
-            if (stmt.HasElse)
+            if (!(stmt.Children.Last() is IfStatementTestNode))
             {
                 Fill();
                 _code.Append("else");

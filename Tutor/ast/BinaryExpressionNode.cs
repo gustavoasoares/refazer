@@ -11,10 +11,12 @@ namespace Tutor.ast
     {
         public BinaryExpressionNode(Node innerNode, bool isAbstract) : base(innerNode, isAbstract)
         {
+            InsertStrategy = new InsertFixedList();
         }
 
         public BinaryExpressionNode(Node innerNode, bool isAbstract, int editId) : base(innerNode, isAbstract, editId)
         {
+            InsertStrategy = new InsertFixedList();
         }
 
         protected override bool IsEqualToInnerNode(Node node)
@@ -30,6 +32,6 @@ namespace Tutor.ast
             pythonNode.Id = Id;
             if (Value != null) pythonNode.Value = Value;
             return pythonNode;
-        }
+        }       
     }
 }

@@ -226,6 +226,178 @@ def product(n, term):
         }
 
         [TestMethod]
+        public void TestLearn15()
+        {
+            var before = @"
+def product(n, term):
+    if n == 0:
+        return 1
+    else:
+        return n * product(n-1, term)";
+            var after = @"
+def product(n, term):
+    if n==0:
+        return 1
+    else:
+        return term(n)*product(n-1, term)";
+            AssertCorrectTransformation(before, after);
+        }
+
+        [TestMethod]
+        public void TestLearn16()
+        {
+            var before = @"
+def product(n, term):
+    if n == 0:
+        return 1
+    else:
+        return mul(n, product(n - 1, term))
+";
+            var after = @"
+def product(n, term):
+    if n==0:
+        return 1
+    else:
+        return mul(term(n), product(n-1, term))";
+            AssertCorrectTransformation(before, after);
+        }
+
+        [TestMethod]
+        public void TestLearn17()
+        {
+            var before = @"
+def product(n, term):
+    x = lambda term: term
+    total = 1
+    for i in range (1, n + 1):
+        total = total * x(i)
+    return total
+";
+            var after = @"
+def product(n, term):
+    total = 1
+    for i in range(1, n+1):
+        total = total*term(i)
+    return total";
+            AssertCorrectTransformation(before, after);
+        }
+
+        [TestMethod]
+        public void TestLearn18()
+        {
+            var before = @"
+def product(n, term):
+    x = 1
+    product = 1
+    x = term(x)
+    while n>0:
+        product = product*x
+        x += 1
+        n -= 1
+    if n==0:
+        return product
+";
+            var after = @"
+def product(n, term):
+    if (n==1):
+        return term(n)
+    else:
+        return term(n)*product(n-1, term)";
+            AssertCorrectTransformation(before, after);
+        }
+
+        [TestMethod]
+        public void TestLearn20()
+        {
+            var before = @"
+def product(n, term):
+    k = 1
+    total = 1
+    while k<n+1:
+        total = total*term(k)
+        k+1
+    return total
+";
+            var after = @"
+def product(n, term):
+    k = 1
+    total = 1
+    while k<n+1:
+        total = total*term(k)
+        k += 1
+    return total";
+            AssertCorrectTransformation(before, after);
+        }
+
+
+        [TestMethod]
+        public void TestLearn19()
+        {
+            var before = @"
+def product(n, term):
+    def total_prod(x, total):
+        if x==n:
+            return total*term(x)
+    return total_prod(1, 1)
+";
+            var after = @"
+def product(n, term):
+    def total_prod(x, total):
+        if x==n:
+            return total
+        else:
+            return total_prod(x+1, total*term(x+1))
+    return total_prod(1, 1)";
+            AssertCorrectTransformation(before, after);
+        }
+
+        [TestMethod]
+        public void TestLearn21()
+        {
+            var before = @"
+def product(n, term):
+    summed = 1
+    k = 1
+    while k<=n:
+        summed *= term(k)
+        increment(k)
+    return summed
+";
+            var after = @"
+def product(n, term):
+    summed = 1
+    k = 1
+    while k<=n:
+        summed *= term(k)
+        k += 1
+    return summed";
+            AssertCorrectTransformation(before, after);
+        }
+
+        [TestMethod]
+        public void TestLearn22()
+        {
+            var before = @"
+def product(n, term):
+    def multi(x):
+        if x==n:
+            return term(n)
+        else:
+            return term(x+1)*x
+    return multi(1)
+";
+            var after = @"
+def product(n, term):
+    def multi(x, func):
+        if x==n:
+            return func(n)
+        else:
+            return multi(x+1, func)*func(x)
+    return multi(1, term)";
+            AssertCorrectTransformation(before, after);
+        }
+
+        [TestMethod]
         public void TestLearnMultipleExamples1()
         {
             var examples = new List<Tuple<string, string>>();
@@ -237,6 +409,125 @@ i = 1";
             after = @"
 i, j = 1, 1";
             examples.Add(Tuple.Create(before, after));
+            AssertCorrectTransformation(examples);
+        }
+
+        [TestMethod]
+        public void TestLearnMultipleExamples2()
+        {
+            var examples = new List<Tuple<string, string>>();
+            var before = @"
+def product(n, term):
+    if n == 1:
+        return term(1)
+    else:
+        return term(n) + product(n - 1, term)";
+            var after = @"
+def product(n, term):
+    if n==1:
+        return term(1)
+    else:
+        return term(n)*product(n-1, term)";
+            examples.Add(Tuple.Create(before, after));
+            before = @"
+def product(n, term):
+    if n == 1:
+        return term(1)
+    else:
+        return term(n) + product(n - 1, term)
+";
+            after = @"
+def product(n, term):
+    if n==1:
+        return term(1)
+    else:
+        return term(n)*product(n-1, term)";
+            examples.Add(Tuple.Create(before, after));
+
+            before = @"
+def product(n, term):
+    if n==0:
+        return 0
+    elif n==1:
+        return term(1)
+    else:
+        return term(n) + product(n-1, term)";
+            after = @"
+def product(n, term):
+    if n==0:
+        return 0
+    elif n==1:
+        return term(1)
+    else:
+        return term(n)*product(n-1, term)";
+            examples.Add(Tuple.Create(before, after));
+
+            before = @"
+def product(n, term):
+    if n == 1:
+        return term(1)
+    else:
+        return term(n) + product(n-1, term)";
+            after = @"
+def product(n, term):
+    if n==1:
+        return term(1)
+    else:
+        return term(n)*product(n-1, term)";
+            examples.Add(Tuple.Create(before, after));
+
+            before = @"
+def product(n, term):
+    if n == 1:
+        return term(1)
+    else:
+        return term(n) + product(n - 1, term)";
+            after = @"
+def product(n, term):
+    if n==1:
+        return term(1)
+    else:
+        return term(n)*product(n-1, term)";
+            examples.Add(Tuple.Create(before, after));
+
+            before = @"
+def product(n, term):
+    if n ==1:
+        return n
+    return term(n)+ product(n-1, term)";
+            after = @"
+def product(n, term):
+    if n==1:
+        return n
+    return term(n)*product(n-1, term)";
+            examples.Add(Tuple.Create(before, after));
+
+            before = @"
+def product(n, term):    
+    if n == 1:
+        return term(n)
+    else:
+        return term(n) + product(n-1, term)";
+            after = @"
+def product(n, term):
+    if n==1:
+        return term(n)
+    else:
+        return term(n)*product(n-1, term)";
+            examples.Add(Tuple.Create(before, after));
+
+            before = @"
+def product(n, term):    
+    if n == 1:
+        return term(n)
+    return term(n) + product(n-1,term)";
+            after = @"
+def product(n, term):
+    if n==1:
+        return term(n)
+    return term(n)*product(n-1, term)";
+            examples.Add(Tuple.Create(before, after));
+
             AssertCorrectTransformation(examples);
         }
 

@@ -19,6 +19,8 @@ namespace Tutor
                     return new NameExpression(info.NodeValue);
                 case "literal": 
                     return new ConstantExpression(info.NodeValue);
+                case "Parameter":
+                    return new ConstantExpression(info.NodeValue);
                 default:
                     throw new NotImplementedException(info.NodeType);
             }

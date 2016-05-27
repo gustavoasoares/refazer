@@ -11,10 +11,12 @@ namespace Tutor.ast
     {
         public AugmentedAssignStatementNode(Node innerNode, bool isAbstract) : base(innerNode, isAbstract)
         {
+            InsertStrategy = new InsertFixedList();
         }
 
         public AugmentedAssignStatementNode(Node innerNode, bool isAbstract, int editId) : base(innerNode, isAbstract, editId)
         {
+            InsertStrategy = new InsertFixedList();
         }
         
 
