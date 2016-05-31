@@ -398,6 +398,63 @@ def product(n, term):
         }
 
         [TestMethod]
+        public void TestLearn23()
+        {
+            var before = @"
+def product(n, term):
+    k = 1
+    sum1 = 1
+    if term==identity:
+        while k<=n:
+            k += 1
+        return sum1*term(k)
+    if term==square:
+        while k<=n:
+            k += 1
+        return sum1*term(k)
+";
+            var after = @"
+def product(n, term):
+    k = 1
+    sum1 = 1
+    if term==identity:
+        while k<=n:
+            sum1 = sum1*term(k)
+            k += 1
+        return sum1
+    if term==square:
+        while k<=n:
+            sum1 = sum1*term(k)
+            k += 1
+        return sum1";
+            AssertCorrectTransformation(before, after);
+        }
+
+        [TestMethod]
+        public void TestLearn24()
+        {
+            var before = @"
+def product(n, term):
+    x = 1
+    _sum_ = 1
+    while x<=n:
+        _sum_, = _sum_*term(x)
+        x += 1
+    return _sum_
+";
+            var after = @"
+def product(n, term):
+    x = 1
+    _sum_ = 1
+    while x<=n:
+        _sum_ = _sum_*term(x)
+        x += 1
+    return _sum_";
+            AssertCorrectTransformation(before, after);
+        }
+
+     
+        [TestMethod]
         public void TestLearnMultipleExamples1()
         {
             var examples = new List<Tuple<string, string>>();
@@ -667,6 +724,76 @@ functools.reduce(lambda x, y: x*y, apply(term), a[1])";
             var actual = new Unparser().Unparse(ast);
             Assert.AreEqual(code, actual);
         }
+
+        [TestMethod]
+        public void TestUnparser6()
+        {
+            var py = Python.CreateEngine();
+            var code = @"
+def product(n, term):
+    def term_output(n):
+        return term(n)
+    if n>1:
+        return 
+    else:
+        return product(n-1, term_output(n-1))*term_output(n)";
+            var ast = ParseContent(code, py);
+            var actual = new Unparser().Unparse(ast);
+            Assert.AreEqual(code, actual);
+        }
+
+        [TestMethod]
+        public void TestUnparser7()
+        {
+            var py = Python.CreateEngine();
+            var code = @"
+def product(n, term):
+    def helper(n, acc):
+        if n>0:
+            return helper(n-1, acc)
+        print(acc)
+    return helper(n, 1)";
+            var ast = ParseContent(code, py);
+            var actual = new Unparser().Unparse(ast);
+            Assert.AreEqual(code, actual);
+        }
+
+        [TestMethod]
+        public void TestUnparser8()
+        {
+            var py = Python.CreateEngine();
+            var code = @"
+def product(n, term):
+    counter = n
+    listen = []
+    while counter>0:
+        counter -= 1
+        x = term(n)
+        listen.append(x)
+    product = 1
+    for x in listen:
+        product *= x
+    return product";
+            var ast = ParseContent(code, py);
+            var actual = new Unparser().Unparse(ast);
+            Assert.AreEqual(code, actual);
+        }
+
+        [TestMethod]
+        public void TestUnparser9()
+        {
+            var py = Python.CreateEngine();
+            var code = @"
+def product(n, term):
+    lst = []
+    for i in range (1, n + 1):
+        lst.append(i)
+    return [term(x) for x in lst]";
+            var ast = ParseContent(code, py);
+            var actual = new Unparser().Unparse(ast);
+            Assert.AreEqual(code, actual);
+        }
+
 
         private PythonNode ParseContent(string content, ScriptEngine py)
         {

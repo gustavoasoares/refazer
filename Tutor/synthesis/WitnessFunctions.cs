@@ -41,12 +41,17 @@ namespace Tutor.Transformation
             return new ExampleSpec(examples);
         }
 
-        private static List<Edit> ExtractPrimaryEdits(Tuple<List<Edit>, List<Edit>> rootAndNonRootEdits, EditDistance editDistance)
+        private static List<Edit> ExtractPrimaryEdits(Tuple<List<Edit>, List<Edit>> rootAndNonRootEdits, 
+            EditDistance editDistance)
         {
             var edits = new List<Edit>();
             foreach (var root in rootAndNonRootEdits.Item1)
             {
                 edits.Add(root);
+                if (root is Update)
+                {
+                    UpdateIds(root.ModifiedNode.Children, editDistance);
+                }
                 if (root is Insert)
                 {
                     var parent = root.TargetNode;
@@ -111,6 +116,19 @@ namespace Tutor.Transformation
                 }
             }
             return edits;
+        }
+
+        private static void UpdateIds(List<PythonNode> children, EditDistance editDistance)
+        {
+            foreach (var pythonNode in children)
+            {
+                if (editDistance.Mapping.ContainsKey(pythonNode))
+                {
+                    var mapped = editDistance.Mapping[pythonNode];
+                    pythonNode.Id = mapped.Id;
+                }
+                UpdateIds(pythonNode.Children, editDistance);
+            }
         }
 
         private static bool InsertedNodeContainsNode(PythonNode modifiedNode, PythonNode child)
@@ -195,10 +213,10 @@ namespace Tutor.Transformation
             var examples = new Dictionary<State, IEnumerable<object>>();
             foreach (var input in spec.ProvidedInputs)
             {
-                var edits = spec.Examples[input] as Patch;
-                if (edits == null || edits.EditSets.Count() > 1)
+                var patch = spec.Examples[input] as Patch;
+                if (patch == null || !patch.EditSets.Any() || patch.EditSets.Count() > 1)
                     return null;
-                examples[input] = edits.EditSets.First();
+                examples[input] = patch.EditSets.First();
             }
             return new SubsequenceSpec(examples);
         }

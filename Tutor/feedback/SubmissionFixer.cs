@@ -4,6 +4,7 @@ using System.Diagnostics;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using CsQuery.ExtensionMethods.Internal;
 using IronPython.Compiler.Ast;
 using IronPython.Modules;
 using Microsoft.CSharp.RuntimeBinder;
@@ -109,8 +110,15 @@ namespace Tutor
 
         public static ProgramNode LearnProgram(List<Mistake> list, Mistake next)
         {
-            var mistakes = new List<Mistake>(list) { next };
-            return LearnProgram(mistakes);
+            var mistakes =  (list.Any()) ?  new List<Mistake>() { list.First(),  next } :
+                new List<Mistake>() { next };
+            if (LearnProgram(mistakes) != null)
+            {
+                mistakes  = (list.Count > 30) ? new List<Mistake>(list.GetRange(0,30)) { next }:
+                    new List<Mistake>(list) { next };
+                return LearnProgram(mistakes);
+            }
+            return null;
         }
 
         public static ProgramNode LearnProgram(List<Mistake> mistakes)
@@ -146,10 +154,10 @@ namespace Tutor
 
         private string TryFix(Dictionary<string, long> tests, ProgramNode current, State input, Unparser unparser)
         {
-            Console.Out.WriteLine("===================");
-            Console.Out.WriteLine("TRY:");
-            Console.Out.WriteLine(current);
-            Console.Out.WriteLine("===================");
+            //Console.Out.WriteLine("===================");
+            //Console.Out.WriteLine("TRY:");
+            //Console.Out.WriteLine(current);
+            //Console.Out.WriteLine("===================");
 
             object output = null;
             try
@@ -163,15 +171,15 @@ namespace Tutor
             if (output != null)
             {
                 var programSet = output as IEnumerable<PythonNode>;
-
-                foreach (var changedProgram in programSet)
+                var range = programSet.Count() < 10 ? programSet.ToList() : programSet.ToList().GetRange(0, 10); 
+                foreach (var changedProgram in range)
                 {
                     var newCode = unparser.Unparse(changedProgram);
 
-                    Console.Out.WriteLine(changedProgram);
-                    Console.Out.WriteLine("===================");
-                    Console.Out.WriteLine("Fixed:");
-                    Console.Out.WriteLine(newCode);
+                    //Console.Out.WriteLine(changedProgram);
+                    //Console.Out.WriteLine("===================");
+                    //Console.Out.WriteLine("Fixed:");
+                    //Console.Out.WriteLine(newCode);
 
                     var isFixed = true;
                     foreach (var test in tests)

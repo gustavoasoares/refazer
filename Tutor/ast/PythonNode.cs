@@ -213,7 +213,7 @@ namespace Tutor
         public PythonNode GetAbstractCopy()
         {
             var type = GetType();
-            var result = (PythonNode)Activator.CreateInstance(type, InnerNode, false, EditId);
+            var result = (PythonNode)Activator.CreateInstance(type, InnerNode, true, EditId);
             if (Parent != null) result.Parent = Parent;
             result.Value = Value;
             foreach (var child in Children)
@@ -254,7 +254,7 @@ namespace Tutor
 
         public bool Contains2(PythonNode node)
         {
-            if (Equals(node))
+            if (Id == node.Id && Equals(Value,node.Value) && GetType() == node.GetType())
                 return true;
 
             foreach (var child in Children)
@@ -292,7 +292,7 @@ namespace Tutor
 
         public PythonNode GetCorrespondingNode(PythonNode node)
         {
-            if(Equals(node))
+            if (Id == node.Id && Equals(Value, node.Value) && GetType() == node.GetType())
                 return this;
 
             foreach (var child in Children)

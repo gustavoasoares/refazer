@@ -218,6 +218,7 @@
     <Compile Include="ast\AugmentedAssignStatementNode.cs" />
     <Compile Include="ast\BinaryExpressionNode.cs" />
     <Compile Include="ast\CallExpressionNode.cs" />
+    <Compile Include="ast\ComprehensionIteratorNode.cs" />
     <Compile Include="ast\ConstantExpressionNode.cs" />
     <Compile Include="ast\ExpressionStatementNode.cs" />
     <Compile Include="ast\ForStatementNode.cs" />
@@ -233,6 +234,8 @@
     <Compile Include="ast\LambdaExpressionNode.cs" />
     <Compile Include="ast\LeafNode.cs" />
     <Compile Include="ast\InternalNode.cs" />
+    <Compile Include="ast\ListComprehensionNode.cs" />
+    <Compile Include="ast\ListExpressionNode.cs" />
     <Compile Include="ast\MemberExpressionNode.cs" />
     <Compile Include="ast\NameExpressionNode.cs" />
     <Compile Include="ast\NodeBuilder.cs" />
@@ -248,6 +251,7 @@
     <Compile Include="ast\TupleExpressionNode.cs" />
     <Compile Include="ast\UnaryExpressionNode.cs" />
     <Compile Include="ast\WhileStatementNode.cs" />
+    <Compile Include="Logger.cs" />
     <Compile Include="synthesis\NodeInfo.cs" />
     <Compile Include="ast\NodeWrapper.cs" />
     <Compile Include="synthesis\Edit.cs" />

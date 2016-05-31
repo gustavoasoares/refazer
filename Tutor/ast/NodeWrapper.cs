@@ -55,7 +55,8 @@ namespace Tutor
         private static PythonNode Wrap(PrintStatement stmt, PythonNode parent)
         {
             var result = new PrintStatementNode(stmt, false) { Parent = parent };
-            result.AddChild(Wrap(stmt.Destination, result));
+            if (stmt.Destination != null)
+                result.AddChild(Wrap(stmt.Destination, result));
             stmt.Expressions.ForEach(e => result.AddChild(Wrap(e,result)));
             return result;
         }
@@ -176,6 +177,8 @@ namespace Tutor
             if (exp is LambdaExpression) return Wrap((LambdaExpression)exp, parent);
             if (exp is OrExpression) return Wrap((OrExpression)exp, parent);
             if (exp is UnaryExpression) return Wrap((UnaryExpression)exp, parent);
+            if (exp is ListExpression) return Wrap((ListExpression)exp, parent);
+            if(exp is ListComprehension) return Wrap((ListComprehension)exp, parent);
             throw  new NotImplementedException();
         }
 
@@ -203,6 +206,26 @@ namespace Tutor
             result.AddChild(Wrap(exp.Left, result));
             result.AddChild(Wrap(exp.Right, result));
             return result;
+        }
+
+        private static PythonNode Wrap(ListExpression exp, PythonNode parent)
+        {
+            var result = new ListExpressionNode(exp, false) { Parent = parent };
+            exp.Items.ForEach(e => result.AddChild(Wrap(e, result)));
+            return result;
+        }
+
+        private static PythonNode Wrap(ListComprehension exp, PythonNode parent)
+        {
+            var result = new ListComprehensionNode(exp, false) { Parent = parent };
+            result.AddChild(Wrap(exp.Item, result));
+            exp.Iterators.ForEach(e => result.AddChild(Wrap(e, result)));
+            return result;
+        }
+
+        private static PythonNode Wrap(ComprehensionIterator exp, PythonNode parent)
+        {
+            throw new NotImplementedException();
         }
 
         private static PythonNode Wrap(LambdaExpression exp, PythonNode parent)
@@ -276,7 +299,8 @@ namespace Tutor
         private static PythonNode Wrap(ReturnStatement stmt, PythonNode parent)
         {
             var result = new ReturnStatementNode(stmt, false) { Parent = parent };
-            result.AddChild(Wrap(stmt.Expression, result));
+            if (stmt.Expression != null)
+                result.AddChild(Wrap(stmt.Expression, result));
             return result;
         }
 

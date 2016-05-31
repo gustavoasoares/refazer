@@ -21,8 +21,16 @@ namespace Tutor
 
         public string Unparse(PythonNode ast)
         {
+            _indent = 0;
             _code = new StringBuilder();
-            ast.Children.ForEach(e => Write(e));
+            try
+            {
+                ast.Children.ForEach(e => Write(e));
+            }
+            catch (ArgumentOutOfRangeException e)
+            {
+                Logger.Instance.Log(e.ToString());
+            }
             return _code.ToString();
         }
 
@@ -48,11 +56,11 @@ namespace Tutor
             else if (stmt is MemberExpressionNode) Write((MemberExpressionNode)stmt);
             else if (stmt is LambdaExpressionNode) Write((LambdaExpressionNode)stmt);
             else if (stmt is IndexExpressionNode) Write((IndexExpressionNode)stmt);
+            else if (stmt is ListExpressionNode) Write((ListExpressionNode)stmt);
             else if (stmt is OrExpressionNode) Write((OrExpressionNode)stmt);
             else if (stmt is UnaryExpressionNode) Write((UnaryExpressionNode)stmt);
             else if (stmt is ParameterNode) Write((ParameterNode)stmt);
-
-
+            else if (stmt is PrintStatementNode) Write((PrintStatementNode)stmt);
             else
                 throw new NotImplementedException();
         }
@@ -76,6 +84,19 @@ namespace Tutor
             {
                 if (notlambda) Fill();
                 Write(stmt.Children[0]);
+            }
+        }
+
+        private void Write(PrintStatementNode stmt, bool notlambda = true)
+        {
+            Fill();
+            _code.Append("print");
+            //todo print destination
+            for (var i = 0; i < stmt.Children.Count; i++)
+            {
+                Write(stmt.Children[i]);
+                if (i < stmt.Children.Count - 1)
+                    _code.Append(", ");
             }
         }
 
@@ -263,6 +284,18 @@ namespace Tutor
             Write(exp.Children[1]);
         }
 
+        private void Write(ListExpressionNode exp)
+        {
+            _code.Append("[");
+            for (var i = 0; i < exp.Children.Count; i++)
+            {
+                Write(exp.Children[i]);
+                if (i < exp.Children.Count - 1)
+                    _code.Append(", ");
+            }
+            _code.Append("]");
+        }
+
         private void Write(IndexExpressionNode exp)
         {
             Write(exp.Children[0]);
@@ -337,7 +370,8 @@ namespace Tutor
                 Fill();
                 _code.Append("return ");
             }
-            Write(stmt.Children[0]);
+            if (stmt.Children.Any())
+                Write(stmt.Children[0]);
         }
 
         private void Write(IfStatementNode stmt)
