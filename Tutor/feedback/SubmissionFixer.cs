@@ -4,6 +4,7 @@ using System.Diagnostics;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using CsQuery.ExtensionMethods.Internal;
 using IronPython.Compiler.Ast;
 using IronPython.Modules;
 using Microsoft.CSharp.RuntimeBinder;
@@ -21,13 +22,19 @@ namespace Tutor
         private readonly List<Tuple<List<Mistake>, ProgramNode>> _classification;
         public List<IEnumerable<ProgramNode>> ProsePrograms { get; }
 
-        public Dictionary<string, int> UsedPrograms { get;  } 
+        public Dictionary<string, int> UsedPrograms { get; }
 
         private Result<Grammar> _grammar = DSLCompiler.LoadGrammarFromFile(@"C:\Users\Gustavo\git\Tutor\Tutor\synthesis\Transformation.grammar");
 
         public SubmissionFixer(List<Tuple<List<Mistake>, ProgramNode>> classification)
         {
             _classification = classification;
+            ProsePrograms = new List<IEnumerable<ProgramNode>>();
+            UsedPrograms = new Dictionary<string, int>();
+        }
+
+        public SubmissionFixer()
+        {
             ProsePrograms = new List<IEnumerable<ProgramNode>>();
             UsedPrograms = new Dictionary<string, int>();
         }
@@ -44,7 +51,7 @@ namespace Tutor
                 Console.Error.WriteLine(e.Message);
                 return false;
             }
-                var input = State.Create(grammar.Value.InputSymbol, NodeWrapper.Wrap(ast));
+            var input = State.Create(grammar.Value.InputSymbol, NodeWrapper.Wrap(ast));
 
             var unparser = new Unparser();
 
@@ -103,17 +110,24 @@ namespace Tutor
 
         public static ProgramNode LearnProgram(List<Mistake> list, Mistake next)
         {
-            var mistakes = new List<Mistake>(list) { next };
-            return LearnProgram(mistakes);
+            var mistakes =  (list.Any()) ?  new List<Mistake>() { list.First(),  next } :
+                new List<Mistake>() { next };
+            if (LearnProgram(mistakes) != null)
+            {
+                mistakes  = (list.Count > 30) ? new List<Mistake>(list.GetRange(0,30)) { next }:
+                    new List<Mistake>(list) { next };
+                return LearnProgram(mistakes);
+            }
+            return null;
         }
 
         public static ProgramNode LearnProgram(List<Mistake> mistakes)
         {
             var examples = new Dictionary<State, object>();
+            var unparser = new Unparser();
             foreach (var mistake in mistakes)
             {
                 var astBefore = NodeWrapper.Wrap(ASTHelper.ParseContent(mistake.before));
-
                 var input = State.Create(grammar.Value.InputSymbol, astBefore);
                 var astAfter = NodeWrapper.Wrap(ASTHelper.ParseContent(mistake.after));
                 examples.Add(input, astAfter);
@@ -124,13 +138,26 @@ namespace Tutor
             return learned.Any() ? learned.First() : null;
         }
 
+        public static ProgramNode LearnProgram(Mistake mistake, State input)
+        {
+            var examples = new Dictionary<State, object>();
+
+            var astAfter = NodeWrapper.Wrap(ASTHelper.ParseContent(mistake.after));
+            examples.Add(input, astAfter);
+
+            var spec = new ExampleSpec(examples);
+            var prose = new SynthesisEngine(grammar.Value);
+            var learned = prose.LearnGrammarTopK(spec, "Score", k: 1);
+            return learned.Any() ? learned.First() : null;
+        }
+
 
         private string TryFix(Dictionary<string, long> tests, ProgramNode current, State input, Unparser unparser)
         {
-            Console.Out.WriteLine("===================");
-            Console.Out.WriteLine("TRY:");
-            Console.Out.WriteLine(current);
-            Console.Out.WriteLine("===================");
+            //Console.Out.WriteLine("===================");
+            //Console.Out.WriteLine("TRY:");
+            //Console.Out.WriteLine(current);
+            //Console.Out.WriteLine("===================");
 
             object output = null;
             try
@@ -139,20 +166,20 @@ namespace Tutor
             }
             catch (Exception)
             {
-                return null; 
+                return null;
             }
             if (output != null)
             {
-                var programSet = output as IEnumerable<PythonAst>;
-
-                foreach (var changedProgram in programSet)
+                var programSet = output as IEnumerable<PythonNode>;
+                var range = programSet.Count() < 10 ? programSet.ToList() : programSet.ToList().GetRange(0, 10); 
+                foreach (var changedProgram in range)
                 {
                     var newCode = unparser.Unparse(changedProgram);
 
-                    Console.Out.WriteLine(changedProgram);
-                    Console.Out.WriteLine("===================");
-                    Console.Out.WriteLine("Fixed:");
-                    Console.Out.WriteLine(newCode);
+                    //Console.Out.WriteLine(changedProgram);
+                    //Console.Out.WriteLine("===================");
+                    //Console.Out.WriteLine("Fixed:");
+                    //Console.Out.WriteLine(newCode);
 
                     var isFixed = true;
                     foreach (var test in tests)
@@ -192,6 +219,39 @@ namespace Tutor
                 }
             }
             return null;
+        }
+
+        public bool FixItSelf(Mistake mistake, Dictionary<string, long> tests)
+        {
+            var unparser = new Unparser();
+
+            PythonAst ast = null;
+            try
+            {
+                ast = ASTHelper.ParseContent(mistake.before);
+                var cleanCode = unparser.Unparse(NodeWrapper.Wrap(ast));
+                mistake.before = cleanCode;
+                ast = ASTHelper.ParseContent(cleanCode);
+
+                var astAfter = NodeWrapper.Wrap(ASTHelper.ParseContent(mistake.after));
+                var cleanedAfter = unparser.Unparse(astAfter);
+                mistake.after = cleanedAfter;
+            }
+            catch (Exception e)
+            {
+                Console.Error.WriteLine(e.Message);
+                return false;
+            }
+            var input = State.Create(grammar.Value.InputSymbol, NodeWrapper.Wrap(ast));
+            var program = LearnProgram(mistake, input);
+            if (program == null) return false;
+
+            var fixedCode = TryFix(tests, program, input, unparser);
+            if (fixedCode != null)
+            {
+                return true;
+            }
+            return false;
         }
     }
 }

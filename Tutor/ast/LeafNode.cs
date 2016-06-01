@@ -17,10 +17,10 @@ namespace Tutor.ast
         {
         }
 
-        public override Tuple<bool, Node> Match(Node node)
+        public override Tuple<bool, PythonNode> Match(PythonNode node)
         {
-            Node matchResult = null;
-            if (!MatchInternalNode(node)) return Tuple.Create<bool, Node>(false, null);
+            PythonNode matchResult = null;
+            if (!MatchInternalNode(node.InnerNode)) return Tuple.Create<bool, PythonNode>(false, null);
 
             if (EditId != 0)
             {

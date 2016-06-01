@@ -11,26 +11,12 @@ namespace Tutor.ast
     {
         public BinaryExpressionNode(Node innerNode, bool isAbstract) : base(innerNode, isAbstract)
         {
+            InsertStrategy = new InsertFixedList();
         }
 
         public BinaryExpressionNode(Node innerNode, bool isAbstract, int editId) : base(innerNode, isAbstract, editId)
         {
-        }
-
-        protected override Tuple<bool, Node> CompareChildren(Node node, Node binding)
-        {
-            var convertedNode = (BinaryExpression)node;
-            if (convertedNode == null) return Tuple.Create<bool, Node>(false, null);
-
-            var resultLeft = Children[0].Match(convertedNode.Left);
-            var resultRight = Children[1].Match(convertedNode.Right);
-            if (resultRight.Item1 && resultLeft.Item1)
-            {
-                binding = AddBindingNode(binding, resultLeft.Item2);
-                binding = AddBindingNode(binding, resultRight.Item2);
-                return Tuple.Create(true, binding);
-            }
-            return Tuple.Create<bool, Node>(false, null);
+            InsertStrategy = new InsertFixedList();
         }
 
         protected override bool IsEqualToInnerNode(Node node)
@@ -38,5 +24,14 @@ namespace Tutor.ast
             var comparedNode = node as BinaryExpression;
             return comparedNode != null && ((BinaryExpression)InnerNode).Operator.Equals(comparedNode.Operator);
         }
+
+        public override PythonNode Clone()
+        {
+            var pythonNode = new BinaryExpressionNode(InnerNode, IsAbstract, EditId);
+            pythonNode.Children = Children;
+            pythonNode.Id = Id;
+            if (Value != null) pythonNode.Value = Value;
+            return pythonNode;
+        }       
     }
 }

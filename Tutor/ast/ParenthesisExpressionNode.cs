@@ -11,25 +11,12 @@ namespace Tutor.ast
     {
         public ParenthesisExpressionNode(Node innerNode, bool isAbstract) : base(innerNode, isAbstract)
         {
+            InsertStrategy = new InsertFixedList();
         }
 
         public ParenthesisExpressionNode(Node innerNode, bool isAbstract, int editId) : base(innerNode, isAbstract, editId)
         {
-        }
-
-        protected override Tuple<bool, Node> CompareChildren(Node node, Node binding)
-        {
-            var convertedNode = (ParenthesisExpression)node;
-            if (convertedNode == null) return Tuple.Create<bool, Node>(false, null);
-
-            if (Children.Count != 1)
-                return Tuple.Create<bool, Node>(false, null);
-
-            var result = Children[0].Match(convertedNode.Expression);
-            if (!result.Item1)
-                return Tuple.Create<bool, Node>(false, null);
-            binding = AddBindingNode(binding, result.Item2);
-            return Tuple.Create(true, binding);
+            InsertStrategy = new InsertFixedList();
         }
 
         protected override bool IsEqualToInnerNode(Node node)
@@ -37,6 +24,15 @@ namespace Tutor.ast
             var comparedNode = node as ParenthesisExpression;
             if (comparedNode == null) return false;
             return true;
+        }
+
+        public override PythonNode Clone()
+        {
+            var pythonNode = new ParenthesisExpressionNode(InnerNode, IsAbstract, EditId);
+            pythonNode.Children = Children;
+            pythonNode.Id = Id;
+            if (Value != null) pythonNode.Value = Value;
+            return pythonNode;
         }
     }
 }

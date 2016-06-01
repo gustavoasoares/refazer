@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.ComponentModel.Design.Serialization;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
+using Microsoft.CodeAnalysis.VisualBasic.Syntax;
 using Microsoft.ProgramSynthesis;
 using Microsoft.ProgramSynthesis.Learning;
 using Microsoft.ProgramSynthesis.Rules;
@@ -30,8 +31,8 @@ namespace Tutor.Transformation
                 var edits = ExtractPrimaryEdits(rootAndNonRootEdits, editDistance);
 
                 //todo fix some big examples that are not working 
-                if (edits.Count > 18)
-                    return null;
+                //if (edits.Count > 18)
+                //    return null;
 
                 var patch = new Patch();
                 edits.ForEach(e => patch.EditSets.Add(new List<Edit>() {e}));
@@ -40,12 +41,41 @@ namespace Tutor.Transformation
             return new ExampleSpec(examples);
         }
 
-        private static List<Edit> ExtractPrimaryEdits(Tuple<List<Edit>, List<Edit>> rootAndNonRootEdits, EditDistance editDistance)
+        private static List<Edit> ExtractPrimaryEdits(Tuple<List<Edit>, List<Edit>> rootAndNonRootEdits, 
+            EditDistance editDistance)
         {
             var edits = new List<Edit>();
             foreach (var root in rootAndNonRootEdits.Item1)
             {
                 edits.Add(root);
+                if (root is Update)
+                {
+                    UpdateIds(root.ModifiedNode.Children, editDistance);
+                }
+                if (root is Insert)
+                {
+                    var parent = root.TargetNode;
+                    foreach (var child in parent.Children)
+                    {
+                        PythonNode mappedNodeInTheResultingAst = null;
+                        foreach (var keyValuePair in editDistance.Mapping)
+                        {
+                            if (keyValuePair.Value.Equals(child))
+                            {
+                                mappedNodeInTheResultingAst = keyValuePair.Key;
+                            }
+                        }
+                        if (mappedNodeInTheResultingAst == null)
+                            continue;
+
+                        if (InsertedNodeContainsNode(root.ModifiedNode, mappedNodeInTheResultingAst))
+                        {
+                            //create a delete operation to represented the moved node
+                            var delete = new Delete(child, root.TargetNode);
+                            edits.Add(delete);
+                        }
+                    }
+                }
                 if (root is Delete)
                 {
                     var children = NotDeletedChildren(root.ModifiedNode,
@@ -76,16 +106,43 @@ namespace Tutor.Transformation
                             }
                             if (!isUsed)
                             {
-                                //create an insert in the parent node
-                                var insert = new Insert(child, root.TargetNode,
+                                //create a move in the parent node
+                                var move = new Move(child, root.TargetNode,
                                     mappedNodeInTheResultingAst.Parent.Children.IndexOf(mappedNodeInTheResultingAst));
-                                edits.Add(insert);
+                                edits.Add(move);
                             }
                         }
                     }
                 }
             }
             return edits;
+        }
+
+        private static void UpdateIds(List<PythonNode> children, EditDistance editDistance)
+        {
+            foreach (var pythonNode in children)
+            {
+                if (editDistance.Mapping.ContainsKey(pythonNode))
+                {
+                    var mapped = editDistance.Mapping[pythonNode];
+                    pythonNode.Id = mapped.Id;
+                }
+                UpdateIds(pythonNode.Children, editDistance);
+            }
+        }
+
+        private static bool InsertedNodeContainsNode(PythonNode modifiedNode, PythonNode child)
+        {
+            if (child.Equals(modifiedNode))
+                return true;
+
+            foreach (var pythonNode in modifiedNode.Children)
+            {
+                var childResult = InsertedNodeContainsNode(pythonNode, child);
+                if (childResult)
+                    return true;
+            }
+            return false;
         }
 
         private static Tuple<List<Edit>, List<Edit>> SplitEditsByRootsAndNonRoots(EditDistance editDistance)
@@ -156,10 +213,10 @@ namespace Tutor.Transformation
             var examples = new Dictionary<State, IEnumerable<object>>();
             foreach (var input in spec.ProvidedInputs)
             {
-                var edits = spec.Examples[input] as Patch;
-                if (edits == null || edits.EditSets.Count() > 1)
+                var patch = spec.Examples[input] as Patch;
+                if (patch == null || !patch.EditSets.Any() || patch.EditSets.Count() > 1)
                     return null;
-                examples[input] = edits.EditSets.First();
+                examples[input] = patch.EditSets.First();
             }
             return new SubsequenceSpec(examples);
         }
@@ -289,6 +346,34 @@ namespace Tutor.Transformation
             return new ExampleSpec(contextExamples);
         }
 
+        [WitnessFunction("Move", 1)]
+        public static DisjunctiveExamplesSpec WitnessMoveN(GrammarRule rule, int parameter, ExampleSpec spec)
+        {
+            var contextExamples = new Dictionary<State, object>();
+            foreach (State input in spec.ProvidedInputs)
+            {
+                var operation = spec.Examples[input] as Move;
+                if (operation == null)
+                    return null;
+                contextExamples[input] = operation.ModifiedNode;
+            }
+            return new ExampleSpec(contextExamples);
+        }
+
+        [WitnessFunction("Move", 2)]
+        public static ExampleSpec WitnessMoveK(GrammarRule rule, int parameter, ExampleSpec spec)
+        {
+            var contextExamples = new Dictionary<State, object>();
+            foreach (State input in spec.ProvidedInputs)
+            {
+                var operation = spec.Examples[input] as Move;
+                if (operation == null)
+                    return null;
+                contextExamples[input] = operation.Index;
+            }
+            return new ExampleSpec(contextExamples);
+        }
+
         [WitnessFunction("Delete", 1)]
         public static ExampleSpec WitnessDeleteK(GrammarRule rule, int parameter, ExampleSpec spec)
         {
@@ -364,7 +449,7 @@ namespace Tutor.Transformation
                 var node = spec.Examples[input] as PythonNode;
 
                 var ast = (PythonNode)input[rule.Body[0]];
-                if (!ast.Contains(node))
+                if (!ast.Contains2(node))
                     return null;
 
                 node = ast.GetCorrespondingNode(node);

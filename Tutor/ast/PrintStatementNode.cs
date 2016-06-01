@@ -11,10 +11,12 @@ namespace Tutor.ast
     {
         public PrintStatementNode(Node innerNode, bool isAbstract) : base(innerNode, isAbstract)
         {
+            InsertStrategy = new InsertFixedList();
         }
 
         public PrintStatementNode(Node innerNode, bool isAbstract, int editId) : base(innerNode, isAbstract, editId)
         {
+            InsertStrategy = new InsertFixedList();
         }
 
         protected override bool IsEqualToInnerNode(Node node)
@@ -22,9 +24,14 @@ namespace Tutor.ast
             throw new NotImplementedException();
         }
 
-        protected override Tuple<bool, Node> CompareChildren(Node node, Node binding)
+        public override PythonNode Clone()
         {
-            throw new NotImplementedException();
+            var pythonNode = new PrintStatementNode(InnerNode, IsAbstract, EditId);
+            pythonNode.Children = Children;
+            pythonNode.Id = Id;
+            if (Value != null) pythonNode.Value = Value;
+            return pythonNode;
         }
+
     }
 }

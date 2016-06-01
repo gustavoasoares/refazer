@@ -17,13 +17,15 @@ namespace TutorUI
     {
         private static List<long> timeToFix = new List<long>();
 
+        private static TraceSource _source = new TraceSource("experiment");
+
         private const string LogFolder = "C:/Users/Gustavo/Box Sync/pesquisa/tutor/hw02-sp16/";
         private const string TimeFile = LogFolder + "time.txt";
 
 
         static void Main(string[] args)
         {
-            var choice = 2;
+            var choice =2;
             switch (choice)
             {
                 case 1:
@@ -32,14 +34,113 @@ namespace TutorUI
                 case 2:
                     RunExperiment();
                     break;
+                case 3:
+                    CheckCanFixItself();
+                    break;
             }
             Console.ReadKey();
         }
 
+        private static void CheckCanFixItself()
+        {
+            var product = new Tuple<TestBasedCluster.Question, string>(TestBasedCluster.Question.Product,
+                LogFolder + "mistake_pairs_product_complete.json");
+            var repeted = new Tuple<TestBasedCluster.Question, string>(TestBasedCluster.Question.Repeated,
+                           LogFolder + "mistake_pairs_repeated_complete.json");
+            var questionLogs = new[] { product, repeted };
+
+
+            var cluster = new TestBasedCluster();
+            cluster.GenerateCluster(questionLogs);
+            var clusters = cluster.Clusters[TestBasedCluster.Question.Product];
+
+            var tests = GetTests("product");
+
+
+            var values = from pair in clusters
+                         orderby pair.Value.Count descending
+                         select pair.Value;
+
+            var submissions = new List<Mistake>();
+            foreach (var mistakes in values)
+            {
+                submissions.AddRange(mistakes);
+            }
+
+            var count = 0;
+            var doesNotCompile = 0;
+
+            var submissionCount = 0;
+
+            var fixer = new SubmissionFixer();
+            var notFixed = new List<Mistake>();
+            int notImplementedYet = 0;
+            int transformationNotImplemented = 0;
+            foreach (var mistake in submissions)
+            {
+                submissionCount += 1;
+                _source.TraceEvent(TraceEventType.Start, 1, "Submission " + submissionCount);
+
+                var unparser = new Unparser();
+                PythonNode before = null;
+                try
+                {
+                    before = NodeWrapper.Wrap(ASTHelper.ParseContent(mistake.before));
+                    before = NodeWrapper.Wrap(ASTHelper.ParseContent(unparser.Unparse(before)));
+                }
+                catch (SyntaxErrorException)
+                {
+                    doesNotCompile++;
+                    _source.TraceEvent(TraceEventType.Information, 0, "Input does not compile");
+                    continue;
+                }
+                catch (NotImplementedException)
+                {
+                    _source.TraceEvent(TraceEventType.Error, 0, mistake.before);
+                    notImplementedYet++;
+                    continue;
+                }
+
+                try
+                {
+                    var isFixed = fixer.FixItSelf(mistake, tests);
+                    mistake.IsFixed = isFixed;
+                    if (isFixed)
+                    {
+                        count++;
+                        _source.TraceEvent(TraceEventType.Information, 4,
+                            "Program fixed: " + count);
+                    }
+                    else
+                    {
+                        notFixed.Add(mistake);
+                        _source.TraceEvent(TraceEventType.Error, 3,
+                        "Program not fixed:\r\nbefore\r\n" + mistake.before + " \r\n" +
+                        mistake.after);
+                    }
+                }
+                catch (NotImplementedException e)
+                {
+                    _source.TraceEvent(TraceEventType.Error, 2, 
+                        "Transformation not implemented:\r\nbefore\r\n" + mistake.before + " \r\n" +
+                        mistake.after + "\r\n" + e.Message);
+                    transformationNotImplemented++;
+                }
+                _source.TraceEvent(TraceEventType.Stop, 1, "Submission " + submissionCount);
+            }
+
+            _source.TraceEvent(TraceEventType.Information, 5, "Total submissions: " + submissions.Count);
+            _source.TraceEvent(TraceEventType.Information, 5, "input does not compile: " + doesNotCompile);
+            _source.TraceEvent(TraceEventType.Information, 5, "Fixed: " + count);
+            _source.TraceEvent(TraceEventType.Information, 5, "Not Fixed: " + notFixed.Count);
+            _source.TraceEvent(TraceEventType.Information, 5, "parser not implemented: " + notImplementedYet);
+            _source.TraceEvent(TraceEventType.Information, 5, "transformation not implemented: " + transformationNotImplemented);
+        }
+
         private static void AnalyzeResults()
         {
-            var submissions = JsonConvert.DeserializeObject<List<Mistake>>(File.ReadAllText(LogFolder + "submissionsResults-repeated.json"));
-            
+            var submissions = JsonConvert.DeserializeObject<List<Mistake>>(File.ReadAllText(LogFolder + "submissionsResults.json"));
+
             var usedPrograms = new HashSet<string>();
             foreach (var submission in submissions)
             {
@@ -55,41 +156,42 @@ namespace TutorUI
 
                 }
             }
+            Console.Out.WriteLine("Total: " + submissions.Count);
+            Console.Out.WriteLine("Fixed: " + submissions.Where(e => e.IsFixed).Count());
         }
 
         private static void RunExperiment()
         {
             var notImplementedYet = 0;
 
-
             var product = new Tuple<TestBasedCluster.Question, string>(TestBasedCluster.Question.Product,
                 LogFolder + "mistake_pairs_product_complete.json");
             var repeted = new Tuple<TestBasedCluster.Question, string>(TestBasedCluster.Question.Repeated,
-                           LogFolder+ "mistake_pairs_repeated_complete.json");
-            var questionLogs = new[] {product, repeted};
-
+                           LogFolder + "mistake_pairs_repeated_complete.json");
+            var questionLogs = new[] { product, repeted };
 
             var cluster = new TestBasedCluster();
             cluster.GenerateCluster(questionLogs);
             var clusters = cluster.Clusters[TestBasedCluster.Question.Product];
 
             var tests = GetTests("product");
-
-
             var values = from pair in clusters
-                orderby pair.Value.Count descending
-                select pair.Value;
+                         orderby pair.Value.Count descending
+                         select pair.Value;
 
             var submissions = new List<Mistake>();
-            submissions.AddRange(values.ElementAt(1));
-            submissions.AddRange(values.ElementAt(2));
-            submissions.AddRange(values.ElementAt(3));
-            submissions.AddRange(values.ElementAt(4));
-            submissions.AddRange(values.ElementAt(5));
-            submissions.AddRange(values.ElementAt(6));
-            submissions.AddRange(values.ElementAt(7));
+            //var target  = values.ToList()[0];
+            //submissions.AddRange(new List<Mistake>()
+            //{
+            //    target[55],
+            //    target[88],
+            //} );
+            values.ForEach(submissions.AddRange);
+            int transformationNotImplemented = 0;
 
-            List<Tuple<List<Mistake>, ProgramNode>> classification = new List<Tuple<List<Mistake>, ProgramNode>>();
+
+            var classification = new List<Tuple<List<Mistake>, ProgramNode>>();
+
             for (var i = 0; i < submissions.Count; i++)
             {
                 var current = submissions[i];
@@ -105,12 +207,11 @@ namespace TutorUI
                 }
                 if (!hasGroup)
                 {
-                    var list = new List<Mistake>() {current};
-                    Console.Out.WriteLine("New group with mistake: " + i);
+                    var list = new List<Mistake>() { current };
+                    _source.TraceEvent(TraceEventType.Start, 6, "New group with mistake: " + i);
                     for (var j = i + 1; j < submissions.Count; j++)
                     {
                         var next = submissions[j];
-
                         hasGroup = false;
                         foreach (var group in classification)
                         {
@@ -122,7 +223,7 @@ namespace TutorUI
                         }
                         if (!hasGroup)
                         {
-                            Console.Out.WriteLine("Trying to add mistake " + j);
+                            _source.TraceEvent(TraceEventType.Information, 6, "Trying to add mistake " + j);
                             try
                             {
                                 var topProgram = SubmissionFixer.LearnProgram(list, next);
@@ -130,16 +231,18 @@ namespace TutorUI
                                 {
                                     list.Add(next);
                                     next.GeneratedFix = topProgram.ToString();
-                                    Console.Out.WriteLine("Added!");
+                                    _source.TraceEvent(TraceEventType.Information, 6, "Added");
                                 }
                             }
                             catch (SyntaxErrorException)
                             {
-                                Console.Out.WriteLine("Syntax error on input");
+                                _source.TraceEvent(TraceEventType.Information, 0, "Input does not compile");
                             }
-                            catch (NotImplementedException)
+                            catch (NotImplementedException e)
                             {
-                                Console.Out.WriteLine("Not implemented yet");
+                                _source.TraceEvent(TraceEventType.Error, 2, 
+                                    "Transformation not implemented:\r\nbefore\r\n" + next.before + " \r\n" +
+                                    next.after + "\r\n" + e.Message);
                             }
                         }
                     }
@@ -154,54 +257,47 @@ namespace TutorUI
                     }
                     catch (SyntaxErrorException)
                     {
-                        Console.Out.WriteLine("Syntax error on input");
+                        _source.TraceEvent(TraceEventType.Information, 0, "Input does not compile");
                     }
                     catch (NotImplementedException)
                     {
-                        notImplementedYet++;
-                        Console.Out.WriteLine("Syntax error on input");
+                        transformationNotImplemented++;
+                        _source.TraceEvent(TraceEventType.Error, 1, "feature not implemented");
                     }
+                    _source.TraceEvent(TraceEventType.Stop, 6, "Ending group: " + i);
                 }
             }
 
-
             var count = 0;
             var doesNotCompile = 0;
-
             var submissionCount = 0;
-
             var fixer = new SubmissionFixer(classification);
             var notFixed = new List<Mistake>();
             foreach (var mistake in submissions)
             {
                 submissionCount += 1;
-                Console.Out.WriteLine(
-                    "=============================================================================================== " +
-                    submissionCount);
+                _source.TraceEvent(TraceEventType.Start, 1, "Submission " + submissionCount);
+                if (submissionCount == 9)
+                    Console.Out.WriteLine("Achei");
                 var unparser = new Unparser();
-                PythonAst before = null;
+                PythonNode before = null;
                 try
                 {
-                    before = ASTHelper.ParseContent(mistake.before);
-                    before = ASTHelper.ParseContent(unparser.Unparse(before));
+                    before = NodeWrapper.Wrap(ASTHelper.ParseContent(mistake.before));
+                    before = NodeWrapper.Wrap(ASTHelper.ParseContent(unparser.Unparse(before)));
                 }
                 catch (SyntaxErrorException)
                 {
-                    Console.Out.WriteLine("ERROR: INPUT DOES NOT COMPILE");
+                    _source.TraceEvent(TraceEventType.Information, 0, "Input does not compile");
                     doesNotCompile++;
                     continue;
                 }
                 catch (NotImplementedException)
                 {
-                    Console.Out.WriteLine("Not Implemented yet");
+                    _source.TraceEvent(TraceEventType.Error, 0, mistake.before);
                     notImplementedYet++;
                     continue;
                 }
-
-                Console.Out.WriteLine("Diff =====================");
-                Console.Out.WriteLine(mistake.diff);
-                Console.Out.WriteLine("Before ===================================");
-                Console.Out.WriteLine(mistake.before);
 
                 try
                 {
@@ -215,65 +311,53 @@ namespace TutorUI
                     if (isFixed)
                     {
                         count++;
-                        Console.Out.WriteLine("Fixed!" + count);
+                        _source.TraceEvent(TraceEventType.Information, 4,
+                            "Program fixed: " + count);
                     }
                     else
                     {
                         notFixed.Add(mistake);
-                        Console.Out.WriteLine("ERROR: PROGRAM NOT FIXED");
+                        _source.TraceEvent(TraceEventType.Error, 3,
+                        "Program not fixed:\r\nbefore\r\n" + mistake.before + " \r\n" +
+                        mistake.after);
                     }
                 }
-                catch (NotImplementedException)
+                catch (NotImplementedException e)
                 {
-                    notImplementedYet++;
+                    _source.TraceEvent(TraceEventType.Error, 2,
+                                    "Transformation not implemented:\r\nbefore\r\n" +  mistake.before + " \r\n" +
+                                    mistake.after + "\r\n" + e.Message);
+                    transformationNotImplemented++;
                 }
+                _source.TraceEvent(TraceEventType.Stop, 1, "Submission " + submissionCount);
+
             }
 
-            Console.Out.WriteLine("Total tested: " + submissions.Count);
-            Console.Out.WriteLine("Does not compile: " + doesNotCompile);
-            Console.Out.WriteLine("Not implemented yet: " + notImplementedYet);
-            Console.Out.WriteLine("Fixed: " + count);
-            Console.Out.WriteLine("Not Fixed: " + (submissionCount - count));
-            Console.Out.WriteLine("Program sets: " + (fixer.ProsePrograms.Count));
-            Console.Out.WriteLine("Used Programs: " + (fixer.UsedPrograms.Count));
+            _source.TraceEvent(TraceEventType.Information, 5, "Total submissions: " + submissions.Count);
+            _source.TraceEvent(TraceEventType.Information, 5, "input does not compile: " + doesNotCompile);
+            _source.TraceEvent(TraceEventType.Information, 5, "Fixed: " + count);
+            _source.TraceEvent(TraceEventType.Information, 5, "Not Fixed: " + notFixed.Count);
+            _source.TraceEvent(TraceEventType.Information, 5, "parser not implemented: " + notImplementedYet);
+            _source.TraceEvent(TraceEventType.Information, 5, "transformation not implemented: " + transformationNotImplemented);
+            _source.TraceEvent(TraceEventType.Information, 5, "Script sets: " + fixer.ProsePrograms.Count);
+            _source.TraceEvent(TraceEventType.Information, 5, "Used Programs: " + (fixer.UsedPrograms.Count));
+
+
             var editSetDistribution = fixer.UsedPrograms.Select(e => Tuple.Create(CountEdits(e.Key), e.Value));
-            Console.Out.WriteLine("Distribution of fixes: ");
-            Console.Out.WriteLine("Edits, Submissions");
+            _source.TraceEvent(TraceEventType.Information, 5, "Distribution of fixes");
+            _source.TraceEvent(TraceEventType.Information, 5, "Edits, Submissions");
             foreach (var tuple in editSetDistribution)
             {
-                Console.Out.WriteLine(tuple.Item1 + " , " + tuple.Item2);
+                _source.TraceEvent(TraceEventType.Information, 5, tuple.Item1 + " , " + tuple.Item2);
             }
-            fixer.UsedPrograms.ForEach(e => Console.Out.WriteLine(e + "\r\n"));
+            fixer.UsedPrograms.ForEach(e => _source.TraceEvent(TraceEventType.Information, 5, e + "\r\n"));
 
-            LogPerformance();
-            Console.Out.WriteLine("Total of groups: " + classification.Count);
+            //LogPerformance();
+            _source.TraceEvent(TraceEventType.Information, 5, "Total of groups: " + classification.Count);
             foreach (var tuple in classification)
             {
-                Console.Out.WriteLine("Number of mistakes: " + tuple.Item1.Count);
-                Console.Out.WriteLine(tuple.Item2);
-            }
-
-            Console.Out.WriteLine("=====================");
-            foreach (var submission in submissions)
-            {
-                if (submission.IsFixed)
-                {
-                    if (submission.GeneratedFix == null ||
-                        !submission.GeneratedFix.ToString().Equals(submission.UsedFix.ToString()))
-                    {
-                        Console.Out.WriteLine("Different Fix ------------------------------------");
-                        Console.Out.WriteLine("learned");
-                        Console.Out.WriteLine(submission.GeneratedFix);
-                        Console.Out.WriteLine("Used");
-                        Console.Out.WriteLine(submission.UsedFix);
-                        Console.Out.WriteLine("input");
-                        Console.Out.WriteLine(submission.before);
-                        Console.Out.WriteLine("output");
-                        Console.Out.WriteLine(submission.after);
-                        Console.Out.WriteLine("Synthesized output");
-                        Console.Out.WriteLine(submission.SynthesizedAfter);
-                    }
-                }
+                _source.TraceEvent(TraceEventType.Information, 5, "Number of mistakes: " + tuple.Item1.Count);
+                _source.TraceEvent(TraceEventType.Information, 5, tuple.Item2.ToString());
             }
 
             var submissionsToJson = JsonConvert.SerializeObject(submissions);
@@ -311,6 +395,8 @@ namespace TutorUI
         private static string GetTestSetup()
         {
             return @"
+from operator import add, mul
+
 def square(x):
     return x * x
 
@@ -357,7 +443,7 @@ def increment(x):
             r = new Regex(pat2, RegexOptions.IgnoreCase);
             m = r.Matches(node);
             var inserts = m.Count;
-            r = new Regex(pat3,RegexOptions.IgnoreCase);
+            r = new Regex(pat3, RegexOptions.IgnoreCase);
             m = r.Matches(node);
             var deletes = m.Count;
             return updates + deletes + inserts;

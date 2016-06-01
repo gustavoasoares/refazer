@@ -18,7 +18,7 @@ namespace Tutor.Transformation
         public static double Score_InOrderSort(double document) => document;
 
         [FeatureCalculator("SingleChild")]
-        public static double Score_SingleChild(double n) => n;
+        public static double Score_SingleChild(double n) => n/10;
 
         [FeatureCalculator("Children", Method = CalculationMethod.FromChildrenFeatureValues)]
         public static double Score_Children(double n, double children) => n + children;
@@ -28,6 +28,9 @@ namespace Tutor.Transformation
 
         [FeatureCalculator("Insert")]
         public static double Score_Insert(double n, double node, double k) => n +  node + k;
+
+        [FeatureCalculator("Move")]
+        public static double Score_Move(double n, double node, double k) => n + node + k;
 
         [FeatureCalculator("Delete")]
         public static double Score_Delete(double n, double r) => n +  r;
@@ -66,10 +69,11 @@ namespace Tutor.Transformation
         public static double KScore(int k) => 1;
 
         [FeatureCalculator(Method = CalculationMethod.FromLiteral)]
-        public static double InfoScore(NodeInfo info) => 1;
+        public static double InfoScore(NodeInfo info) => -1;
 
         [FeatureCalculator(Method = CalculationMethod.FromLiteral)]
-        public static double TemplateScore(PythonNode template) => template.GetHeight() * 10 + template.CountAbstract();
+        public static double TemplateScore(PythonNode template) =>  
+            template.CountAbstract() + template.CountNodes() + template.GetHeight();
 
     }
 }
