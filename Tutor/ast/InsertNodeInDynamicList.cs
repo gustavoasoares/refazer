@@ -12,8 +12,14 @@ namespace Tutor.ast
         {
             var newList = new List<PythonNode>();
             newList.AddRange(context.Children);
+            if (index > context.Children.Count)
+                throw new TransformationNotApplicableExpection();
             newList.Insert(index, inserted);
             return newList;
         }
+    }
+
+    public class TransformationNotApplicableExpection : Exception
+    {
     }
 }

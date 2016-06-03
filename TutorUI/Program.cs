@@ -180,7 +180,8 @@ namespace TutorUI
                          select pair.Value;
 
             var submissions = new List<Mistake>();
-            //var target  = values.ToList()[0];
+            //var target = values.ToList()[1];
+            //submissions.AddRange(target);
             //submissions.AddRange(new List<Mistake>()
             //{
             //    target[55],

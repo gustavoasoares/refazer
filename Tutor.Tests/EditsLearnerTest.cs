@@ -131,7 +131,7 @@ n>1";
         {
             var before = @"
 def product(n, term):
-    k, product = 1, 0
+    k, product = 1, 1
     while k <= n:
         product, k = (product * term(k)), k + 1
     return product";
@@ -203,7 +203,7 @@ def product(n, term):
         {
             var before = @"
 def product(n, term):
-    x = n
+    x = y
     y = 1
     while x>1:
         x -= 1
@@ -214,13 +214,6 @@ def product(n, term):
     x, y = n, 1
     while x>=1:
         x, y = x-1, y*term(x)
-    return y
-    x = n
-    y = 1
-    while x>=1:
-        temp = x
-        x -= 1
-        y = y*term(temp)
     return y";
             AssertCorrectTransformation(before, after);
         }
@@ -453,7 +446,27 @@ def product(n, term):
             AssertCorrectTransformation(before, after);
         }
 
-     
+        [TestMethod]
+        public void TestLearn25()
+        {
+            var before = @"
+def product(n, term):
+    i, Total = 0, 1
+    while item<=n:
+        i, Total = i + 1, Total * term(i)
+        return Total";
+
+            var after = @"
+def product(n, term):
+    i, Total = 0, 1
+    while i<=n:
+        i, Total = i+1, Total*term(i)
+    return Total";
+
+            AssertCorrectTransformation(before, after);
+        }
+
+
         [TestMethod]
         public void TestLearnMultipleExamples1()
         {
@@ -585,6 +598,46 @@ def product(n, term):
     return term(n)*product(n-1, term)";
             examples.Add(Tuple.Create(before, after));
 
+            AssertCorrectTransformation(examples);
+        }
+
+
+        [TestMethod]
+        public void TestLearnMultipleExamples3()
+        {
+            var examples = new List<Tuple<string, string>>();
+            var before = @"
+def product(n, term):
+    i = 1
+    total =1
+    while i <= n:        
+        total *=i
+        i+=1
+    return total";
+            var after = @"
+def product(n, term):
+    i = 1
+    total = 1
+    while i<=n:
+        total *= term(i)
+        i += 1
+    return total";
+            examples.Add(Tuple.Create(before, after));
+            before = @"
+def product(n, term):
+    counter, product = 1, 1
+    while counter <= n:
+        product *= counter
+        counter += 1
+    return product";
+            after = @"
+def product(n, term):
+    counter, product = 1, 1
+    while counter<=n:
+        product *= term(counter)
+        counter += 1
+    return product";
+            examples.Add(Tuple.Create(before, after));
             AssertCorrectTransformation(examples);
         }
 

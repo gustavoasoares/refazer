@@ -2,10 +2,11 @@
 reference 'IronPython.dll';
 
 using Tutor;
+using Tutor.synthesis;
 using Tutor.Transformation;
 using IronPython.Compiler.Ast;
 
-using semantics Tutor.Transformation.Semantics;
+using semantics Tutor.Transformation.Semantics;template
 using learners Tutor.Transformation.WitnessFunctions;
 
 
@@ -20,6 +21,8 @@ Patch patch := Patch(editSet) | ConcatPatch(editSet, patch);
 IEnumerable<Edit> editSet := EditMap(edit, selectednodes) = Map(\node : PythonNode => edit, selectednodes);
 IEnumerable<PythonNode> selectednodes := Selected(match, nodes) = Filter(\x : PythonNode => match,nodes); 
 bool match := Match(x, template);
+TreeTemplate template := Tree(info, templateChildren) | Node(info) | Variable(type);
+IEnumerable<TreeTemplate> templateChildren := TemplateChild(template) | TemplateChildren(template, templateChildren);
 Edit edit := Update(node, n) | Insert(node, n, k) | Delete(node, r) | Move(node, r, k);
 PythonNode r := ReferenceNode(node, template); 
 PythonNode n := c | r;
@@ -29,6 +32,6 @@ IEnumerable<PythonNode> nodes := InOrderSort(ast);
 
 
 @input PythonNode ast;
-@feature[Score=TemplateScore] PythonNode template;
 @feature[Score=InfoScore] NodeInfo info; 
 @feature[Score=KScore] int k;
+@feature[Score=TypeScore] string type;

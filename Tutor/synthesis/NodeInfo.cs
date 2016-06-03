@@ -55,6 +55,9 @@ namespace Tutor
             dynamic nodeValue; 
             switch (type)
             {
+                case "FunctionDefinition":
+                    nodeValue = ((FunctionDefinition)node.InnerNode).Name;
+                    break;
                 case "literal":
                     nodeValue = ((ConstantExpression) node.InnerNode).Value;
                     break;
@@ -75,6 +78,7 @@ namespace Tutor
                     break;
                 case "Arg":
                 case "CallExpression":
+                case "LambdaExpression":
                 case "SuiteStatement":
                 case "IfStatement":
                 case "IfStatementTest":
@@ -83,6 +87,7 @@ namespace Tutor
                 case "ExpressionStatement":
                 case "WhileStatement":
                 case "ParenthesisExpression":
+                case "ForStatement":
                     nodeValue = null;
                     break;
                 default: 

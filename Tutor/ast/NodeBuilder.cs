@@ -5,6 +5,7 @@ using System.Text;
 using System.Threading.Tasks;
 using IronPython.Compiler;
 using IronPython.Compiler.Ast;
+using Tutor.ast;
 
 namespace Tutor
 {
@@ -26,8 +27,9 @@ namespace Tutor
             }
         }
 
-        internal static Node Create(NodeInfo info, List<PythonNode> Children)
+        internal static PythonNode Create(NodeInfo info, List<PythonNode> Children)
         {
+            if (Children == null) Children = new List<PythonNode>();
             var rewriter = new Rewriter(new List<Edit>());
             switch (info.NodeType)
             {
@@ -41,55 +43,69 @@ namespace Tutor
                             args.Add(rewriter.VisitArg((Arg)Children[i].InnerNode));
                         }
                     }
-                    return new CallExpression(rewriter.VisitExpression(target), args.ToArray());
+                    var inner = new CallExpression(rewriter.VisitExpression(target), args.ToArray());
+                    return new CallExpressionNode(inner, false) {Children = Children};
                 case "Arg":
                     var expression = (Expression)Children[0].InnerNode;
-                    return (info.NodeValue == null) ? new Arg(rewriter.VisitExpression(expression)) :
+                    var innerArg = (info.NodeValue == null) ? new Arg(rewriter.VisitExpression(expression)) :
                         new Arg(info.NodeType, expression);
+                    return new ArgNode(innerArg, false) {Children = Children, Value = innerArg.Name};
                 case "BinaryExpression":
                     var left = (Expression)Children[0].InnerNode;
                     var right = (Expression)Children[1].InnerNode;
                     PythonOperator op = info.NodeValue;
-                    return new BinaryExpression(op, rewriter.VisitExpression(left), rewriter.VisitExpression(right));
+                    var binaryExpression = new BinaryExpression(op, rewriter.VisitExpression(left), rewriter.VisitExpression(right));
+                    return new BinaryExpressionNode(binaryExpression, false) {Children = Children, Value = binaryExpression.Operator };
                 case "AugmentedAssignStatement":
                     var left1 = (Expression)Children[0].InnerNode;
                     var right1 = (Expression)Children[1].InnerNode;
                     PythonOperator op1 = info.NodeValue;
-                    return new AugmentedAssignStatement(op1, rewriter.VisitExpression(left1), rewriter.VisitExpression(right1));
+                    var augmentedAssignStatement = new AugmentedAssignStatement(op1, rewriter.VisitExpression(left1), rewriter.VisitExpression(right1));
+                    return new AugmentedAssignStatementNode(augmentedAssignStatement, false) {Children = Children, Value = augmentedAssignStatement.Operator };
                 case "SuiteStatement":
                     var statements = Children.Select(e => rewriter.VisitStatement((Statement)e.InnerNode));
-                    return new SuiteStatement(statements.ToArray());
+                    var suiteStatement = new SuiteStatement(statements.ToArray());
+                    return new SuiteStatementNode(suiteStatement, false) {Children = Children};
                 case "WhileStatement":
                     var test = (Expression) Children[0].InnerNode;
                     var body = (Statement) Children[1].InnerNode;
-                    Statement else_ = (Children.Count == 3) ? rewriter.VisitStatement((Statement)Children[2].InnerNode) : null; 
-                    return new WhileStatement(rewriter.VisitExpression(test), rewriter.VisitStatement(body), else_);
+                    Statement else_ = (Children.Count == 3) ? rewriter.VisitStatement((Statement)Children[2].InnerNode) : null;
+                    var whileStatement = new WhileStatement(rewriter.VisitExpression(test), rewriter.VisitStatement(body), else_);
+                    return new WhileStatementNode(whileStatement, false) {Children = Children};
                 case "ReturnStatement":
-                    return new ReturnStatement(rewriter.VisitExpression((Expression)Children[0].InnerNode));
+                    var returnStatement = new ReturnStatement(rewriter.VisitExpression((Expression)Children[0].InnerNode));
+                    return new ReturnStatementNode(returnStatement, false) {Children = Children};
                 case "Parameter":
                     var parameter = new Parameter(info.NodeValue);
                     if (Children.Any()) parameter.DefaultValue = rewriter.VisitExpression((Expression)Children[0].InnerNode);
-                    return parameter;
+                    return new ParameterNode(parameter, false) {Children = Children, Value = parameter.Name};
                 case "ExpressionStatement":
-                    return new ReturnStatement(rewriter.VisitExpression((Expression)Children[0].InnerNode));
+                    var expressionStatement = new ExpressionStatement(rewriter.VisitExpression((Expression)Children[0].InnerNode));
+                    return new ExpressionStatementNode(expressionStatement, false) {Children = Children};
                 case "ParenthesisExpression":
-                    return new ParenthesisExpression(rewriter.VisitExpression((Expression)Children[0].InnerNode));  
+                    var parenthesisExpression = new ParenthesisExpression(rewriter.VisitExpression((Expression)Children[0].InnerNode));
+                    return new ParenthesisExpressionNode(parenthesisExpression, false) {Children = Children};  
                 case "IfStatement":
                     if (Children.Last().InnerNode is IfStatementTest)
                     {
-                        return new IfStatement(Children.Select(e => (IfStatementTest) e.InnerNode).ToArray(), null);
+                        var ifStatement = new IfStatement(Children.Select(e => (IfStatementTest) e.InnerNode).ToArray(), null);
+                        return new IfStatementNode(ifStatement, false) {Children = Children};
                     }
                     var tests = Children.GetRange(0, Children.Count - 1).Select(e => (IfStatementTest) e.InnerNode);
                     var elseStmt = Children.Last().InnerNode;
-                    return new IfStatement(tests.ToArray(), rewriter.VisitStatement((Statement)elseStmt));
+                    var statement = new IfStatement(tests.ToArray(), rewriter.VisitStatement((Statement)elseStmt));
+                    return new IfStatementNode(statement, false) {Children = Children};
                 case "IfStatementTest":
-                    return new IfStatementTest(rewriter.VisitExpression((Expression)Children[0].InnerNode), rewriter.VisitStatement((Statement)Children[1].InnerNode));
+                    var ifStatementTest = new IfStatementTest(rewriter.VisitExpression((Expression)Children[0].InnerNode), rewriter.VisitStatement((Statement)Children[1].InnerNode));
+                    return new IfStatementTestNode(ifStatementTest, false) { Children = Children};
                 case "AssignmentStatement":
                     IEnumerable<Expression> leftAssign = Children.GetRange(0, Children.Count - 1).Select(e => rewriter.VisitExpression((Expression)e.InnerNode));
-                    return new AssignmentStatement(leftAssign.ToArray(), rewriter.VisitExpression((Expression)Children.Last().InnerNode));
+                    var assignmentStatement = new AssignmentStatement(leftAssign.ToArray(), rewriter.VisitExpression((Expression)Children.Last().InnerNode));
+                    return new AssignmentStatementNode(assignmentStatement, false) {Children = Children};
                 case "TupleExpression":
                     IEnumerable<Expression> expressions = Children.Select(e => rewriter.VisitExpression((Expression)e.InnerNode));
-                    return new TupleExpression(info.NodeValue, expressions.ToArray());
+                    var tupleExpression = new TupleExpression(info.NodeValue, expressions.ToArray());
+                    return new TupleExpressionNode(tupleExpression, false) {Children = Children};
                 default:
                     throw new NotImplementedException(info.NodeType);
             }

@@ -16,8 +16,6 @@ namespace Tutor
         {
             var result = new PythonAstNode(ast, false);
             result.AddChild(Wrap(ast.Body, result));
-            
-            result.Walk(new MakeReferenceNodeVisitor());
             return result;
         }
 
@@ -253,6 +251,7 @@ namespace Tutor
         private static PythonNode Wrap(TupleExpression exp, PythonNode parent)
         {
             var result = new TupleExpressionNode(exp, false) { Parent = parent };
+            result.Value = exp.IsExpandable;
             foreach (var item in exp.Items)
             {
                 result.AddChild(Wrap(item, result));
@@ -274,7 +273,7 @@ namespace Tutor
 
         private static PythonNode Wrap(ConstantExpression exp, PythonNode parent)
         {
-            return new ConstantExpressionNode(exp, false) { Parent = parent, Value = exp.Value.ToString()};
+            return new ConstantExpressionNode(exp, false) { Parent = parent, Value = exp.Value};
         }
 
         private static PythonNode Wrap(CallExpression exp, PythonNode parent)
@@ -335,7 +334,7 @@ namespace Tutor
     {
         public bool Visit(PythonNode pythonNode)
         {
-            pythonNode.Reference = true;
+            pythonNode.IsTemplate = true;
             return true;
         }
     }

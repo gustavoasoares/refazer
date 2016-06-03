@@ -38,6 +38,22 @@ namespace Tutor.Transformation
         [FeatureCalculator("Match")]
         public static double Score_Match(double x, double template) => x + template;
 
+        [FeatureCalculator("Tree")]
+        public static double Score_Tree(double info, double templateChildren) => 3 + templateChildren;
+
+        [FeatureCalculator("Node")]
+        public static double Score_Node(double info) => 2;
+
+        [FeatureCalculator("Variable")]
+        public static double Score_Variable(double type) => 1;
+
+        [FeatureCalculator("TemplateChild")]
+        public static double Score_TemplateChild(double template) => template;
+
+
+        [FeatureCalculator("TemplateChildren")]
+        public static double Score_TemplateChildren(double template, double templateChildren) => template + templateChildren;
+
         [FeatureCalculator("Selected")]
         public static double Score_Selected(double match, double nodes) => match + nodes;
 
@@ -51,29 +67,28 @@ namespace Tutor.Transformation
         public static double Score_ConcatPatch(double editSet, double patch) => editSet + patch;
 
         [FeatureCalculator("ReferenceNode")]
-        public static double Score_ReferenceNode(double node, double template) => node + template;
+        public static double Score_ReferenceNode(double node, double template) => node - template;
 
         [FeatureCalculator("LeafConstNode")]
         public static double Score_LeafConstNode(double info)
         {
-            return info; 
+            return info * 10; 
         }
 
         [FeatureCalculator("ConstNode")]
         public static double Score_ConstNode(double info, double children)
         {
-            return info + children;
+            return info * 10 + children;
         }
 
         [FeatureCalculator(Method = CalculationMethod.FromLiteral)]
         public static double KScore(int k) => 1;
 
         [FeatureCalculator(Method = CalculationMethod.FromLiteral)]
-        public static double InfoScore(NodeInfo info) => -1;
+        public static double TypeScore(string type) => 0;
 
         [FeatureCalculator(Method = CalculationMethod.FromLiteral)]
-        public static double TemplateScore(PythonNode template) =>  
-            template.CountAbstract() + template.CountNodes() + template.GetHeight();
+        public static double InfoScore(NodeInfo info) => 1;
 
     }
 }

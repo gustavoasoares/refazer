@@ -3,11 +3,14 @@ using System.Collections.Generic;
 using System.ComponentModel.Design.Serialization;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
+using IronPython.Modules;
 using Microsoft.CodeAnalysis.VisualBasic.Syntax;
 using Microsoft.ProgramSynthesis;
 using Microsoft.ProgramSynthesis.Learning;
 using Microsoft.ProgramSynthesis.Rules;
 using Microsoft.ProgramSynthesis.Specifications;
+using Microsoft.ProgramSynthesis.Utils;
+using Tutor.synthesis;
 
 namespace Tutor.Transformation
 {
@@ -48,10 +51,8 @@ namespace Tutor.Transformation
             foreach (var root in rootAndNonRootEdits.Item1)
             {
                 edits.Add(root);
-                if (root is Update)
-                {
-                    UpdateIds(root.ModifiedNode.Children, editDistance);
-                }
+                UpdateIds(root.ModifiedNode.Children, editDistance);
+                
                 if (root is Insert)
                 {
                     var parent = root.TargetNode;
@@ -158,8 +159,25 @@ namespace Tutor.Transformation
                 //this edit is not root
                 foreach (var edit1 in editDistance.Edits)
                 {
+                    if (edit1.Equals(edit))
+                        continue;
+
                     if (edit.TargetNode.Equals(edit1.ModifiedNode))
+                    {
                         isRoot = false;
+                        break; 
+                    }
+                    if (edit is Update && edit1 is Insert)
+                    {
+                        foreach (var child in edit1.ModifiedNode.Children)
+                        {
+                            if (edit.ModifiedNode.Equals(child))
+                            {
+                                isRoot = false;
+                                break;
+                            }
+                        }
+                    }
                 }
 
                 //if the edit is performed on an node in the input tree
@@ -268,39 +286,118 @@ namespace Tutor.Transformation
             return new SubsequenceSpec(examples);
         }
 
-       
+
 
         [WitnessFunction("Match", 1)]
-        public static DisjunctiveExamplesSpec WitnessMatchTemplate(GrammarRule rule, int parameter,
+        public static ExampleSpec WitnessMatchTemplate(GrammarRule rule, int parameter,
             ExampleSpec spec)
         {
-            var examples = new Dictionary<State, IEnumerable<object>>();
+            var examples = new Dictionary<State, object>();
             foreach (State input in spec.ProvidedInputs)
             {
-                
-                var selectedNode = (PythonNode)input[rule.Body[0]];
-                selectedNode.EditId = 1;
-                var templateTrees = new List<PythonNode>();
 
-                if (selectedNode.Parent != null)
-                {
-                    var t1 = selectedNode.Parent.GetCopy();
-                    t1.IsTemplate = true;
-                    templateTrees.Add(t1);
-                    var t2 = selectedNode.Parent.GetAbstractCopy();
-                    t2.IsTemplate = true;
-                    templateTrees.Add(t2);
-                }
-                var t3 = selectedNode.GetCopy();
-                t3.IsTemplate = true;
-                templateTrees.Add(t3);
-                var t4 = selectedNode.GetAbstractCopy();
-                t4.IsTemplate = true;
-                templateTrees.Add(t4);
-                examples[input] = templateTrees;
-                selectedNode.EditId = 0;
+                var selectedNode = (PythonNode)input[rule.Body[0]];
+                //var solutions = GetAllTemplates(selectedNode, selectedNode);
+                //if (selectedNode.Parent != null)
+                //{
+                //    solutions.AddRange(GetAllTemplates(selectedNode.Parent, selectedNode));
+                //}
+                examples[input] = selectedNode;
             }
-            return DisjunctiveExamplesSpec.From(examples);
+            return new ExampleSpec(examples);
+        }
+
+        private static List<TreeTemplate> GetAllTemplates(PythonNode root, PythonNode selectedNode)
+        {
+            var visitor = new PythonNodeVisitor();
+            root.Walk(visitor);
+            var inOrderNodes = visitor.SortedNodes;
+            
+            var dic = new Dictionary<int, List<TreeTemplate>>();
+            for (var i = 0; i < inOrderNodes.Count; i++)
+            {
+                List<TreeTemplate> templates = new List<TreeTemplate>();
+                var node = inOrderNodes[i];
+                var selected = node.Equals(selectedNode); 
+                templates.Add(new Variable(node.GetType().Name) {Target = selected});
+                var template = new TreeTemplate(node.GetType().Name);
+                if (node.Value != null) template.Value = node.Value;
+                template.Target = selected;
+                templates.Add(template);
+                dic.Add(i, templates);
+            }
+            var nodes = Enumerable.Range(0, inOrderNodes.Count).ToArray();
+            var solutions = new List<Dictionary<int, TreeTemplate>>();
+            var currentSolution = new Dictionary<int,TreeTemplate>();
+            GetAllTemplatesAux(currentSolution, solutions, nodes, dic, inOrderNodes);
+            var result = new List<TreeTemplate>();
+            foreach (var solution in solutions)
+            {
+                result.Add(CreateTemplate(root, solution, inOrderNodes));
+            }
+            return result; 
+        }
+
+        private static TreeTemplate CreateTemplate(PythonNode root, Dictionary<int, TreeTemplate> solution, List<PythonNode> inOrderNodes)
+        {
+            var id = inOrderNodes.IndexOf(root);
+            var template = solution[id];
+            if (template is Variable)
+                return template;
+            foreach (var child in root.Children)
+            {
+                template.Children.Add(CreateTemplate(child, solution,inOrderNodes));
+            }
+            return template;
+        }
+
+        private static void GetAllTemplatesAux(Dictionary<int, TreeTemplate> currentSolution, List<Dictionary<int, TreeTemplate>> solutions, int[] nodes, Dictionary<int, List<TreeTemplate>> dic, List<PythonNode> inOrderNodes)
+        {
+            if (nodes.IsEmpty())
+            {
+                solutions.Add(currentSolution);
+            }
+            else
+            {
+                var nodeId = nodes.First();
+                var treeTemplates = dic[nodeId];
+                if (IsValid(nodeId, currentSolution, inOrderNodes))
+                {
+                    foreach (var treeTemplate in treeTemplates)
+                    {
+                        var newList = new List<int>(nodes);
+                        newList.RemoveAt(0);
+                        var copy = new Dictionary<int, TreeTemplate>(currentSolution);
+                        copy.Add(nodeId, treeTemplate);
+                        GetAllTemplatesAux(copy, solutions, newList.ToArray(), dic, inOrderNodes);
+                    }
+                }
+                else
+                {
+                    var newList = new List<int>(nodes);
+                    newList.RemoveAt(0);
+                    var copy = new Dictionary<int, TreeTemplate>(currentSolution);
+                    copy.Add(nodeId, new InvalidTemplate(""));
+                    GetAllTemplatesAux(copy, solutions, newList.ToArray(), dic, inOrderNodes);
+                }
+            }
+        }
+
+        private static bool IsValid(int nodeId, Dictionary<int, TreeTemplate> currentSolution, List<PythonNode> nodes)
+        {
+            foreach (var pair in currentSolution)
+            {
+                if (pair.Value is Variable || pair.Value is InvalidTemplate)
+                {
+                    var node = nodes[pair.Key];
+                    var currentNode = nodes[nodeId];
+                    if (currentNode.Parent != null && currentNode.Parent.Equals(node))
+                    {                        
+                        return false; 
+                    }
+                }
+            }
+            return true;
         }
 
 
@@ -439,44 +536,150 @@ namespace Tutor.Transformation
             return new ExampleSpec(contextExamples);
         }
 
-        [WitnessFunction("ReferenceNode", 1)]
-        public static DisjunctiveExamplesSpec WitnessContext(GrammarRule rule, int parameter, ExampleSpec spec)
+        [WitnessFunction("Variable", 0)]
+        public static ExampleSpec WitnessVariable(GrammarRule rule, int parameter, ExampleSpec spec)
         {
-            var templateExamples = new Dictionary<State, IEnumerable<object>>();
+            var variableExamples = new Dictionary<State, object>();
             foreach (var input in spec.ProvidedInputs)
             {
-                var templateTrees = new List<PythonNode>();
+                var node = spec.Examples[input] as PythonNode;
+                if (node == null)
+                    return null;
+                variableExamples[input] = node.GetType().Name;
+            }
+            return new ExampleSpec(variableExamples);
+        }
+
+        [WitnessFunction("Tree", 0)]
+        public static ExampleSpec WitnessTreeInfo(GrammarRule rule, int parameter, ExampleSpec spec)
+        {
+            var contextExamples = new Dictionary<State, object>();
+            foreach (State input in spec.ProvidedInputs)
+            {
+                var node = spec.Examples[input] as PythonNode;
+                if (node == null || !node.Children.Any())
+                    return null;
+
+                var info = NodeInfo.CreateInfo(node);
+                contextExamples[input] = info;
+
+            }
+            return new ExampleSpec(contextExamples);
+        }
+
+        [WitnessFunction("Node", 0)]
+        public static ExampleSpec WitnessNodeInfo(GrammarRule rule, int parameter, ExampleSpec spec)
+        {
+            var contextExamples = new Dictionary<State, object>();
+            foreach (State input in spec.ProvidedInputs)
+            {
+                var node = spec.Examples[input] as PythonNode;
+                if (node == null || node.Children.Any())
+                    return null;
+
+                var info = NodeInfo.CreateInfo(node);
+                contextExamples[input] = info;
+
+            }
+            return new ExampleSpec(contextExamples);
+        }
+
+        [WitnessFunction("Tree", 1)]
+        public static ExampleSpec WitnessTreeChildren(GrammarRule rule, int parameter, ExampleSpec spec)
+        {
+            var contextExamples = new Dictionary<State, object>();
+            foreach (State input in spec.ProvidedInputs)
+            {
+                var node = spec.Examples[input] as PythonNode;
+                if (node == null || !node.Children.Any())
+                    return null;
+
+                contextExamples[input] = node.Children;
+
+            }
+            return new ExampleSpec(contextExamples);
+        }
+
+        [WitnessFunction("TemplateChild", 0)]
+        public static ExampleSpec WitnessTemplateChild(GrammarRule rule, int parameter, ExampleSpec spec)
+        {
+            var childrenExamples = new Dictionary<State, object>();
+            foreach (var input in spec.ProvidedInputs)
+            {
+                var children = spec.Examples[input] as IEnumerable<PythonNode>;
+                if (children != null && children.Count().Equals(1))
+                    childrenExamples[input] = children.First();
+                else
+                    return null;
+            }
+            return new ExampleSpec(childrenExamples);
+        }
+
+        [WitnessFunction("TemplateChildren", 0)]
+        public static ExampleSpec WitnessTemplateChildrenHead(GrammarRule rule, int parameter, ExampleSpec spec)
+        {
+            var headExamples = new Dictionary<State, object>();
+            foreach (var input in spec.ProvidedInputs)
+            {
+                var children = spec.Examples[input] as IEnumerable<PythonNode>;
+                if (children != null && children.Count() > 1)
+                    headExamples[input] = children.First();
+                else
+                    return null;
+            }
+            return new ExampleSpec(headExamples);
+        }
+
+        [WitnessFunction("TemplateChildren", 1)]
+        public static ExampleSpec WitnessTemplateChildrenTail(GrammarRule rule, int parameter, ExampleSpec spec)
+        {
+            var headExamples = new Dictionary<State, object>();
+            foreach (var input in spec.ProvidedInputs)
+            {
+                var children = spec.Examples[input] as IEnumerable<PythonNode>;
+                if (children != null && children.Count() > 1)
+                {
+                    var newList = new List<PythonNode>();
+                    newList.AddRange(children);
+                    newList.RemoveAt(0);
+                    headExamples[input] = newList;
+                }
+                else
+                    return null;
+            }
+            return new ExampleSpec(headExamples);
+        }
+
+        [WitnessFunction("ReferenceNode", 1)]
+        public static ExampleSpec WitnessContext(GrammarRule rule, int parameter, ExampleSpec spec)
+        {
+            var templateExamples = new Dictionary<State, object>();
+            foreach (var input in spec.ProvidedInputs)
+            {
                 var node = spec.Examples[input] as PythonNode;
 
                 var ast = (PythonNode)input[rule.Body[0]];
-                if (!ast.Contains2(node))
+                if (ast.ContainsByBinding(node))
+                {
+                    node = ast.GetCorrespondingNodeByBinding(node);
+                }
+                //else if (ast.Contains(node))
+                //{
+                //    node = ast.GetCorrespondingNode(node);
+                //}
+                else
+                {
                     return null;
+                }
 
-                node = ast.GetCorrespondingNode(node);
-
-                node.EditId = 1;
-                var t3 = node.GetCopy();
-                t3.IsTemplate = true;
-                t3.Parent = null;
-                templateTrees.Add(t3);
-
-                var t4 = node.GetAbstractCopy();
-                t4.IsTemplate = true;
-                t4.Parent = null;
-                templateTrees.Add(t4);
-
-                var t1 = node.Parent.GetCopy();
-                t1.IsTemplate = true;
-                templateTrees.Add(t1);
-                
-                var t2 = node.Parent.GetAbstractCopy();
-                t2.IsTemplate = true;
-                templateTrees.Add(t2);
-                node.EditId = 0;
-                
-                templateExamples[input] = templateTrees;
+                //var solutions = GetAllTemplates(node, node);
+                //if (node.Parent != null)
+                //{
+                //    solutions.AddRange(GetAllTemplates(node.Parent, node));
+                //}
+                templateExamples[input] = node;
             }
-            return DisjunctiveExamplesSpec.From(templateExamples);
+            return new ExampleSpec(templateExamples);
         }
 
         [WitnessFunction("SingleChild", 0)]

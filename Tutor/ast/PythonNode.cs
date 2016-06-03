@@ -31,11 +31,9 @@ namespace Tutor
         public PythonNode(Node innerNode, bool isAbstract)
         {
             Id = IdCount++;
-            IsTemplate = false;
             InnerNode = innerNode;
             IsAbstract = isAbstract;
             Children = new List<PythonNode>();
-            Value = "";
             Reference = false;
         }
 
@@ -216,6 +214,7 @@ namespace Tutor
             var result = (PythonNode)Activator.CreateInstance(type, InnerNode, true, EditId);
             if (Parent != null) result.Parent = Parent;
             result.Value = Value;
+            result.IsTemplate = true;
             foreach (var child in Children)
             {
                 result.AddChild(child.GetAbstractCopy());
@@ -252,14 +251,14 @@ namespace Tutor
         }
 
 
-        public bool Contains2(PythonNode node)
+        public bool ContainsByBinding(PythonNode node)
         {
             if (Id == node.Id && Equals(Value,node.Value) && GetType() == node.GetType())
                 return true;
 
             foreach (var child in Children)
             {
-                var contains = child.Contains2(node);
+                var contains = child.ContainsByBinding(node);
                 if (contains)
                     return true;
             }
@@ -290,9 +289,23 @@ namespace Tutor
             return 1 + maxChildHeight;
         }
 
-        public PythonNode GetCorrespondingNode(PythonNode node)
+        public PythonNode GetCorrespondingNodeByBinding(PythonNode node)
         {
             if (Id == node.Id && Equals(Value, node.Value) && GetType() == node.GetType())
+                return this;
+
+            foreach (var child in Children)
+            {
+                var childResult = child.GetCorrespondingNodeByBinding(node);
+                if (childResult != null)
+                    return childResult;
+            }
+            return null;
+        }
+
+        public PythonNode GetCorrespondingNode(PythonNode node)
+        {
+            if (Match(node).Item1)
                 return this;
 
             foreach (var child in Children)
