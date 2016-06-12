@@ -10,23 +10,12 @@ namespace Tutor.ast
 {
     public abstract class InternalNode :  PythonNode
     {
-        public InternalNode(Node innerNode, bool isAbstract) : base(innerNode, isAbstract)
-        {
-        }
-
-        public InternalNode(Node innerNode, bool isAbstract, int editId) : base(innerNode, isAbstract, editId)
-        {
-        }
 
         public override Tuple<bool, PythonNode> Match(PythonNode node)
         {
             PythonNode matchResult = null;
             if (!MatchInternalNode(node.InnerNode)) return Tuple.Create<bool, PythonNode>(false, null);
 
-            if (EditId != 0)
-            {
-                matchResult = node;
-            }
             return CompareChildren(node, matchResult);
         }
 
@@ -43,6 +32,10 @@ namespace Tutor.ast
                 binding = AddBindingNode(binding, childResult.Item2);
             }
             return Tuple.Create(true, binding);
+        }
+
+        public InternalNode(Node innerNode) : base(innerNode)
+        {
         }
     }
 }

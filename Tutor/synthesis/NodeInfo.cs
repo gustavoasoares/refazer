@@ -10,7 +10,7 @@ namespace Tutor
     public class NodeInfo
     {
         public string NodeType { get; }
-        public dynamic NodeValue { get; }
+        public dynamic NodeValue { get; set; }
 
         public NodeInfo(string nodeType, dynamic nodeValue)
         {
@@ -51,43 +51,43 @@ namespace Tutor
 
         public static NodeInfo CreateInfo(PythonNode node)
         {
-            var type = node.InnerNode.NodeName;
+            var type = node.GetType().Name;
             dynamic nodeValue; 
             switch (type)
             {
-                case "FunctionDefinition":
+                case "FunctionDefinitionNode":
                     nodeValue = ((FunctionDefinition)node.InnerNode).Name;
                     break;
-                case "literal":
+                case "ConstantExpressionNode":
                     nodeValue = ((ConstantExpression) node.InnerNode).Value;
                     break;
-                case "AugmentedAssignStatement":
+                case "AugmentedAssignStatementNode":
                     nodeValue = ((AugmentedAssignStatement)node.InnerNode).Operator;
                     break;
-                case "BinaryExpression":
+                case "BinaryExpressionNode":
                     nodeValue = ((BinaryExpression) node.InnerNode).Operator;
                     break;
-                case "NameExpression":
+                case "NameExpressionNode":
                     nodeValue = ((NameExpression) node.InnerNode).Name;
                     break;
-                case "TupleExpression":
+                case "TupleExpressionNode":
                     nodeValue = ((TupleExpression) node.InnerNode).IsExpandable;
                     break;
-                case "Parameter":
+                case "ParameterNode":
                     nodeValue = ((Parameter)node.InnerNode).Name;
                     break;
-                case "Arg":
-                case "CallExpression":
-                case "LambdaExpression":
-                case "SuiteStatement":
-                case "IfStatement":
-                case "IfStatementTest":
-                case "AssignmentStatement":
-                case "ReturnStatement":
-                case "ExpressionStatement":
-                case "WhileStatement":
-                case "ParenthesisExpression":
-                case "ForStatement":
+                case "ArgNode":
+                case "CallExpressionNode":
+                case "LambdaExpressionNode":
+                case "SuiteStatementNode":
+                case "IfStatementNode":
+                case "IfStatementTestNode":
+                case "AssignmentStatementNode":
+                case "ReturnStatementNode":
+                case "ExpressionStatementNode":
+                case "WhileStatementNode":
+                case "ParenthesisExpressionNode":
+                case "ForStatementNode":
                     nodeValue = null;
                     break;
                 default: 

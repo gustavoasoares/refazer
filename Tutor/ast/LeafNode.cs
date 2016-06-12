@@ -9,11 +9,7 @@ namespace Tutor.ast
 {
     public abstract class LeafNode : PythonNode
     {
-        public LeafNode(Node innerNode, bool isAbstract) : base(innerNode, isAbstract)
-        {
-        }
-
-        public LeafNode(Node innerNode, bool isAbstract, int editId) : base(innerNode, isAbstract, editId)
+        public LeafNode(Node innerNode) : base(innerNode)
         {
         }
 
@@ -22,10 +18,6 @@ namespace Tutor.ast
             PythonNode matchResult = null;
             if (!MatchInternalNode(node.InnerNode)) return Tuple.Create<bool, PythonNode>(false, null);
 
-            if (EditId != 0)
-            {
-                matchResult = node;
-            }
             return Tuple.Create(true, matchResult);
         }
     }

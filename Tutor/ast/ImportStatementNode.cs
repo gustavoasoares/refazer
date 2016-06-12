@@ -11,11 +11,7 @@ namespace Tutor.ast
     {
         public IList<string> Names { set; get; }
          
-        public ImportStatementNode(Node innerNode, bool isAbstract) : base(innerNode, isAbstract)
-        {
-        }
-
-        public ImportStatementNode(Node innerNode, bool isAbstract, int editId) : base(innerNode, isAbstract, editId)
+        public ImportStatementNode(Node innerNode) : base(innerNode)
         {
         }
 
@@ -25,7 +21,7 @@ namespace Tutor.ast
         }
         public override PythonNode Clone()
         {
-            var pythonNode = new ImportStatementNode(InnerNode, IsAbstract, EditId);
+            var pythonNode = new ImportStatementNode(InnerNode);
             pythonNode.Names = Names;
             pythonNode.Id = Id;
             if (Value != null) pythonNode.Value = Value;

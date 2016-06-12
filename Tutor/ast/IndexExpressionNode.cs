@@ -9,11 +9,7 @@ namespace Tutor.ast
 {
     class IndexExpressionNode : InternalNode
     {
-        public IndexExpressionNode(Node innerNode, bool isAbstract) : base(innerNode, isAbstract)
-        {
-        }
-
-        public IndexExpressionNode(Node innerNode, bool isAbstract, int editId) : base(innerNode, isAbstract, editId)
+        public IndexExpressionNode(Node innerNode) : base(innerNode)
         {
         }
 
@@ -24,7 +20,7 @@ namespace Tutor.ast
 
         public override PythonNode Clone()
         {
-            var pythonNode = new IndexExpressionNode(InnerNode, IsAbstract, EditId);
+            var pythonNode = new IndexExpressionNode(InnerNode);
             pythonNode.Children = Children;
             pythonNode.Id = Id;
             if (Value != null) pythonNode.Value = Value;

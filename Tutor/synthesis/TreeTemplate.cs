@@ -90,5 +90,66 @@ namespace Tutor.synthesis
                 return false;
             return Equals(Value, root.Value);
         }
+
+        public IList<PythonNode> Matches(PythonNode inp)
+        {
+            var visitor = new MatchVisitor(this);
+            inp.Walk(visitor);
+            return visitor.Matches;
+        }
+
+    }
+
+    public class MatchVisitor : IVisitor
+    {
+        private readonly TreeTemplate _template;
+
+        public List<PythonNode> Matches { set; get; }
+
+        public MatchVisitor(TreeTemplate template)
+        {
+            _template = template;
+            Matches = new List<PythonNode>();
+        }
+
+        public bool Visit(PythonNode pythonNode)
+        {
+            PythonNode target = null;
+            if (TryMatch(pythonNode, _template, ref target) && target != null)
+            {
+                Matches.Add(target);
+            }
+            return true;
+        }
+
+        private bool TryMatch(PythonNode node, TreeTemplate template, ref PythonNode target)
+        {
+            if (template.Match(node))
+            {
+                if (template.Target)
+                    target = node;
+
+                for (var i = 0; i < template.Children.Count; i++)
+                {
+                    var child = template.Children[i];
+                    if (i < node.Children.Count)
+                    {
+                        var compared = node.Children[i];
+                        var result = TryMatch(compared, child, ref target);
+                        if (!result)
+                            return false;
+                    }
+                    else
+                    {
+                        return false;
+                    }
+                }
+            }
+            else
+            {
+                return false;
+            }
+            return true; 
+        }
     }
 }

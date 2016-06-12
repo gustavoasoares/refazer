@@ -12,6 +12,7 @@ using System.Collections.Generic;
 using System.Linq;
 using Microsoft.ProgramSynthesis;
 using Microsoft.ProgramSynthesis.Compiler;
+using Microsoft.ProgramSynthesis.Diagnostics;
 using Microsoft.ProgramSynthesis.Learning;
 using Microsoft.ProgramSynthesis.Learning.Logging;
 using Microsoft.ProgramSynthesis.Specifications;
@@ -428,29 +429,6 @@ def product(n, term):
         {
             var before = @"
 def product(n, term):
-    x = 1
-    _sum_ = 1
-    while x<=n:
-        _sum_, = _sum_*term(x)
-        x += 1
-    return _sum_
-";
-            var after = @"
-def product(n, term):
-    x = 1
-    _sum_ = 1
-    while x<=n:
-        _sum_ = _sum_*term(x)
-        x += 1
-    return _sum_";
-            AssertCorrectTransformation(before, after);
-        }
-
-        [TestMethod]
-        public void TestLearn25()
-        {
-            var before = @"
-def product(n, term):
     i, Total = 0, 1
     while item<=n:
         i, Total = i + 1, Total * term(i)
@@ -643,8 +621,6 @@ def product(n, term):
 
         private static void AssertCorrectTransformation(IEnumerable<Tuple<string,string>> mistakes) 
         {
-            var grammar = DSLCompiler.LoadGrammarFromFile(@"..\..\..\Tutor\synthesis\Transformation.grammar");
-
             var examples = new Dictionary<State, object>();
             foreach (var mistake in mistakes)
             {
@@ -655,9 +631,8 @@ def product(n, term):
                 examples.Add(input,astAfter);
             }
             var spec = new ExampleSpec(examples);
-            var prose = new SynthesisEngine(grammar.Value);
-            var learned = prose.LearnGrammarTopK(spec, "Score", k: 1);
-            var first = learned.First();
+            var learned = prose.LearnGrammar(spec);
+            var first = learned.RealizedPrograms.First();
 
             foreach (var mistake in mistakes)
             {
@@ -678,9 +653,11 @@ def product(n, term):
             }
         }
 
+        private static Result<Grammar> grammar = DSLCompiler.LoadGrammarFromFile(@"..\..\..\Tutor\synthesis\Transformation.grammar");
+        private static SynthesisEngine prose = new SynthesisEngine(grammar.Value, new SynthesisEngine.Config { LogListener = new LogListener() });
+
         private static void AssertCorrectTransformation(string before, string after)
         {
-            var grammar = DSLCompiler.LoadGrammarFromFile(@"..\..\..\Tutor\synthesis\Transformation.grammar");
 
             var astBefore = NodeWrapper.Wrap(ASTHelper.ParseContent(before));
 
@@ -691,10 +668,9 @@ def product(n, term):
             var spec = new ExampleSpec(examples);
 
             
-            var prose = new SynthesisEngine(grammar.Value, new SynthesisEngine.Config { LogListener = new LogListener() });
-            var learned = prose.LearnGrammarTopK(spec,"Score", k:1);
+            var learned = prose.LearnGrammar(spec);
             prose.Configuration.LogListener.SaveLogToXML("log.xml");
-            var first = learned.First();
+            var first = learned.RealizedPrograms.First();
             var output = first.Invoke(input) as IEnumerable<PythonNode>;
 
             var isFixed = false;

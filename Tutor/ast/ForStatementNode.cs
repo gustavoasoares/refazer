@@ -9,12 +9,7 @@ namespace Tutor.ast
 {
     class ForStatementNode : InternalNode
     {
-        public ForStatementNode(Node innerNode, bool isAbstract) : base(innerNode, isAbstract)
-        {
-            InsertStrategy = new InsertFixedList();
-        }
-
-        public ForStatementNode(Node innerNode, bool isAbstract, int editId) : base(innerNode, isAbstract, editId)
+        public ForStatementNode(Node innerNode) : base(innerNode)
         {
             InsertStrategy = new InsertFixedList();
         }
@@ -28,7 +23,7 @@ namespace Tutor.ast
 
         public override PythonNode Clone()
         {
-            var pythonNode = new ForStatementNode(InnerNode, IsAbstract, EditId);
+            var pythonNode = new ForStatementNode(InnerNode);
             pythonNode.Children = Children;
             pythonNode.Id = Id;
             if (Value != null) pythonNode.Value = Value;

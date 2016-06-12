@@ -9,12 +9,7 @@ namespace Tutor.ast
 {
     class UnaryExpressionNode : InternalNode
     {
-        public UnaryExpressionNode(Node innerNode, bool isAbstract) : base(innerNode, isAbstract)
-        {
-            InsertStrategy = new InsertFixedList();
-        }
-
-        public UnaryExpressionNode(Node innerNode, bool isAbstract, int editId) : base(innerNode, isAbstract, editId)
+        public UnaryExpressionNode(Node innerNode) : base(innerNode)
         {
             InsertStrategy = new InsertFixedList();
         }
@@ -26,7 +21,7 @@ namespace Tutor.ast
 
         public override PythonNode Clone()
         {
-            var pythonNode = new UnaryExpressionNode(InnerNode, IsAbstract, EditId);
+            var pythonNode = new UnaryExpressionNode(InnerNode);
             pythonNode.Children = Children;
             pythonNode.Id = Id;
             if (Value != null) pythonNode.Value = Value;

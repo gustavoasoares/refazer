@@ -6,13 +6,16 @@ using System.Threading.Tasks;
 
 namespace Tutor.synthesis
 {
-    public class Variable : TreeTemplate
+    public class Wildcard : TreeTemplate
     {
-        public string Type { get; set; }
 
-        public Variable(string type) : base(type)
+        public Wildcard(string type) : base(type)
         {
-            Type = type;
+        }
+
+        public Wildcard(string type, IEnumerable<TreeTemplate> children) : base(type)
+        {
+            Children = children.ToList();
         }
 
         public override string ToString()
@@ -24,6 +27,7 @@ namespace Tutor.synthesis
             {
                 sb.Append(", * ");
             }
+            Children.ForEach(c => sb.Append(c.ToString()));
             sb.Append("}");
             return sb.ToString();
         }

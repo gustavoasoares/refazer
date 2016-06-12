@@ -9,12 +9,7 @@ namespace Tutor.ast
 {
     class CallExpressionNode : InternalNode
     {
-        public CallExpressionNode(Node innerNode, bool isAbstract) : base(innerNode, isAbstract)
-        {
-            InsertStrategy = new InsertNodeInDynamicList();
-        }
-
-        public CallExpressionNode(Node innerNode, bool isAbstract, int editId) : base(innerNode, isAbstract, editId)
+        public CallExpressionNode(Node innerNode) : base(innerNode)
         {
             InsertStrategy = new InsertNodeInDynamicList();
         }
@@ -28,7 +23,7 @@ namespace Tutor.ast
 
         public override PythonNode Clone()
         {
-            var pythonNode = new CallExpressionNode(InnerNode, IsAbstract, EditId);
+            var pythonNode = new CallExpressionNode(InnerNode);
             pythonNode.Children = Children;
             pythonNode.Id = Id;
             if (Value != null) pythonNode.Value = Value;

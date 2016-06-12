@@ -38,20 +38,25 @@ namespace Tutor.Transformation
         [FeatureCalculator("Match")]
         public static double Score_Match(double x, double template) => x + template;
 
-        [FeatureCalculator("Tree")]
-        public static double Score_Tree(double info, double templateChildren) => 3 + templateChildren;
-
         [FeatureCalculator("Node")]
-        public static double Score_Node(double info) => 2;
+        public static double Score_Tree(double info, double templateChildren) => 1 + templateChildren;
 
-        [FeatureCalculator("Variable")]
-        public static double Score_Variable(double type) => 1;
+        [FeatureCalculator("LeafNode")]
+        public static double Score_Node(double info) => 1;
 
-        [FeatureCalculator("TemplateChild")]
+        [FeatureCalculator("LeafWildcard")]
+        public static double Score_Wildcard(double type) => 7;
+
+        [FeatureCalculator("Wildcard")]
+        public static double Score_Wildcard(double type, double children ) => 3;
+
+        [FeatureCalculator("Target")]
+        public static double Score_Target(double template) => 0;
+
+        [FeatureCalculator("TChild")]
         public static double Score_TemplateChild(double template) => template;
 
-
-        [FeatureCalculator("TemplateChildren")]
+        [FeatureCalculator("TChildren")]
         public static double Score_TemplateChildren(double template, double templateChildren) => template + templateChildren;
 
         [FeatureCalculator("Selected")]
@@ -63,11 +68,11 @@ namespace Tutor.Transformation
         [FeatureCalculator("Patch")]
         public static double Score_Patch(double editset) => editset;
 
-        [FeatureCalculator("ConcatPatch", Method = CalculationMethod.FromChildrenFeatureValues)]
+        [FeatureCalculator("CPatch", Method = CalculationMethod.FromChildrenFeatureValues)]
         public static double Score_ConcatPatch(double editSet, double patch) => editSet + patch;
 
         [FeatureCalculator("ReferenceNode")]
-        public static double Score_ReferenceNode(double node, double template) => node - template;
+        public static double Score_ReferenceNode(double node, double template, double k) => node - template;
 
         [FeatureCalculator("LeafConstNode")]
         public static double Score_LeafConstNode(double info)
@@ -88,7 +93,9 @@ namespace Tutor.Transformation
         public static double TypeScore(string type) => 0;
 
         [FeatureCalculator(Method = CalculationMethod.FromLiteral)]
-        public static double InfoScore(NodeInfo info) => 1;
+        public static double ValueScore(dynamic value) => 0;
 
+        [FeatureCalculator(Method = CalculationMethod.FromLiteral)]
+        public static double InfoScore(NodeInfo info) => 1;
     }
 }

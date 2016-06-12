@@ -9,11 +9,7 @@ namespace Tutor.ast
 {
     class NameExpressionNode : LeafNode
     {
-        public NameExpressionNode(Node innerNode, bool isAbstract) : base(innerNode, isAbstract)
-        {
-        }
-
-        public NameExpressionNode(Node innerNode, bool isAbstract, int editId) : base(innerNode, isAbstract, editId)
+        public NameExpressionNode(Node innerNode) : base(innerNode)
         {
         }
 
@@ -27,7 +23,7 @@ namespace Tutor.ast
 
         public override PythonNode Clone()
         {
-            var pythonNode = new NameExpressionNode(InnerNode, IsAbstract, EditId);
+            var pythonNode = new NameExpressionNode(InnerNode);
             pythonNode.Id = Id;
             if (Value != null) pythonNode.Value = Value;
             return pythonNode;

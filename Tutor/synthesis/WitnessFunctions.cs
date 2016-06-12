@@ -239,7 +239,7 @@ namespace Tutor.Transformation
             return new SubsequenceSpec(examples);
         }
 
-        [WitnessFunction("ConcatPatch", 0)]
+        [WitnessFunction("CPatch", 0)]
         public static SubsequenceSpec WitnessHeadPatch(GrammarRule rule, int parameter,
             ExampleSpec spec)
         {
@@ -254,7 +254,7 @@ namespace Tutor.Transformation
             return new SubsequenceSpec(examples);
         }
 
-        [WitnessFunction("ConcatPatch", 1)]
+        [WitnessFunction("CPatch", 1)]
         public static ExampleSpec WitnessTailPatch(GrammarRule rule, int parameter,
             ExampleSpec spec)
         {
@@ -295,114 +295,15 @@ namespace Tutor.Transformation
             var examples = new Dictionary<State, object>();
             foreach (State input in spec.ProvidedInputs)
             {
-
                 var selectedNode = (PythonNode)input[rule.Body[0]];
-                //var solutions = GetAllTemplates(selectedNode, selectedNode);
-                //if (selectedNode.Parent != null)
-                //{
-                //    solutions.AddRange(GetAllTemplates(selectedNode.Parent, selectedNode));
-                //}
-                examples[input] = selectedNode;
+                examples[input] = selectedNode.Parent != null ? Tuple.Create(selectedNode.Parent, selectedNode) :
+                    Tuple.Create(selectedNode, selectedNode);
             }
             return new ExampleSpec(examples);
         }
 
-        private static List<TreeTemplate> GetAllTemplates(PythonNode root, PythonNode selectedNode)
-        {
-            var visitor = new PythonNodeVisitor();
-            root.Walk(visitor);
-            var inOrderNodes = visitor.SortedNodes;
-            
-            var dic = new Dictionary<int, List<TreeTemplate>>();
-            for (var i = 0; i < inOrderNodes.Count; i++)
-            {
-                List<TreeTemplate> templates = new List<TreeTemplate>();
-                var node = inOrderNodes[i];
-                var selected = node.Equals(selectedNode); 
-                templates.Add(new Variable(node.GetType().Name) {Target = selected});
-                var template = new TreeTemplate(node.GetType().Name);
-                if (node.Value != null) template.Value = node.Value;
-                template.Target = selected;
-                templates.Add(template);
-                dic.Add(i, templates);
-            }
-            var nodes = Enumerable.Range(0, inOrderNodes.Count).ToArray();
-            var solutions = new List<Dictionary<int, TreeTemplate>>();
-            var currentSolution = new Dictionary<int,TreeTemplate>();
-            GetAllTemplatesAux(currentSolution, solutions, nodes, dic, inOrderNodes);
-            var result = new List<TreeTemplate>();
-            foreach (var solution in solutions)
-            {
-                result.Add(CreateTemplate(root, solution, inOrderNodes));
-            }
-            return result; 
-        }
-
-        private static TreeTemplate CreateTemplate(PythonNode root, Dictionary<int, TreeTemplate> solution, List<PythonNode> inOrderNodes)
-        {
-            var id = inOrderNodes.IndexOf(root);
-            var template = solution[id];
-            if (template is Variable)
-                return template;
-            foreach (var child in root.Children)
-            {
-                template.Children.Add(CreateTemplate(child, solution,inOrderNodes));
-            }
-            return template;
-        }
-
-        private static void GetAllTemplatesAux(Dictionary<int, TreeTemplate> currentSolution, List<Dictionary<int, TreeTemplate>> solutions, int[] nodes, Dictionary<int, List<TreeTemplate>> dic, List<PythonNode> inOrderNodes)
-        {
-            if (nodes.IsEmpty())
-            {
-                solutions.Add(currentSolution);
-            }
-            else
-            {
-                var nodeId = nodes.First();
-                var treeTemplates = dic[nodeId];
-                if (IsValid(nodeId, currentSolution, inOrderNodes))
-                {
-                    foreach (var treeTemplate in treeTemplates)
-                    {
-                        var newList = new List<int>(nodes);
-                        newList.RemoveAt(0);
-                        var copy = new Dictionary<int, TreeTemplate>(currentSolution);
-                        copy.Add(nodeId, treeTemplate);
-                        GetAllTemplatesAux(copy, solutions, newList.ToArray(), dic, inOrderNodes);
-                    }
-                }
-                else
-                {
-                    var newList = new List<int>(nodes);
-                    newList.RemoveAt(0);
-                    var copy = new Dictionary<int, TreeTemplate>(currentSolution);
-                    copy.Add(nodeId, new InvalidTemplate(""));
-                    GetAllTemplatesAux(copy, solutions, newList.ToArray(), dic, inOrderNodes);
-                }
-            }
-        }
-
-        private static bool IsValid(int nodeId, Dictionary<int, TreeTemplate> currentSolution, List<PythonNode> nodes)
-        {
-            foreach (var pair in currentSolution)
-            {
-                if (pair.Value is Variable || pair.Value is InvalidTemplate)
-                {
-                    var node = nodes[pair.Key];
-                    var currentNode = nodes[nodeId];
-                    if (currentNode.Parent != null && currentNode.Parent.Equals(node))
-                    {                        
-                        return false; 
-                    }
-                }
-            }
-            return true;
-        }
-
-
         [WitnessFunction("Update", 1)]
-        public static DisjunctiveExamplesSpec WitnessN2(GrammarRule rule, int parameter, ExampleSpec spec)
+        public static ExampleSpec WitnessN2(GrammarRule rule, int parameter, ExampleSpec spec)
         {
             var contextExamples = new Dictionary<State, object>();
             foreach (State input in spec.ProvidedInputs)
@@ -416,7 +317,7 @@ namespace Tutor.Transformation
         }
 
         [WitnessFunction("Insert", 1)]
-        public static DisjunctiveExamplesSpec WitnessInsertN(GrammarRule rule, int parameter, ExampleSpec spec)
+        public static ExampleSpec WitnessInsertN(GrammarRule rule, int parameter, ExampleSpec spec)
         {
             var contextExamples = new Dictionary<State, object>();
             foreach (State input in spec.ProvidedInputs)
@@ -444,7 +345,7 @@ namespace Tutor.Transformation
         }
 
         [WitnessFunction("Move", 1)]
-        public static DisjunctiveExamplesSpec WitnessMoveN(GrammarRule rule, int parameter, ExampleSpec spec)
+        public static ExampleSpec WitnessMoveN(GrammarRule rule, int parameter, ExampleSpec spec)
         {
             var contextExamples = new Dictionary<State, object>();
             foreach (State input in spec.ProvidedInputs)
@@ -536,124 +437,382 @@ namespace Tutor.Transformation
             return new ExampleSpec(contextExamples);
         }
 
-        [WitnessFunction("Variable", 0)]
-        public static ExampleSpec WitnessVariable(GrammarRule rule, int parameter, ExampleSpec spec)
+        [WitnessFunction("LeafWildcard", 0)]
+        public static ExampleSpec WitnessLeafWildCardType(GrammarRule rule, int parameter, ExampleSpec spec)
         {
-            var variableExamples = new Dictionary<State, object>();
+            var variableExamples = new Dictionary<State, IEnumerable<object>>();
             foreach (var input in spec.ProvidedInputs)
             {
-                var node = spec.Examples[input] as PythonNode;
-                if (node == null)
+                var contextTargets = spec.DisjunctiveExamples[input] as IEnumerable<Tuple<PythonNode, PythonNode>>;
+                if (contextTargets == null)
+                {
+                    var list = new List<Tuple<PythonNode, PythonNode>>();
+                    foreach (var element in spec.DisjunctiveExamples[input])
+                    {
+                        var tuple = element as Tuple<PythonNode, PythonNode>;
+                        if (tuple == null)
+                            return null;
+                        list.Add(tuple);
+                    }
+                    contextTargets = list;
+                }
+                var types = new List<string>();
+                foreach (var contextTarget in contextTargets)
+                {
+                    var node = contextTarget.Item1;
+                    if (contextTarget.Item2 != null && contextTarget.Item2.Equals(contextTarget.Item1))
+                        continue;
+                    if (node != null && node.Children.Any())
+                        continue;
+                    types.Add(node.GetType().Name);
+                }
+
+                if (!types.Any())
                     return null;
-                variableExamples[input] = node.GetType().Name;
+                variableExamples[input] = types;
+
             }
-            return new ExampleSpec(variableExamples);
+            return DisjunctiveExamplesSpec.From(variableExamples);
         }
 
-        [WitnessFunction("Tree", 0)]
-        public static ExampleSpec WitnessTreeInfo(GrammarRule rule, int parameter, ExampleSpec spec)
+        [WitnessFunction("Wildcard", 0)]
+        public static DisjunctiveExamplesSpec WitnessWildCardType(GrammarRule rule, int parameter, DisjunctiveExamplesSpec spec)
         {
-            var contextExamples = new Dictionary<State, object>();
-            foreach (State input in spec.ProvidedInputs)
+            var variableExamples = new Dictionary<State, IEnumerable<object>>();
+            foreach (var input in spec.ProvidedInputs)
             {
-                var node = spec.Examples[input] as PythonNode;
-                if (node == null || !node.Children.Any())
-                    return null;
+                var contextTargets = spec.DisjunctiveExamples[input] as IEnumerable<Tuple<PythonNode, PythonNode>>;
+                if (contextTargets == null)
+                {
+                    var list = new List<Tuple<PythonNode, PythonNode>>();
+                    foreach (var element in spec.DisjunctiveExamples[input])
+                    {
+                        var tuple = element as Tuple<PythonNode, PythonNode>;
+                        if (tuple == null)
+                            return null;
+                        list.Add(tuple);
+                    }
+                    contextTargets = list;
+                }
+                var types = new List<string>();
+                foreach (var contextTarget in contextTargets)
+                {
+                    var node = contextTarget.Item1;
+                    if (contextTarget.Item2 != null && contextTarget.Item2.Equals(contextTarget.Item1))
+                        continue;
+                    if (node == null || !node.Children.Any())
+                        continue;
+                    types.Add(node.GetType().Name);
+                }
 
-                var info = NodeInfo.CreateInfo(node);
-                contextExamples[input] = info;
+                if (!types.Any())
+                    return null;
+                variableExamples[input] = types;
+            }
+            return DisjunctiveExamplesSpec.From(variableExamples);
+        }
+
+        [WitnessFunction("Wildcard", 1)]
+        public static DisjunctiveExamplesSpec WitnessWildcardValue(GrammarRule rule, int parameter, DisjunctiveExamplesSpec spec)
+        {
+            var variableExamples = new Dictionary<State, IEnumerable<object>>();
+            foreach (var input in spec.ProvidedInputs)
+            {
+                var contextTargets = spec.DisjunctiveExamples[input] as IEnumerable<Tuple<PythonNode, PythonNode>>;
+                if (contextTargets == null)
+                {
+                    var list = new List<Tuple<PythonNode, PythonNode>>();
+                    foreach (var element in spec.DisjunctiveExamples[input])
+                    {
+                        var tuple = element as Tuple<PythonNode, PythonNode>;
+                        if (tuple == null)
+                            return null;
+                        list.Add(tuple);
+                    }
+                    contextTargets = list;
+                }
+                var children = new List<Tuple<List<PythonNode>, PythonNode>>();
+                foreach (var contextTarget in contextTargets)
+                {
+                    var node = contextTarget.Item1;
+                    if (contextTarget.Item2 != null && contextTarget.Item2.Equals(contextTarget.Item1))
+                        continue;
+                    if (node == null || !node.Children.Any())
+                        continue;
+
+                    children.Add(Tuple.Create(node.Children, contextTarget.Item2));
+                }
+                if (!children.Any())
+                    return null;
+                variableExamples[input] = children;
 
             }
-            return new ExampleSpec(contextExamples);
+            return DisjunctiveExamplesSpec.From(variableExamples);
+        }
+
+        [WitnessFunction("Target", 0)]
+        public static DisjunctiveExamplesSpec WitnessTemplate(GrammarRule rule, int parameter, DisjunctiveExamplesSpec spec)
+        {
+            var variableExamples = new Dictionary<State, IEnumerable<object>>();
+            foreach (var input in spec.ProvidedInputs)
+            {
+                var contextTargets = spec.DisjunctiveExamples[input] as IEnumerable<Tuple<PythonNode, PythonNode>>;
+                if (contextTargets == null)
+                {
+                    var list = new List<Tuple<PythonNode, PythonNode>>();
+                    foreach (var element in spec.DisjunctiveExamples[input])
+                    {
+                        var tuple = element as Tuple<PythonNode, PythonNode>;
+                        if (tuple == null)
+                            return null;
+                        list.Add(tuple);
+                    }
+                    contextTargets = list;
+                }
+                var contexts = new List<Tuple<PythonNode,PythonNode>>();
+                foreach (var contextTarget in contextTargets)
+                {
+                    if (contextTarget.Item2 == null || !contextTarget.Item2.Equals(contextTarget.Item1))
+                        continue;
+
+                    contexts.Add(Tuple.Create<PythonNode, PythonNode>(contextTarget.Item1, null));
+                }
+                if (!contexts.Any())
+                    return null;
+                variableExamples[input] = contexts;
+            }
+            return DisjunctiveExamplesSpec.From(variableExamples);
         }
 
         [WitnessFunction("Node", 0)]
-        public static ExampleSpec WitnessNodeInfo(GrammarRule rule, int parameter, ExampleSpec spec)
+        public static DisjunctiveExamplesSpec WitnessNodeType(GrammarRule rule, int parameter, DisjunctiveExamplesSpec spec)
         {
-            var contextExamples = new Dictionary<State, object>();
+            var variableExamples = new Dictionary<State, IEnumerable<object>>();
             foreach (State input in spec.ProvidedInputs)
             {
-                var node = spec.Examples[input] as PythonNode;
-                if (node == null || node.Children.Any())
-                    return null;
-
-                var info = NodeInfo.CreateInfo(node);
-                contextExamples[input] = info;
-
-            }
-            return new ExampleSpec(contextExamples);
-        }
-
-        [WitnessFunction("Tree", 1)]
-        public static ExampleSpec WitnessTreeChildren(GrammarRule rule, int parameter, ExampleSpec spec)
-        {
-            var contextExamples = new Dictionary<State, object>();
-            foreach (State input in spec.ProvidedInputs)
-            {
-                var node = spec.Examples[input] as PythonNode;
-                if (node == null || !node.Children.Any())
-                    return null;
-
-                contextExamples[input] = node.Children;
-
-            }
-            return new ExampleSpec(contextExamples);
-        }
-
-        [WitnessFunction("TemplateChild", 0)]
-        public static ExampleSpec WitnessTemplateChild(GrammarRule rule, int parameter, ExampleSpec spec)
-        {
-            var childrenExamples = new Dictionary<State, object>();
-            foreach (var input in spec.ProvidedInputs)
-            {
-                var children = spec.Examples[input] as IEnumerable<PythonNode>;
-                if (children != null && children.Count().Equals(1))
-                    childrenExamples[input] = children.First();
-                else
-                    return null;
-            }
-            return new ExampleSpec(childrenExamples);
-        }
-
-        [WitnessFunction("TemplateChildren", 0)]
-        public static ExampleSpec WitnessTemplateChildrenHead(GrammarRule rule, int parameter, ExampleSpec spec)
-        {
-            var headExamples = new Dictionary<State, object>();
-            foreach (var input in spec.ProvidedInputs)
-            {
-                var children = spec.Examples[input] as IEnumerable<PythonNode>;
-                if (children != null && children.Count() > 1)
-                    headExamples[input] = children.First();
-                else
-                    return null;
-            }
-            return new ExampleSpec(headExamples);
-        }
-
-        [WitnessFunction("TemplateChildren", 1)]
-        public static ExampleSpec WitnessTemplateChildrenTail(GrammarRule rule, int parameter, ExampleSpec spec)
-        {
-            var headExamples = new Dictionary<State, object>();
-            foreach (var input in spec.ProvidedInputs)
-            {
-                var children = spec.Examples[input] as IEnumerable<PythonNode>;
-                if (children != null && children.Count() > 1)
+                var contextTargets = spec.DisjunctiveExamples[input] as IEnumerable<Tuple<PythonNode, PythonNode>>;
+                if (contextTargets == null)
                 {
-                    var newList = new List<PythonNode>();
-                    newList.AddRange(children);
-                    newList.RemoveAt(0);
-                    headExamples[input] = newList;
+                    var list = new List<Tuple<PythonNode, PythonNode>>();
+                    foreach (var element in spec.DisjunctiveExamples[input])
+                    {
+                        var tuple = element as Tuple<PythonNode, PythonNode>;
+                        if (tuple == null)
+                            return null;
+                        list.Add(tuple);
+                    }
+                    contextTargets = list;
                 }
-                else
+                var types = new List<NodeInfo>();
+                foreach (var contextTarget in contextTargets)
+                {
+                    var node = contextTarget.Item1;
+                    if (contextTarget.Item2 != null && contextTarget.Item2.Equals(contextTarget.Item1))
+                        continue;
+                    if (node == null || !node.Children.Any())
+                        continue;
+
+                    var nodeInfo = new NodeInfo(node.GetType().Name);
+                    if (node.Value != null) nodeInfo.NodeValue = node.Value;
+                    types.Add(nodeInfo);
+                }
+                if (!types.Any())
                     return null;
+                variableExamples[input] = types;
+
             }
-            return new ExampleSpec(headExamples);
+            return DisjunctiveExamplesSpec.From(variableExamples);
+        }
+        [WitnessFunction("Node", 1)]
+        public static DisjunctiveExamplesSpec WitnessNodeInfo(GrammarRule rule, int parameter, DisjunctiveExamplesSpec spec)
+        {
+            var variableExamples = new Dictionary<State, IEnumerable<object>>();
+            foreach (State input in spec.ProvidedInputs)
+            {
+                var contextTargets = spec.DisjunctiveExamples[input] as IEnumerable<Tuple<PythonNode, PythonNode>>;
+                if (contextTargets == null)
+                {
+                    var list = new List<Tuple<PythonNode, PythonNode>>();
+                    foreach (var element in spec.DisjunctiveExamples[input])
+                    {
+                        var tuple = element as Tuple<PythonNode, PythonNode>;
+                        if (tuple == null)
+                            return null;
+                        list.Add(tuple);
+                    }
+                    contextTargets = list;
+                }
+                var children = new List<Tuple<List<PythonNode>, PythonNode>>();
+                foreach (var contextTarget in contextTargets)
+                {
+                    var node = contextTarget.Item1;
+                    if (contextTarget.Item2 != null && contextTarget.Item2.Equals(contextTarget.Item1))
+                        continue;
+                    if (node == null || !node.Children.Any())
+                        continue;
+
+                    children.Add(Tuple.Create(node.Children, contextTarget.Item2));
+                }
+                if (!children.Any())
+                    return null;
+                variableExamples[input] = children;
+            }
+            return DisjunctiveExamplesSpec.From(variableExamples);
+        }
+
+        [WitnessFunction("LeafNode", 0)]
+        public static DisjunctiveExamplesSpec WitnessLeafNodeType(GrammarRule rule, int parameter, DisjunctiveExamplesSpec spec)
+        {
+            var variableExamples = new Dictionary<State, IEnumerable<object>>();
+            foreach (State input in spec.ProvidedInputs)
+            {
+                var contextTargets = spec.DisjunctiveExamples[input] as IEnumerable<Tuple<PythonNode, PythonNode>>;
+                if (contextTargets == null)
+                {
+                    var list = new List<Tuple<PythonNode, PythonNode>>();
+                    foreach (var element in spec.DisjunctiveExamples[input])
+                    {
+                        var tuple = element as Tuple<PythonNode, PythonNode>;
+                        if (tuple == null)
+                            return null;
+                        list.Add(tuple);
+                    }
+                    contextTargets = list;
+                }
+                var types = new List<NodeInfo>();
+                foreach (var contextTarget in contextTargets)
+                {
+                    var node = contextTarget.Item1;
+                    if (contextTarget.Item2 != null && contextTarget.Item2.Equals(contextTarget.Item1))
+                        continue;
+                    if (node != null && node.Children.Any())
+                        continue;
+
+                    var info = new NodeInfo(node.GetType().Name);
+                    if (node.Value != null) info.NodeValue = node.Value;
+                    types.Add(info);
+                }
+                if (!types.Any())
+                    return null;
+                variableExamples[input] = types;
+
+            }
+            return DisjunctiveExamplesSpec.From(variableExamples);
+        }
+
+        [WitnessFunction("TChild", 0)]
+        public static DisjunctiveExamplesSpec WitnessTemplateChild(GrammarRule rule, int parameter, DisjunctiveExamplesSpec spec)
+        {
+            var childrenExamples = new Dictionary<State, IEnumerable<object>>();
+            foreach (var input in spec.ProvidedInputs)
+            {
+                var childrenTargets = spec.DisjunctiveExamples[input] as IEnumerable<Tuple<List<PythonNode>, PythonNode>>;
+                if (childrenTargets == null)
+                {
+                    var list = new List<Tuple<List<PythonNode>, PythonNode>>();
+                    foreach (var element in spec.DisjunctiveExamples[input])
+                    {
+                        var tuple = element as Tuple<List<PythonNode>, PythonNode>;
+                        if (tuple == null)
+                            return null;
+                        list.Add(tuple);
+                    }
+                    childrenTargets = list;
+                }
+                var contexts = new List<Tuple<PythonNode, PythonNode>>();
+                foreach (var childrenTarget in childrenTargets)
+                {
+                    var children = childrenTarget.Item1;
+                    if (children != null && children.Count().Equals(1))
+                        contexts.Add(Tuple.Create(children.First(), childrenTarget.Item2));
+                }
+                if (!contexts.Any())
+                    return null;
+                childrenExamples[input] = contexts;
+            }
+            return DisjunctiveExamplesSpec.From(childrenExamples);
+        }
+
+        [WitnessFunction("TChildren", 0)]
+        public static DisjunctiveExamplesSpec WitnessTemplateChildrenHead(GrammarRule rule, int parameter, DisjunctiveExamplesSpec spec)
+        {
+            var headExamples = new Dictionary<State, IEnumerable<object>>();
+            foreach (var input in spec.ProvidedInputs)
+            {
+                var childrenTargets = spec.DisjunctiveExamples[input] as IEnumerable<Tuple<List<PythonNode>, PythonNode>>;
+                if (childrenTargets == null)
+                {
+                    var list = new List<Tuple<List<PythonNode>, PythonNode>>();
+                    foreach (var element in spec.DisjunctiveExamples[input])
+                    {
+                        var tuple = element as Tuple<List<PythonNode>, PythonNode>;
+                        if (tuple == null)
+                            return null;
+                        list.Add(tuple);
+                    }
+                    childrenTargets = list;
+                }
+                if (childrenTargets == null)
+                    return null;
+                var contexts = new List<Tuple<PythonNode, PythonNode>>();
+                foreach (var childrenTarget in childrenTargets)
+                {
+                    var children = childrenTarget.Item1;
+                    if (children != null && children.Count() > 1)
+                        contexts.Add(Tuple.Create(children.First(), childrenTarget.Item2));
+                }
+                if (!contexts.Any())
+                    return null;
+                headExamples[input] = contexts;
+            }
+            return DisjunctiveExamplesSpec.From(headExamples);
+        }
+
+        [WitnessFunction("TChildren", 1)]
+        public static DisjunctiveExamplesSpec WitnessTemplateChildrenTail(GrammarRule rule, int parameter, DisjunctiveExamplesSpec spec)
+        {
+            var headExamples = new Dictionary<State, IEnumerable<object>>();
+            foreach (var input in spec.ProvidedInputs)
+            {
+                var childrenTargets = spec.DisjunctiveExamples[input] as IEnumerable<Tuple<List<PythonNode>, PythonNode>>;
+                if (childrenTargets == null)
+                {
+                    var list = new List<Tuple<List<PythonNode>, PythonNode>>();
+                    foreach (var element in spec.DisjunctiveExamples[input])
+                    {
+                        var tuple = element as Tuple<List<PythonNode>, PythonNode>;
+                        if (tuple == null)
+                            return null;
+                        list.Add(tuple);
+                    }
+                    childrenTargets = list;
+                }
+                var contexts = new List<Tuple<List<PythonNode>, PythonNode>>();
+                foreach (var childrenTarget in childrenTargets)
+                {
+                    var children = childrenTarget.Item1;
+                    if (children != null && children.Count() > 1)
+                    {
+                        var newList = new List<PythonNode>();
+                        newList.AddRange(children);
+                        newList.RemoveAt(0);
+                        contexts.Add(Tuple.Create(newList, childrenTarget.Item2));
+                    }
+                    else
+                        return null;
+                }
+                if (contexts.Count == 0)
+                    return null;
+                headExamples[input] = contexts;
+
+            }
+            return DisjunctiveExamplesSpec.From(headExamples);
         }
 
         [WitnessFunction("ReferenceNode", 1)]
-        public static ExampleSpec WitnessContext(GrammarRule rule, int parameter, ExampleSpec spec)
+        public static DisjunctiveExamplesSpec WitnessContext(GrammarRule rule, int parameter, ExampleSpec spec)
         {
-            var templateExamples = new Dictionary<State, object>();
+            var templateExamples = new Dictionary<State, IEnumerable<object>>();
             foreach (var input in spec.ProvidedInputs)
             {
                 var node = spec.Examples[input] as PythonNode;
@@ -663,23 +822,50 @@ namespace Tutor.Transformation
                 {
                     node = ast.GetCorrespondingNodeByBinding(node);
                 }
-                //else if (ast.Contains(node))
-                //{
-                //    node = ast.GetCorrespondingNode(node);
-                //}
                 else
                 {
                     return null;
                 }
+                var contextTargetTuples = new List<Tuple<PythonNode, PythonNode>>();
+                contextTargetTuples.Add(Tuple.Create(node, node));
+                if (node.Parent != null && ast.Contains(node.Parent))
+                    contextTargetTuples.Add(Tuple.Create(node.Parent, node));
 
-                //var solutions = GetAllTemplates(node, node);
-                //if (node.Parent != null)
-                //{
-                //    solutions.AddRange(GetAllTemplates(node.Parent, node));
-                //}
-                templateExamples[input] = node;
+                templateExamples[input] = contextTargetTuples;
             }
-            return new ExampleSpec(templateExamples);
+            return DisjunctiveExamplesSpec.From(templateExamples);
+        }
+
+        [WitnessFunction("ReferenceNode", 2, DependsOnParameters = new [] {1})]
+        public static DisjunctiveExamplesSpec WitnessK(GrammarRule rule, int parameter, ExampleSpec spec, 
+            ExampleSpec templateSpec)
+        {
+            var result = new Dictionary<State, IEnumerable<object>>();
+
+            foreach (var input in spec.ProvidedInputs)
+            {
+                var inp = (PythonNode)input[rule.Body[0]];
+                var node = spec.Examples[input] as PythonNode;
+                var template = (TreeTemplate) templateSpec.Examples[input];
+                var matches = template.Matches(inp);
+                var witness = -1;
+                for (var i = 0; i < matches.Count; i++)
+                {
+                    if (matches[i].Id == node.Id)
+                    {
+                        witness = i;
+                        break;
+                    }
+                }
+                if (witness < 0)
+                    continue;
+                var positions = new List<int>();
+                positions.Add(witness);
+                result[input] = positions.Cast<object>();
+            }
+            if (!result.Any())
+                return null;
+            return DisjunctiveExamplesSpec.From(result);
         }
 
         [WitnessFunction("SingleChild", 0)]

@@ -9,12 +9,7 @@ namespace Tutor.ast
 {
     class AssignmentStatementNode : InternalNode
     {
-        public AssignmentStatementNode(Node innerNode, bool isAbstract) : base(innerNode, isAbstract)
-        {
-            InsertStrategy = new InsertFixedList();
-        }
-
-        public AssignmentStatementNode(Node innerNode, bool isAbstract, int editId) : base(innerNode, isAbstract, editId)
+        public AssignmentStatementNode(Node innerNode) : base(innerNode)
         {
             InsertStrategy = new InsertFixedList();
         }
@@ -28,7 +23,7 @@ namespace Tutor.ast
 
         public override PythonNode Clone()
         {
-            var pythonNode = new AssignmentStatementNode(InnerNode, IsAbstract, EditId);
+            var pythonNode = new AssignmentStatementNode(InnerNode);
             pythonNode.Children = Children;
             if (Value != null) pythonNode.Value = Value;
             pythonNode.Id = Id;

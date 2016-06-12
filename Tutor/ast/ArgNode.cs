@@ -4,15 +4,11 @@ namespace Tutor.ast
 {
     class ArgNode : InternalNode
     {
-        public ArgNode(Node innerNode, bool isAbstract) : base(innerNode, isAbstract)
+        public ArgNode(Node innerNode) : base(innerNode)
         {
             InsertStrategy = new InsertFixedList();
         }
 
-        public ArgNode(Node innerNode, bool isAbstract, int editId) : base(innerNode, isAbstract, editId)
-        {
-            InsertStrategy = new InsertFixedList();
-        }
         
         protected override bool IsEqualToInnerNode(Node node)
         {
@@ -31,7 +27,7 @@ namespace Tutor.ast
 
         public override PythonNode Clone()
         {
-            var pythonNode = new ArgNode(InnerNode, IsAbstract, EditId);
+            var pythonNode = new ArgNode(InnerNode);
             pythonNode.Children = Children;
             pythonNode.Id = Id;
             if (Value != null) pythonNode.Value = Value;

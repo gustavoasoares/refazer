@@ -11,12 +11,7 @@ namespace Tutor.ast
     {
         public string Documentation { set; get; }
 
-        public ExpressionStatementNode(Node innerNode, bool isAbstract) : base(innerNode, isAbstract)
-        {
-            InsertStrategy = new InsertFixedList();
-        }
-
-        public ExpressionStatementNode(Node innerNode, bool isAbstract, int editId) : base(innerNode, isAbstract, editId)
+        public ExpressionStatementNode(Node innerNode) : base(innerNode)
         {
             InsertStrategy = new InsertFixedList();
         }
@@ -30,7 +25,7 @@ namespace Tutor.ast
 
         public override PythonNode Clone()
         {
-            var pythonNode = new ExpressionStatementNode(InnerNode, IsAbstract, EditId);
+            var pythonNode = new ExpressionStatementNode(InnerNode);
             pythonNode.Children = Children;
             pythonNode.Id = Id;
             pythonNode.Documentation = Documentation;
