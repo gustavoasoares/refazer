@@ -296,7 +296,7 @@ namespace Tutor.Transformation
             foreach (State input in spec.ProvidedInputs)
             {
                 var selectedNode = (PythonNode)input[rule.Body[0]];
-                examples[input] = selectedNode.Parent != null ? Tuple.Create(selectedNode.Parent, selectedNode) :
+                examples[input] =
                     Tuple.Create(selectedNode, selectedNode);
             }
             return new ExampleSpec(examples);
@@ -438,23 +438,25 @@ namespace Tutor.Transformation
         }
 
         [WitnessFunction("LeafWildcard", 0)]
-        public static DisjunctiveExamplesSpec WitnessLeafWildCardType(GrammarRule rule, int parameter, ExampleSpec spec)
+        public static ExampleSpec WitnessLeafWildCardType(GrammarRule rule, int parameter, ExampleSpec spec)
         {
-            var result = new Dictionary<State, IEnumerable<object>>();
+            var result = new Dictionary<State, object>();
             foreach (var input in spec.ProvidedInputs)
             {
                 var contextTarget = spec.Examples[input] as Tuple<PythonNode, PythonNode>;
                 var node = contextTarget.Item1;
-                if (contextTarget.Item2 != null && contextTarget.Item2.Equals(contextTarget.Item1))
+                if (contextTarget.Item2 != null && 
+                    (contextTarget.Item2.Equals(contextTarget.Item1) ||
+                    node.ContainsByBinding(contextTarget.Item2)))
                     return null;
-                if (node != null && node.Children.Any())
+                if (node == null)
                     return null;
                 var types = new List<string>();
                 types.Add(node.GetType().Name);
                 types.Add("any");
-                result[input] = types;
+                result[input] = node.GetType().Name;
             }
-            return DisjunctiveExamplesSpec.From(result);
+            return new ExampleSpec(result);
         }
 
         [WitnessFunction("Wildcard", 0)]
@@ -632,15 +634,15 @@ namespace Tutor.Transformation
                 {
                     return null;
                 }
-                if (node.Parent != null && ast.Contains(node.Parent))
-                   templateExamples[input] = Tuple.Create(node.Parent, node);
-                else
+                //if (node.Parent != null && ast.Contains(node.Parent))
+                //   templateExamples[input] = Tuple.Create(node.Parent, node);
+                //else
                     templateExamples[input] = Tuple.Create(node, node);
             }
             return new ExampleSpec(templateExamples);
         }
 
-        [WitnessFunction("ReferenceNode", 2, DependsOnParameters = new [] {1})]
+        [WitnessFunction("ReferenceNode", 2, DependsOnParameters = new []{1})]
         public static ExampleSpec WitnessK(GrammarRule rule, int parameter, ExampleSpec spec, 
             ExampleSpec templateSpec)
         {
@@ -650,22 +652,22 @@ namespace Tutor.Transformation
             {
                 var inp = (PythonNode)input[rule.Body[0]];
                 var node = spec.Examples[input] as PythonNode;
-                //var template = (TreeTemplate) templateSpec.Examples[input];
-                //var matches = template.Matches(inp);
-                //var witness = -1;
-                //for (var i = 0; i < matches.Count; i++)
-                //{
-                //    if (matches[i].Id == node.Id)
-                //    {
-                //        witness = i;
-                //        break;
-                //    }
-                //}
-                //if (witness < 0)
-                //    return null;
-                //var positions = new List<int>();
-                //positions.Add(witness);
-                result[input] = 0;
+                var template = (TreeTemplate)templateSpec.Examples[input];
+                var matches = template.Matches(inp);
+                var witness = -1;
+                for (var i = 0; i < matches.Count; i++)
+                {
+                    if (matches[i].Id == node.Id)
+                    {
+                        witness = i;
+                        break;
+                    }
+                }
+                if (witness < 0)
+                    return null;
+                var positions = new List<int>();
+                positions.Add(witness);
+                result[input] = witness;
             }
             return new ExampleSpec(result);
         }
