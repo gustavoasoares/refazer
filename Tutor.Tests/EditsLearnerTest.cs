@@ -668,9 +668,9 @@ def product(n, term):
             var spec = new ExampleSpec(examples);
 
             
-            var learned = prose.LearnGrammar(spec);
+            var learned = prose.LearnGrammarTopK(spec, "Score");
             prose.Configuration.LogListener.SaveLogToXML("log.xml");
-            var first = learned.RealizedPrograms.First();
+            var first = learned.First();
             var output = first.Invoke(input) as IEnumerable<PythonNode>;
 
             var isFixed = false;

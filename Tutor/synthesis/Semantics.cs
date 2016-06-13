@@ -191,7 +191,7 @@ namespace Tutor.Transformation
 
         public static TreeTemplate LeafWildcard(string type)
         {
-            return new Wildcard(type);
+            return new Wildcard(type, true);
         }
 
         public static TreeTemplate Wildcard(string type, IEnumerable<TreeTemplate> children)

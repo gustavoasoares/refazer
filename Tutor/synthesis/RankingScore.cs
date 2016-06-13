@@ -39,19 +39,19 @@ namespace Tutor.Transformation
         public static double Score_Match(double x, double template) => x + template;
 
         [FeatureCalculator("Node")]
-        public static double Score_Tree(double info, double templateChildren) => 1 + templateChildren;
+        public static double Score_Tree(double info, double templateChildren) => 3 / templateChildren;
 
         [FeatureCalculator("LeafNode")]
         public static double Score_Node(double info) => 1;
 
         [FeatureCalculator("LeafWildcard")]
-        public static double Score_Wildcard(double type) => 7;
+        public static double Score_Wildcard(double type) => 130 * type;
 
         [FeatureCalculator("Wildcard")]
-        public static double Score_Wildcard(double type, double children ) => 3;
+        public static double Score_Wildcard(double type, double children ) => 7 * type / children;
 
         [FeatureCalculator("Target")]
-        public static double Score_Target(double template) => 0;
+        public static double Score_Target(double template) => template;
 
         [FeatureCalculator("TChild")]
         public static double Score_TemplateChild(double template) => template;
@@ -72,25 +72,25 @@ namespace Tutor.Transformation
         public static double Score_ConcatPatch(double editSet, double patch) => editSet + patch;
 
         [FeatureCalculator("ReferenceNode")]
-        public static double Score_ReferenceNode(double node, double template, double k) => node - template;
+        public static double Score_ReferenceNode(double node, double template, double k) => template;
 
         [FeatureCalculator("LeafConstNode")]
         public static double Score_LeafConstNode(double info)
         {
-            return info * 10; 
+            return -5; 
         }
 
         [FeatureCalculator("ConstNode")]
         public static double Score_ConstNode(double info, double children)
         {
-            return info * 10 + children;
+            return -10 + children;
         }
 
         [FeatureCalculator(Method = CalculationMethod.FromLiteral)]
         public static double KScore(int k) => 1;
 
         [FeatureCalculator(Method = CalculationMethod.FromLiteral)]
-        public static double TypeScore(string type) => 0;
+        public static double TypeScore(string type) => (type.Equals("any")) ? 1 : 2;
 
         [FeatureCalculator(Method = CalculationMethod.FromLiteral)]
         public static double ValueScore(dynamic value) => 0;
