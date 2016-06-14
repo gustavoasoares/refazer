@@ -331,17 +331,21 @@ namespace Tutor.Transformation
         }
 
         [WitnessFunction("Insert", 2)]
-        public static ExampleSpec WitnessInsertK(GrammarRule rule, int parameter, ExampleSpec spec)
+        public static DisjunctiveExamplesSpec WitnessInsertK(GrammarRule rule, int parameter, ExampleSpec spec)
         {
-            var contextExamples = new Dictionary<State, object>();
+            var contextExamples = new Dictionary<State, IEnumerable<object>>();
             foreach (State input in spec.ProvidedInputs)
             {
                 var operation = spec.Examples[input] as Insert;
                 if (operation == null)
                     return null;
-                contextExamples[input] = operation.Index;
+                var positions = new List<int>();
+                positions.Add(operation.Index);
+                if (operation.Index == operation.TargetNode.Children.Count)
+                    positions.Add(-1);
+                contextExamples[input] = positions.Cast<object>();
             }
-            return new ExampleSpec(contextExamples);
+            return DisjunctiveExamplesSpec.From(contextExamples);
         }
 
         [WitnessFunction("Move", 1)]
@@ -359,17 +363,21 @@ namespace Tutor.Transformation
         }
 
         [WitnessFunction("Move", 2)]
-        public static ExampleSpec WitnessMoveK(GrammarRule rule, int parameter, ExampleSpec spec)
+        public static DisjunctiveExamplesSpec WitnessMoveK(GrammarRule rule, int parameter, ExampleSpec spec)
         {
-            var contextExamples = new Dictionary<State, object>();
+            var contextExamples = new Dictionary<State, IEnumerable<object>>();
             foreach (State input in spec.ProvidedInputs)
             {
                 var operation = spec.Examples[input] as Move;
                 if (operation == null)
                     return null;
-                contextExamples[input] = operation.Index;
+                var positions = new List<int>();
+                positions.Add(operation.Index);
+                if (operation.Index == operation.TargetNode.Children.Count)
+                    positions.Add(-1);
+                contextExamples[input] = positions.Cast<object>();
             }
-            return new ExampleSpec(contextExamples);
+            return DisjunctiveExamplesSpec.From(contextExamples);
         }
 
         [WitnessFunction("Delete", 1)]

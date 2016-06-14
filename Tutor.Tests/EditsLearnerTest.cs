@@ -444,6 +444,8 @@ def product(n, term):
             AssertCorrectTransformation(before, after);
         }
 
+      
+
 
         [TestMethod]
         public void TestLearnMultipleExamples1()
@@ -615,6 +617,40 @@ def product(n, term):
         product *= term(counter)
         counter += 1
     return product";
+            examples.Add(Tuple.Create(before, after));
+            AssertCorrectTransformation(examples);
+        }
+
+
+        [TestMethod]
+        public void TestLearnMultipleExamples4()
+        {
+            var examples = new List<Tuple<string, string>>();
+            var before = @"
+def product(n, term):
+    total = 1
+    k = 1
+    if k <= n:
+        total = total * term(k)
+        k += 1";
+            var after = @"
+def product(n, term):
+    total = 1
+    k = 1
+    if k<=n:
+        total = total*term(k)
+        k += 1
+    return total";
+            examples.Add(Tuple.Create(before, after));
+            before = @"
+def product(n, term):
+    total = 1
+    k = 1";
+            after = @"
+def product(n, term):
+    total = 1
+    k = 1
+    return total";
             examples.Add(Tuple.Create(before, after));
             AssertCorrectTransformation(examples);
         }

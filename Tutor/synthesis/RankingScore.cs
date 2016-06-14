@@ -90,7 +90,7 @@ namespace Tutor.Transformation
         }
 
         [FeatureCalculator(Method = CalculationMethod.FromLiteral)]
-        public static double KScore(int k) => 1;
+        public static double KScore(int k) => k < 0 ? 2 : 1;
 
         [FeatureCalculator(Method = CalculationMethod.FromLiteral)]
         public static double TypeScore(string type) => (type.Equals("any")) ? 1 : 2;
