@@ -23,7 +23,8 @@ IEnumerable<Edit> edits := EditMap(edit, selectednodes) = Map(\node : PythonNode
 IEnumerable<PythonNode> selectednodes := Selected(match, nodes) = Filter(\x : PythonNode => match,nodes); 
 bool match := Match(x, template);
 TreeTemplate template := Node(info, tchildren) | LeafNode(info) 
-							| LeafWildcard(type) | Target(template);
+							| LeafWildcard(type) | Target(template) | Skip(template);
+
 IEnumerable<TreeTemplate> tchildren := TChild(template) | TChildren(template, tchildren);
 
 Edit edit := Update(node, c) | Insert(node, n, k) | Delete(node, r) | Move(node, r, k);

@@ -186,7 +186,25 @@ namespace Tutor.Transformation
                 result.Children = template.Children;
             result.Target = true;
             return result;
+        }
 
+        public static TreeTemplate Skip(TreeTemplate template)
+        {
+            TreeTemplate result;
+            if (template is Wildcard)
+            {
+                result = new Wildcard(template.Type);
+            }
+            else
+            {
+                result = new TreeTemplate(template.Type);
+                if (template.Value != null)
+                    result.Value = template.Value;
+            }
+            if (template.Children != null && template.Children.Any())
+                result.Children = template.Children;
+            result.Target = template.Target;
+            return result;
         }
 
         public static TreeTemplate LeafWildcard(string type)

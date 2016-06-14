@@ -18,7 +18,7 @@ namespace Tutor.Transformation
         public static double Score_InOrderSort(double document) => document;
 
         [FeatureCalculator("SingleChild")]
-        public static double Score_SingleChild(double n) => n/10;
+        public static double Score_SingleChild(double n) => n;
 
         [FeatureCalculator("Children", Method = CalculationMethod.FromChildrenFeatureValues)]
         public static double Score_Children(double n, double children) => n + children;
@@ -39,7 +39,7 @@ namespace Tutor.Transformation
         public static double Score_Match(double x, double template) => x + template;
 
         [FeatureCalculator("Node")]
-        public static double Score_Tree(double info, double templateChildren) => 3 / templateChildren;
+        public static double Score_Tree(double info, double templateChildren) => 3 * templateChildren;
 
         [FeatureCalculator("LeafNode")]
         public static double Score_Node(double info) => 1;
@@ -52,6 +52,9 @@ namespace Tutor.Transformation
 
         [FeatureCalculator("Target")]
         public static double Score_Target(double template) => template;
+
+        [FeatureCalculator("Skip")]
+        public static double Score_Skip(double template) => template * 0.8;
 
         [FeatureCalculator("TChild")]
         public static double Score_TemplateChild(double template) => template;
@@ -72,18 +75,18 @@ namespace Tutor.Transformation
         public static double Score_ConcatPatch(double editSet, double patch) => editSet + patch;
 
         [FeatureCalculator("ReferenceNode")]
-        public static double Score_ReferenceNode(double node, double template, double k) => template;
+        public static double Score_ReferenceNode(double node, double template, double k) => template * 100;
 
         [FeatureCalculator("LeafConstNode")]
         public static double Score_LeafConstNode(double info)
         {
-            return -5; 
+            return 5; 
         }
 
         [FeatureCalculator("ConstNode")]
         public static double Score_ConstNode(double info, double children)
         {
-            return -10 + children;
+            return 10 * children;
         }
 
         [FeatureCalculator(Method = CalculationMethod.FromLiteral)]

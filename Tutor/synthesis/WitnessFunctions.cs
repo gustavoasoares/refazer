@@ -296,7 +296,7 @@ namespace Tutor.Transformation
             foreach (State input in spec.ProvidedInputs)
             {
                 var selectedNode = (PythonNode)input[rule.Body[0]];
-                examples[input] =
+                examples[input] = selectedNode.Parent != null? Tuple.Create(selectedNode.Parent, selectedNode) : 
                     Tuple.Create(selectedNode, selectedNode);
             }
             return new ExampleSpec(examples);
@@ -510,6 +510,25 @@ namespace Tutor.Transformation
             return new ExampleSpec(result);
         }
 
+        [WitnessFunction("Skip", 0)]
+        public static ExampleSpec WitnessSkipTemplate(GrammarRule rule, int parameter, ExampleSpec spec)
+        {
+            var result = new Dictionary<State, object>();
+            foreach (var input in spec.ProvidedInputs)
+            {
+                var contextTarget = spec.Examples[input] as Tuple<PythonNode, PythonNode>;
+                if (contextTarget.Item2 != null && contextTarget.Item2.Parent.Equals(contextTarget.Item1))
+                {
+                    result[input] = Tuple.Create(contextTarget.Item2, contextTarget.Item2);
+                }
+                else
+                {
+                    return null;
+                }
+            }
+            return new ExampleSpec(result);
+        }
+
         [WitnessFunction("Node", 0)]
         public static ExampleSpec WitnessNodeType(GrammarRule rule, int parameter, ExampleSpec spec)
         {
@@ -634,9 +653,9 @@ namespace Tutor.Transformation
                 {
                     return null;
                 }
-                //if (node.Parent != null && ast.Contains(node.Parent))
-                //   templateExamples[input] = Tuple.Create(node.Parent, node);
-                //else
+                if (node.Parent != null && ast.Contains(node.Parent))
+                    templateExamples[input] = Tuple.Create(node.Parent, node);
+                else
                     templateExamples[input] = Tuple.Create(node, node);
             }
             return new ExampleSpec(templateExamples);
@@ -652,22 +671,22 @@ namespace Tutor.Transformation
             {
                 var inp = (PythonNode)input[rule.Body[0]];
                 var node = spec.Examples[input] as PythonNode;
-                var template = (TreeTemplate)templateSpec.Examples[input];
-                var matches = template.Matches(inp);
-                var witness = -1;
-                for (var i = 0; i < matches.Count; i++)
-                {
-                    if (matches[i].Id == node.Id)
-                    {
-                        witness = i;
-                        break;
-                    }
-                }
-                if (witness < 0)
-                    return null;
-                var positions = new List<int>();
-                positions.Add(witness);
-                result[input] = witness;
+                //var template = (TreeTemplate)templateSpec.Examples[input];
+                //var matches = template.Matches(inp);
+                //var witness = -1;
+                //for (var i = 0; i < matches.Count; i++)
+                //{
+                //    if (matches[i].Id == node.Id)
+                //    {
+                //        witness = i;
+                //        break;
+                //    }
+                //}
+                //if (witness < 0)
+                //    return null;
+                //var positions = new List<int>();
+                //positions.Add(witness);
+                result[input] = 0;
             }
             return new ExampleSpec(result);
         }
