@@ -446,9 +446,9 @@ namespace Tutor.Transformation
         }
 
         [WitnessFunction("LeafWildcard", 0)]
-        public static ExampleSpec WitnessLeafWildCardType(GrammarRule rule, int parameter, ExampleSpec spec)
+        public static DisjunctiveExamplesSpec WitnessLeafWildCardType(GrammarRule rule, int parameter, ExampleSpec spec)
         {
-            var result = new Dictionary<State, object>();
+            var result = new Dictionary<State, IEnumerable<object>>();
             foreach (var input in spec.ProvidedInputs)
             {
                 var contextTarget = spec.Examples[input] as Tuple<PythonNode, PythonNode>;
@@ -461,10 +461,11 @@ namespace Tutor.Transformation
                     return null;
                 var types = new List<string>();
                 types.Add(node.GetType().Name);
-                types.Add("any");
-                result[input] = node.GetType().Name;
+                if (node.Children.Any())
+                    types.Add("any");
+                result[input] = types;
             }
-            return new ExampleSpec(result);
+            return DisjunctiveExamplesSpec.From(result);
         }
 
         [WitnessFunction("Wildcard", 0)]

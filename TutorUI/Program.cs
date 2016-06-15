@@ -180,7 +180,7 @@ namespace TutorUI
                          select pair.Value;
 
             var submissions = new List<Mistake>();
-            //var target = values.ToList()[1];
+            //var target = values.ToList()[0];
             //submissions.AddRange(target);
             //submissions.AddRange(new List<Mistake>()
             //{
@@ -278,8 +278,6 @@ namespace TutorUI
             {
                 submissionCount += 1;
                 _source.TraceEvent(TraceEventType.Start, 1, "Submission " + submissionCount);
-                if (submissionCount == 9)
-                    Console.Out.WriteLine("Achei");
                 var unparser = new Unparser();
                 PythonNode before = null;
                 try

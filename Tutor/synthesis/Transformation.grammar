@@ -22,13 +22,14 @@ Patch patch := Patch(edits) | CPatch(edits, patch);
 IEnumerable<Edit> edits := EditMap(edit, selectednodes) = Map(\node : PythonNode => edit, selectednodes);
 IEnumerable<PythonNode> selectednodes := Selected(match, nodes) = Filter(\x : PythonNode => match,nodes); 
 bool match := Match(x, template);
-TreeTemplate template := Node(info, tchildren) | LeafNode(info) 
-							| LeafWildcard(type) | Target(template) | Skip(template);
+TreeTemplate template := t2 | Skip(template);
+TreeTemplate t2 := Node(info, tchildren) | LeafNode(info) 
+							| LeafWildcard(type) | Target(template);
 
 IEnumerable<TreeTemplate> tchildren := TChild(template) | TChildren(template, tchildren);
 
 Edit edit := Update(node, c) | Insert(node, n, k) | Delete(node, r) | Move(node, r, k);
-PythonNode r := ReferenceNode(node, template, k); 
+PythonNode r := ReferenceNode(node, t2, k); 
 PythonNode n := c | r;
 PythonNode c := LeafConstNode(info) | ConstNode(info, children);
 IEnumerable<PythonNode> children := SingleChild(n) | Children(n, children);

@@ -655,6 +655,63 @@ def product(n, term):
             AssertCorrectTransformation(examples);
         }
 
+
+        [TestMethod]
+        public void TestLearnMultipleExamples5()
+        {
+            var examples = new List<Tuple<string, string>>();
+            var before = @"
+def product(n, term):
+    trial, result = 1, 1
+    while trial <= n:
+        result = result * trial
+        trial = trial + 1
+    return result";
+            var after = @"
+def product(n, term):
+    trial, result = 1, 1
+    while trial<=n:
+        result = result*term(trial)
+        trial = trial+1
+    return result";
+            examples.Add(Tuple.Create(before, after));
+            before = @"
+def product(n, term):
+    total = 1
+    while n != 0:
+        total = total*n
+        n -= 1
+    return total";
+            after = @"
+def product(n, term):
+    total = 1
+    while n!=0:
+        total = total*term(n)
+        n -= 1
+    return total";
+            examples.Add(Tuple.Create(before, after));
+
+            before = @"
+def product(n, term):
+    x = 1
+    total = 1
+    while x <= n:
+        total = total * x
+        x += 1
+    return total";
+            after = @"
+def product(n, term):
+    x = 1
+    total = 1
+    while x<=n:
+        total = total*term(x)
+        x += 1
+    return total";
+            examples.Add(Tuple.Create(before, after));
+
+            AssertCorrectTransformation(examples);
+        }
+
         private static void AssertCorrectTransformation(IEnumerable<Tuple<string,string>> mistakes) 
         {
             var examples = new Dictionary<State, object>();
