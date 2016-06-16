@@ -59,32 +59,7 @@ namespace Tutor
 
             return backup.Substring(start, end - start);
         }
-
-
-        public List<Mistake> GetSubmissions(Tuple<Question, string>[] questionLogs)
-        {
-            var result = new List<Mistake>();
-            foreach (var questionLog in questionLogs)
-            {
-                var cluster = new Dictionary<String, List<Mistake>>();
-                var submissions = JsonConvert.DeserializeObject<List<Mistake>>(File.ReadAllText(questionLog.Item2, Encoding.ASCII));
-                foreach (var submission in submissions)
-                {
-                    submission.before = GetQuestion(submission.before, questionLog.Item1);
-                    submission.after = GetQuestion(submission.after, questionLog.Item1);
-
-                    //Notice that some submissions have the same before and after
-                    //probabily some error during ok python. Let's igore them for now
-                    if (submission.before.Equals(submission.after))
-                        continue;
-
-                    result.Add(submission);
-                }
-            }
-            return result;
-        }
-
-
+        
         public void GenerateCluster(Tuple<Question, string>[] questionLogs)
         {
             foreach (var questionLog in questionLogs)

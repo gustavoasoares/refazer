@@ -11,7 +11,7 @@ namespace Tutor
     {
         public static Logger Instance { get;  } = new Logger();
 
-        private string _logFile = "C:/Users/Gustavo/Box Sync/pesquisa/tutor/hw02-sp16/log.txt"; 
+        private string _logFile = "log.txt"; 
         public void Log(string message)
         {
             File.AppendAllText(_logFile, message);

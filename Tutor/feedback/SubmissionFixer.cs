@@ -181,27 +181,7 @@ namespace Tutor
                     //Console.Out.WriteLine("Fixed:");
                     //Console.Out.WriteLine(newCode);
 
-                    var isFixed = true;
-                    foreach (var test in tests)
-                    {
-                        var script = newCode + Environment.NewLine + test.Key;
-                        try
-                        {
-                            var result = ASTHelper.Run(script);
-                            if (result != test.Value)
-                                isFixed = false;
-                        }
-                        catch (TestCaseException)
-                        {
-                            isFixed = false;
-                        }
-                        catch (RuntimeBinderException)
-                        {
-                            isFixed = false;
-                        }
-                        if (!isFixed)
-                            break;
-                    }
+                    var isFixed = IsFixed(tests, newCode);
                     if (isFixed)
                     {
                         if (UsedPrograms.ContainsKey(current.ToString()))
@@ -219,6 +199,32 @@ namespace Tutor
                 }
             }
             return null;
+        }
+
+        public static bool IsFixed(Dictionary<string, long> tests, string newCode)
+        {
+            var isFixed = true;
+            foreach (var test in tests)
+            {
+                var script = newCode + Environment.NewLine + test.Key;
+                try
+                {
+                    var result = ASTHelper.Run(script);
+                    if (result != test.Value)
+                        isFixed = false;
+                }
+                catch (TestCaseException)
+                {
+                    isFixed = false;
+                }
+                catch (RuntimeBinderException)
+                {
+                    isFixed = false;
+                }
+                if (!isFixed)
+                    break;
+            }
+            return isFixed;
         }
 
         public bool FixItSelf(Mistake mistake, Dictionary<string, long> tests)

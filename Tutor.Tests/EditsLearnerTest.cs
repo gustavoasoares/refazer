@@ -916,7 +916,6 @@ def product(n, term):
             Assert.AreEqual(code, actual);
         }
 
-
         private PythonNode ParseContent(string content, ScriptEngine py)
         {
             var src = HostingHelpers.GetSourceUnit(py.CreateScriptSourceFromString(content));
