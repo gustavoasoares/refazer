@@ -75,7 +75,25 @@ namespace TutorUI
                     PrintProblemsMenu();
                     choice = int.Parse(Console.ReadLine());
                     problemName = (ProblemNames)choice;
-                    CheckCanFixItself();
+                    problem = ProblemManager.Instance.GetProblemByName(problemName);
+                    if (problem != null)
+                    {
+                        PrintExperimentOptions();
+                        choice = int.Parse(Console.ReadLine());
+                        if (choice == 1)
+                        {
+                            CheckCanFixItself(problem);
+                        }
+                        else if (choice == 2)
+                        {
+                            Console.Out.WriteLine("Write the number of submissions to evaluate:");
+                            choice = int.Parse(Console.ReadLine());
+                            CheckCanFixItself(problem, choice);
+                        }
+                    }
+
+                    else
+                        Console.Out.WriteLine("Problem not found.");
                     break;
                 case (int)Options.PrintMistakes:
                     PrintProblemsMenu();
@@ -201,7 +219,7 @@ namespace TutorUI
             Console.Out.WriteLine("5. Check and Clean submissions");
         }
 
-        private static void CheckCanFixItself()
+        private static void CheckCanFixItself(Problem problem, int numberOfSubmissions = 0)
         {
             var product = new Tuple<TestBasedCluster.Question, string>(TestBasedCluster.Question.Product,
                 LogFolder + "mistake_pairs_product_complete.json");
@@ -503,7 +521,7 @@ namespace TutorUI
             }
 
             var submissionsToJson = JsonConvert.SerializeObject(submissions);
-            File.WriteAllText(LogFolder + "submissionsResults.json", submissionsToJson);
+            File.WriteAllText("submissionsResults.json", submissionsToJson);
         }
 
         private static Dictionary<string, long> GetTests(string question)

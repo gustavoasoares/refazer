@@ -87,6 +87,15 @@ def increment(x):
                         {testSetup + "repeated(square, 3)(5)", 390625},
                         {testSetup + "repeated(square, 0)(5)", 5}
                     };
+                case ProblemNames.Accumulate:
+                    return new Dictionary<string, long>
+                    {
+                        {testSetup + "accumulate(add, 0, 5, identity)", 15},
+                        {testSetup + "accumulate(add, 11, 5, identity)", 26},
+                        {testSetup + "accumulate(add, 11, 0, identity)", 11},
+                        {testSetup + "accumulate(add, 11, 3, square)", 25},
+                        {testSetup + "accumulate(mul, 2, 3, square)", 72}
+                    };
 
             }
             return null;
