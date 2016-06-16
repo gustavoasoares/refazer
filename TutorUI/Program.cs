@@ -136,7 +136,7 @@ namespace TutorUI
                     if (SubmissionFixer.IsFixed(problem.Tests, mistake.after))
                     {
                         Source.TraceEvent(TraceEventType.Information, 1, "Fixed " + ++isfixed);
-                     
+                        cleanMistakes.Add(mistake);
                     }
                     else
                     {
