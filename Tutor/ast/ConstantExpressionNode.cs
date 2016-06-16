@@ -17,6 +17,12 @@ namespace Tutor.ast
             var inner = InnerNode as ConstantExpression;
             var comparedNode = node as ConstantExpression;
             if (comparedNode == null) return false;
+            if (Value == null && comparedNode.Value == null)
+                return true;
+            if (Value == null && comparedNode.Value != null)
+                return false;
+            if (Value != null && comparedNode.Value == null)
+                return false;
             return inner.Value.Equals(comparedNode.Value);
         }
 
