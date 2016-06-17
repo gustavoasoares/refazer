@@ -111,7 +111,6 @@ def increment(x):
                         {testSetup + "filtered_accumulate(add, 11, false, 5, identity)", 11},
                         {testSetup + "filtered_accumulate(add, 0, odd, 5, identity)", 9},
                         {testSetup + "filtered_accumulate(mul, 1, odd, 5, square)", 255},
-                        {testSetup + "filtered_accumulate(mul, 1, odd, 5, square)", 255}
                     };
 
             }
