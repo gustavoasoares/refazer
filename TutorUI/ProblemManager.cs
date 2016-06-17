@@ -96,6 +96,23 @@ def increment(x):
                         {testSetup + "accumulate(add, 11, 3, square)", 25},
                         {testSetup + "accumulate(mul, 2, 3, square)", 72}
                     };
+                case ProblemNames.CountChange:
+                    return new Dictionary<string, long>
+                    {
+                        {testSetup + "count_change(7)", 6},
+                        {testSetup + "count_change(10)", 14},
+                        {testSetup + "count_change(20)", 60},
+                        {testSetup + "count_change(100)", 9828}
+                    };
+                case ProblemNames.FilteredAccumulate:
+                    return new Dictionary<string, long>
+                    {
+                        {testSetup + "filtered_accumulate(add, 0, true, 5, identity)", 15},
+                        {testSetup + "filtered_accumulate(add, 11, false, 5, identity)", 11},
+                        {testSetup + "filtered_accumulate(add, 0, odd, 5, identity)", 9},
+                        {testSetup + "filtered_accumulate(mul, 1, odd, 5, square)", 255},
+                        {testSetup + "filtered_accumulate(mul, 1, odd, 5, square)", 255}
+                    };
 
             }
             return null;
