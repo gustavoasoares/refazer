@@ -58,9 +58,12 @@ namespace TutorUI
                         choice = int.Parse(Console.ReadLine());
                         if (choice == 1)
                         {
-                            RunExperiment(problem);
+                            RunExperiment(problem, learn: true);
                         }
                         else if (choice == 2)
+                        {
+                            RunExperiment(problem);
+                        } else if (choice == 3)
                         {
                             Console.Out.WriteLine("Write the number of submissions to evaluate:");
                             choice = int.Parse(Console.ReadLine());
@@ -116,8 +119,9 @@ namespace TutorUI
 
         private static void PrintExperimentOptions()
         {
-            Console.Out.WriteLine("1. Run all submissions");
-            Console.Out.WriteLine("1. Set number of submissions");
+            Console.Out.WriteLine("1. Learn clusters");
+            Console.Out.WriteLine("2. Run all submissions");
+            Console.Out.WriteLine("3. Set number of submissions");
         }
 
         private static void CleanProblemSumissions(ProblemNames problemName)
@@ -342,7 +346,7 @@ namespace TutorUI
             Console.Out.WriteLine("Fixed: " + submissions.Where(e => e.IsFixed).Count());
         }
 
-        private static void RunExperiment(Problem problem, int numberOfSumissions = 0)
+        private static void RunExperiment(Problem problem, int numberOfSumissions = 0, bool learn = false)
         {
             var submissions = numberOfSumissions == 0 ? problem.Mistakes.ToList()
                 : problem.Mistakes.ToList().GetRange(0, numberOfSumissions);
@@ -351,177 +355,213 @@ namespace TutorUI
             var transformationNotImplemented = 0;
 
             var classification = new List<Tuple<List<Mistake>, ProgramNode>>();
-
-            for (var i = 0; i < submissions.Count; i++)
+            var backup = new FileInfo(problem.Id + "-classification.json");
+            if (backup.Exists && !learn)
             {
-                var current = submissions[i];
-                current.Id = i + 1;
-                var hasGroup = false;
-                foreach (var group in classification)
+                Source.TraceEvent(TraceEventType.Start, 6, "Learning scripts from existing classification");
+                var backupClass =
+                    JsonConvert.DeserializeObject<List<List<Mistake>>>(
+                        File.ReadAllText(problem.Id + "-classification.json"));
+
+                Source.TraceEvent(TraceEventType.Information, 6, "Number of clusters: " + backupClass.Count);
+                var clusterCount = 1; 
+                foreach (var list in backupClass)
                 {
-                    foreach (var mistake in @group.Item1)
+                    Source.TraceEvent(TraceEventType.Information, 6, "Learning cluster " + clusterCount + " with mistakes: " + list.Count);
+                    var learnProgram = SubmissionFixer.LearnProgram(list);
+                    if (learnProgram != null)
                     {
-                        if (current.Equals(mistake))
-                            hasGroup = true;
+                        classification.Add(Tuple.Create(list, learnProgram));
                     }
+                    clusterCount++;
                 }
-                if (!hasGroup)
+                Source.TraceEvent(TraceEventType.Stop, 6, "Learning scripts from existing classification");
+            }
+            else
+            {
+                Source.TraceEvent(TraceEventType.Start, 6, "Learning classification without backup");
+                for (var i = 0; i < submissions.Count; i++)
                 {
-                    var list = new List<Mistake>() { current };
-                    Source.TraceEvent(TraceEventType.Start, 6, "New group with mistake: " + i);
-                    for (var j = i + 1; j < submissions.Count; j++)
+                    var current = submissions[i];
+                    current.Id = i + 1;
+                    var hasGroup = false;
+                    foreach (var group in classification)
                     {
-                        var next = submissions[j];
-                        hasGroup = false;
-                        foreach (var group in classification)
+                        foreach (var mistake in @group.Item1)
                         {
-                            foreach (var mistake in @group.Item1)
-                            {
-                                if (next.Equals(mistake))
-                                    hasGroup = true;
-                            }
+                            if (current.Equals(mistake))
+                                hasGroup = true;
                         }
-                        if (!hasGroup)
+                    }
+                    if (!hasGroup)
+                    {
+                        var list = new List<Mistake>() { current };
+                        Source.TraceEvent(TraceEventType.Start, 6, "New group with mistake: " + i);
+                        for (var j = i + 1; j < submissions.Count; j++)
                         {
-                            Source.TraceEvent(TraceEventType.Information, 6, "Trying to add mistake " + j);
-                            try
+                            var next = submissions[j];
+                            hasGroup = false;
+                            foreach (var group in classification)
                             {
-                                var topProgram = SubmissionFixer.LearnProgram(list, next);
-                                if (topProgram != null)
+                                foreach (var mistake in @group.Item1)
                                 {
-                                    list.Add(next);
-                                    next.GeneratedFix = topProgram.ToString();
-                                    Source.TraceEvent(TraceEventType.Information, 6, "Added");
+                                    if (next.Equals(mistake))
+                                        hasGroup = true;
                                 }
                             }
-                            catch (SyntaxErrorException)
+                            if (!hasGroup)
                             {
-                                Source.TraceEvent(TraceEventType.Information, 0, "Input does not compile");
-                            }
-                            catch (NotImplementedException e)
-                            {
-                                Source.TraceEvent(TraceEventType.Error, 2, 
-                                    "Transformation not implemented:\r\nbefore\r\n" + next.before + " \r\n" +
-                                    next.after + "\r\n" + e.Message);
+                                Source.TraceEvent(TraceEventType.Information, 6, "Trying to add mistake " + j);
+                                try
+                                {
+                                    var topProgram = SubmissionFixer.LearnProgram(list, next);
+                                    if (topProgram != null)
+                                    {
+                                        list.Add(next);
+                                        next.GeneratedFix = topProgram.ToString();
+                                        Source.TraceEvent(TraceEventType.Information, 6, "Added");
+                                    }
+                                }
+                                catch (SyntaxErrorException)
+                                {
+                                    Source.TraceEvent(TraceEventType.Information, 0, "Input does not compile");
+                                }
+                                catch (NotImplementedException e)
+                                {
+                                    Source.TraceEvent(TraceEventType.Error, 2,
+                                        "Transformation not implemented:\r\nbefore\r\n" + next.before + " \r\n" +
+                                        next.after + "\r\n" + e.Message);
+                                }
                             }
                         }
-                    }
-                    try
-                    {
-                        var learnProgram = SubmissionFixer.LearnProgram(list);
-                        if (learnProgram != null)
+                        try
                         {
-                            classification.Add(Tuple.Create(list, learnProgram));
-                            current.GeneratedFix = learnProgram.ToString();
+                            var learnProgram = SubmissionFixer.LearnProgram(list);
+                            if (learnProgram != null)
+                            {
+                                classification.Add(Tuple.Create(list, learnProgram));
+                                current.GeneratedFix = learnProgram.ToString();
+                            }
                         }
+                        catch (SyntaxErrorException)
+                        {
+                            Source.TraceEvent(TraceEventType.Information, 0, "Input does not compile");
+                        }
+                        catch (NotImplementedException)
+                        {
+                            transformationNotImplemented++;
+                            Source.TraceEvent(TraceEventType.Error, 1, "feature not implemented");
+                        }
+                        Source.TraceEvent(TraceEventType.Stop, 6, "Ending group: " + i);
                     }
-                    catch (SyntaxErrorException)
-                    {
-                        Source.TraceEvent(TraceEventType.Information, 0, "Input does not compile");
-                    }
-                    catch (NotImplementedException)
-                    {
-                        transformationNotImplemented++;
-                        Source.TraceEvent(TraceEventType.Error, 1, "feature not implemented");
-                    }
-                    Source.TraceEvent(TraceEventType.Stop, 6, "Ending group: " + i);
                 }
             }
 
             var count = 0;
             var doesNotCompile = 0;
             var submissionCount = 0;
-            var fixer = new SubmissionFixer(classification);
-            var notFixed = new List<Mistake>();
-            foreach (var mistake in submissions)
+            SaveClassification(classification, problem.Id);
+
+            if (!learn)
             {
-                submissionCount += 1;
-                Source.TraceEvent(TraceEventType.Start, 1, "Submission " + submissionCount);
-                //if (submissionCount < 479)
-                //    continue;
-                var unparser = new Unparser();
-                PythonNode before = null;
-                try
+                var fixer = new SubmissionFixer(classification);
+                var notFixed = new List<Mistake>();
+                foreach (var mistake in submissions)
                 {
-                    before = NodeWrapper.Wrap(ASTHelper.ParseContent(mistake.before));
-                    before = NodeWrapper.Wrap(ASTHelper.ParseContent(unparser.Unparse(before)));
-                }
-                catch (SyntaxErrorException)
-                {
-                    Source.TraceEvent(TraceEventType.Information, 0, "Input does not compile");
-                    doesNotCompile++;
-                    continue;
-                }
-                catch (NotImplementedException)
-                {
-                    Source.TraceEvent(TraceEventType.Error, 0, mistake.before);
-                    notImplementedYet++;
-                    continue;
-                }
-
-                try
-                {
-                    var watch = Stopwatch.StartNew();
-                    var isFixed = fixer.Fix(mistake, problem.Tests);
-                    watch.Stop();
-                    var timeInMS = watch.ElapsedMilliseconds;
-                    TimeToFix.Add(timeInMS);
-
-                    mistake.IsFixed = isFixed;
-                    if (isFixed)
+                    submissionCount += 1;
+                    Source.TraceEvent(TraceEventType.Start, 1, "Submission " + submissionCount);
+                    //if (submissionCount < 479)
+                    //    continue;
+                    var unparser = new Unparser();
+                    PythonNode before = null;
+                    try
                     {
-                        count++;
-                        Source.TraceEvent(TraceEventType.Information, 4,
-                            "Program fixed: " + count);
+                        before = NodeWrapper.Wrap(ASTHelper.ParseContent(mistake.before));
+                        before = NodeWrapper.Wrap(ASTHelper.ParseContent(unparser.Unparse(before)));
                     }
-                    else
+                    catch (SyntaxErrorException)
                     {
-                        notFixed.Add(mistake);
-                        Source.TraceEvent(TraceEventType.Error, 3,
-                        "Program not fixed:\r\nbefore\r\n" + mistake.before + " \r\n" +
-                        mistake.after);
+                        Source.TraceEvent(TraceEventType.Information, 0, "Input does not compile");
+                        doesNotCompile++;
+                        continue;
                     }
+                    catch (NotImplementedException)
+                    {
+                        Source.TraceEvent(TraceEventType.Error, 0, mistake.before);
+                        notImplementedYet++;
+                        continue;
+                    }
+
+                    try
+                    {
+                        var watch = Stopwatch.StartNew();
+                        var isFixed = fixer.Fix(mistake, problem.Tests);
+                        watch.Stop();
+                        var timeInMS = watch.ElapsedMilliseconds;
+                        TimeToFix.Add(timeInMS);
+
+                        mistake.IsFixed = isFixed;
+                        if (isFixed)
+                        {
+                            count++;
+                            Source.TraceEvent(TraceEventType.Information, 4,
+                                "Program fixed: " + count);
+                        }
+                        else
+                        {
+                            notFixed.Add(mistake);
+                            Source.TraceEvent(TraceEventType.Error, 3,
+                            "Program not fixed:\r\nbefore\r\n" + mistake.before + " \r\n" +
+                            mistake.after);
+                        }
+                    }
+                    catch (NotImplementedException e)
+                    {
+                        Source.TraceEvent(TraceEventType.Error, 2,
+                                        "Transformation not implemented:\r\nbefore\r\n" + mistake.before + " \r\n" +
+                                        mistake.after + "\r\n" + e.Message);
+                        transformationNotImplemented++;
+                    }
+                    Source.TraceEvent(TraceEventType.Stop, 1, "Submission " + submissionCount);
+
                 }
-                catch (NotImplementedException e)
+
+                Source.TraceEvent(TraceEventType.Information, 5, "Total submissions: " + submissions.Count);
+                Source.TraceEvent(TraceEventType.Information, 5, "input does not compile: " + doesNotCompile);
+                Source.TraceEvent(TraceEventType.Information, 5, "Fixed: " + count);
+                Source.TraceEvent(TraceEventType.Information, 5, "Not Fixed: " + notFixed.Count);
+                Source.TraceEvent(TraceEventType.Information, 5, "parser not implemented: " + notImplementedYet);
+                Source.TraceEvent(TraceEventType.Information, 5, "transformation not implemented: " + transformationNotImplemented);
+                Source.TraceEvent(TraceEventType.Information, 5, "Script sets: " + fixer.ProsePrograms.Count);
+                Source.TraceEvent(TraceEventType.Information, 5, "Used Programs: " + (fixer.UsedPrograms.Count));
+
+
+                var editSetDistribution = fixer.UsedPrograms.Select(e => Tuple.Create(CountEdits(e.Key), e.Value));
+                Source.TraceEvent(TraceEventType.Information, 5, "Distribution of fixes");
+                Source.TraceEvent(TraceEventType.Information, 5, "Edits, Submissions");
+                foreach (var tuple in editSetDistribution)
                 {
-                    Source.TraceEvent(TraceEventType.Error, 2,
-                                    "Transformation not implemented:\r\nbefore\r\n" +  mistake.before + " \r\n" +
-                                    mistake.after + "\r\n" + e.Message);
-                    transformationNotImplemented++;
+                    Source.TraceEvent(TraceEventType.Information, 5, tuple.Item1 + " , " + tuple.Item2);
                 }
-                Source.TraceEvent(TraceEventType.Stop, 1, "Submission " + submissionCount);
+                fixer.UsedPrograms.ForEach(e => Source.TraceEvent(TraceEventType.Information, 5, e + "\r\n"));
 
+                //LogPerformance();
+                Source.TraceEvent(TraceEventType.Information, 5, "Total of groups: " + classification.Count);
+                foreach (var tuple in classification)
+                {
+                    Source.TraceEvent(TraceEventType.Information, 5, "Number of mistakes: " + tuple.Item1.Count);
+                    Source.TraceEvent(TraceEventType.Information, 5, tuple.Item2.ToString());
+                }
+                var submissionsToJson = JsonConvert.SerializeObject(submissions);
+                File.WriteAllText("submissionsResults.json", submissionsToJson);
             }
+        }
 
-            Source.TraceEvent(TraceEventType.Information, 5, "Total submissions: " + submissions.Count);
-            Source.TraceEvent(TraceEventType.Information, 5, "input does not compile: " + doesNotCompile);
-            Source.TraceEvent(TraceEventType.Information, 5, "Fixed: " + count);
-            Source.TraceEvent(TraceEventType.Information, 5, "Not Fixed: " + notFixed.Count);
-            Source.TraceEvent(TraceEventType.Information, 5, "parser not implemented: " + notImplementedYet);
-            Source.TraceEvent(TraceEventType.Information, 5, "transformation not implemented: " + transformationNotImplemented);
-            Source.TraceEvent(TraceEventType.Information, 5, "Script sets: " + fixer.ProsePrograms.Count);
-            Source.TraceEvent(TraceEventType.Information, 5, "Used Programs: " + (fixer.UsedPrograms.Count));
-
-
-            var editSetDistribution = fixer.UsedPrograms.Select(e => Tuple.Create(CountEdits(e.Key), e.Value));
-            Source.TraceEvent(TraceEventType.Information, 5, "Distribution of fixes");
-            Source.TraceEvent(TraceEventType.Information, 5, "Edits, Submissions");
-            foreach (var tuple in editSetDistribution)
-            {
-                Source.TraceEvent(TraceEventType.Information, 5, tuple.Item1 + " , " + tuple.Item2);
-            }
-            fixer.UsedPrograms.ForEach(e => Source.TraceEvent(TraceEventType.Information, 5, e + "\r\n"));
-
-            //LogPerformance();
-            Source.TraceEvent(TraceEventType.Information, 5, "Total of groups: " + classification.Count);
-            foreach (var tuple in classification)
-            {
-                Source.TraceEvent(TraceEventType.Information, 5, "Number of mistakes: " + tuple.Item1.Count);
-                Source.TraceEvent(TraceEventType.Information, 5, tuple.Item2.ToString());
-            }
-
-            var submissionsToJson = JsonConvert.SerializeObject(submissions);
-            File.WriteAllText("submissionsResults.json", submissionsToJson);
+        private static void SaveClassification(List<Tuple<List<Mistake>, ProgramNode>> classification, string id)
+        {
+            var  list = classification.Select(tuple => tuple.Item1).ToList();
+            var submissionsToJson = JsonConvert.SerializeObject(list);
+            File.WriteAllText(id + "-classification.json", submissionsToJson);
         }
 
         private static Dictionary<string, long> GetTests(string question)
