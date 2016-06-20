@@ -43,11 +43,43 @@ namespace TutorUI
                 problem.Tests = GetTests(problemName);
                 Problems.Add(problem);
             }
+            AddIncorrectAttempts();
+        }
+
+        private void AddIncorrectAttempts()
+        {
+            var dir = new DirectoryInfo("../../benchmark_incorrect/");
+            foreach (var file in dir.GetFiles())
+            {
+                var problemName = (ProblemNames)Enum.Parse(typeof(ProblemNames), file.Name.Split('.')[0]);
+
+                var submissions =
+                    JsonConvert.DeserializeObject<List<Mistake>>(File.ReadAllText(file.FullName, Encoding.ASCII));
+                var dic = new Dictionary<int, IList<Mistake>>();
+                foreach (var mistake in submissions)
+                {
+                    mistake.before = GetQuestion(mistake.before, problemName);
+                    if (dic.ContainsKey(mistake.studentId))
+                    {
+                        var current = dic[mistake.studentId];
+                        //only add the next mistake if the student changed something
+                        if (!current.Last().before.Equals(mistake.before))
+                            dic[mistake.studentId].Add(mistake);
+                    }
+                    else
+                    {
+                        dic.Add(mistake.studentId, new List<Mistake>() {mistake});
+                    }
+                }
+                var problem = GetProblemByName(problemName);
+                problem.AttemptsPerStudent = dic;
+            }
         }
 
         private static string GetTestSetup()
         {
-            return @"
+            //File.ReadAllText("../../Resources/construct_check.py");
+            var testSetup = @"
 from operator import add, mul
 
 def square(x):
@@ -62,6 +94,7 @@ def triple(x):
 def increment(x):
     return x + 1
 ";
+            return testSetup;
         }
 
         private static Dictionary<string, long> GetTests(ProblemNames problem)

@@ -221,6 +221,12 @@
     <None Include="benchmark\Repeated.json" />
     <None Include="benchmark\Summation.json" />
     <None Include="packages.config" />
+    <None Include="Resources\Accumulate-classification.json" />
+    <None Include="Resources\construct_check.py" />
+    <None Include="Resources\Product-classification.json" />
+    <None Include="benchmark_incorrect\Product.json" />
+    <None Include="results\repeated-mistakes.json" />
+    <None Include="results\TextWriterOutput-repeated.log" />
   </ItemGroup>
   <ItemGroup>
     <Analyzer Include="..\packages\Microsoft.CodeAnalysis.Analyzers.1.1.0\analyzers\dotnet\cs\Microsoft.CodeAnalysis.Analyzers.dll" />
@@ -232,6 +238,7 @@
       <Name>Tutor</Name>
     </ProjectReference>
   </ItemGroup>
+  <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.

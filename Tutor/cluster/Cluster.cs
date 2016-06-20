@@ -41,6 +41,9 @@ namespace Tutor
         }
 
         public int Id { set; get; }
+
+        public int studentId { set; get; }
+
         public String diff { set; get; }
         public string before { set; get; }
         public string after { set; get; }
