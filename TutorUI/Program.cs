@@ -45,13 +45,14 @@ namespace TutorUI
                     PrintProblemsMenu();
                     choice = int.Parse(Console.ReadLine());
                     var problemName = (ProblemNames)choice;
-                    AnalyzeResults();
+                    var problem = ProblemManager.Instance.GetProblemByName(problemName);
+                    AnalyzeResults(problemName);
                     break;
                 case (int)Options.RunExperiment:
                     PrintProblemsMenu();
                     choice = int.Parse(Console.ReadLine());
                     problemName = (ProblemNames)choice;
-                    var problem = ProblemManager.Instance.GetProblemByName(problemName);
+                    problem = ProblemManager.Instance.GetProblemByName(problemName);
                     if (problem != null)
                     {
                         PrintExperimentOptions();
@@ -324,14 +325,15 @@ namespace TutorUI
             Source.TraceEvent(TraceEventType.Information, 5, "transformation not implemented: " + transformationNotImplemented);
         }
 
-        private static void AnalyzeResults()
+        private static void AnalyzeResults(ProblemNames problemName)
         {
-            var submissions = JsonConvert.DeserializeObject<List<Mistake>>(File.ReadAllText(LogFolder + "submissionsResults-product.json"));
+            var fileName = "../../results/" + problemName.ToString() + "-mistakes.json";
+            var submissions = JsonConvert.DeserializeObject<List<Mistake>>(File.ReadAllText(fileName));
 
             var usedPrograms = new HashSet<string>();
             foreach (var submission in submissions)
             {
-                if (submission.IsFixed)
+                if (submission.IsFixed && !usedPrograms.Contains(submission.UsedFix))
                 {
                     Console.Out.WriteLine("Diff:");
                     Console.Out.WriteLine(submission.diff);

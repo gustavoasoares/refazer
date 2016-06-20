@@ -226,6 +226,8 @@
     <None Include="Resources\Product-classification.json" />
     <None Include="benchmark_incorrect\Product.json" />
     <None Include="results\repeated-mistakes.json" />
+    <None Include="results\Product-mistakes.json" />
+    <None Include="results\accumulate-mistakes.json" />
     <None Include="results\TextWriterOutput-repeated.log" />
   </ItemGroup>
   <ItemGroup>

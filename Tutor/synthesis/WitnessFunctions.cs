@@ -647,7 +647,7 @@ namespace Tutor.Transformation
         }
 
         [WitnessFunction("ReferenceNode", 1)]
-        public static ExampleSpec WitnessContext(GrammarRule rule, int parameter, ExampleSpec spec)
+        public static DisjunctiveExamplesSpec WitnessContext(GrammarRule rule, int parameter, ExampleSpec spec)
         {
             var templateExamples = new Dictionary<State, object>();
             foreach (var input in spec.ProvidedInputs)
