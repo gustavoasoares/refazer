@@ -9,12 +9,7 @@ namespace Tutor.ast
 {
     class PrintStatementNode : InternalNode
     {
-        public PrintStatementNode(Node innerNode, bool isAbstract) : base(innerNode, isAbstract)
-        {
-            InsertStrategy = new InsertFixedList();
-        }
-
-        public PrintStatementNode(Node innerNode, bool isAbstract, int editId) : base(innerNode, isAbstract, editId)
+        public PrintStatementNode(Node innerNode) : base(innerNode)
         {
             InsertStrategy = new InsertFixedList();
         }
@@ -26,7 +21,7 @@ namespace Tutor.ast
 
         public override PythonNode Clone()
         {
-            var pythonNode = new PrintStatementNode(InnerNode, IsAbstract, EditId);
+            var pythonNode = new PrintStatementNode(InnerNode);
             pythonNode.Children = Children;
             pythonNode.Id = Id;
             if (Value != null) pythonNode.Value = Value;

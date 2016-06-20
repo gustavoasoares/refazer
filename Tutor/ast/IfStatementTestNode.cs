@@ -9,12 +9,7 @@ namespace Tutor.ast
 {
     class IfStatementTestNode : InternalNode
     {
-        public IfStatementTestNode(Node innerNode, bool isAbstract) : base(innerNode, isAbstract)
-        {
-            InsertStrategy = new InsertFixedList();
-        }
-
-        public IfStatementTestNode(Node innerNode, bool isAbstract, int editId) : base(innerNode, isAbstract, editId)
+        public IfStatementTestNode(Node innerNode) : base(innerNode)
         {
             InsertStrategy = new InsertFixedList();
         }
@@ -28,7 +23,7 @@ namespace Tutor.ast
 
         public override PythonNode Clone()
         {
-            var pythonNode = new IfStatementTestNode(InnerNode, IsAbstract, EditId);
+            var pythonNode = new IfStatementTestNode(InnerNode);
             pythonNode.Children = Children;
             pythonNode.Id = Id;
             if (Value != null) pythonNode.Value = Value;

@@ -29,7 +29,7 @@ namespace Tutor
             }
             catch (ArgumentOutOfRangeException e)
             {
-                Logger.Instance.Log(e.ToString());
+                Console.Out.WriteLine(e.StackTrace);
             }
             return _code.ToString();
         }

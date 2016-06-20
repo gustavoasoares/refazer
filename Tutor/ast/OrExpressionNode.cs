@@ -9,16 +9,12 @@ namespace Tutor.ast
 {
     class OrExpressionNode : InternalNode
     {
-        public OrExpressionNode(Node innerNode, bool isAbstract) : base(innerNode, isAbstract)
+        public OrExpressionNode(Node innerNode) : base(innerNode)
         {
             InsertStrategy = new InsertFixedList();
         }
 
-        public OrExpressionNode(Node innerNode, bool isAbstract, int editId) : base(innerNode, isAbstract, editId)
-        {
-            InsertStrategy = new InsertFixedList();
-        }
-
+    
         protected override bool IsEqualToInnerNode(Node node)
         {
             throw new NotImplementedException();
@@ -26,7 +22,7 @@ namespace Tutor.ast
 
         public override PythonNode Clone()
         {
-            var pythonNode = new OrExpressionNode(InnerNode, IsAbstract, EditId);
+            var pythonNode = new OrExpressionNode(InnerNode);
             pythonNode.Children = Children;
             pythonNode.Id = Id;
             if (Value != null) pythonNode.Value = Value;

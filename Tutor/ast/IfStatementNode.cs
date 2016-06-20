@@ -10,12 +10,7 @@ namespace Tutor.ast
     class IfStatementNode : InternalNode
     {
         public bool HasElse { set; get; } = false;
-        public IfStatementNode(Node innerNode, bool isAbstract) : base(innerNode, isAbstract)
-        {
-            InsertStrategy = new InsertNodeInDynamicList();
-        }
-
-        public IfStatementNode(Node innerNode, bool isAbstract, int editId) : base(innerNode, isAbstract, editId)
+        public IfStatementNode(Node innerNode) : base(innerNode)
         {
             InsertStrategy = new InsertNodeInDynamicList();
         }
@@ -29,7 +24,7 @@ namespace Tutor.ast
 
         public override PythonNode Clone()
         {
-            var pythonNode = new IfStatementNode(InnerNode, IsAbstract, EditId);
+            var pythonNode = new IfStatementNode(InnerNode);
             pythonNode.Children = Children;
             pythonNode.Id = Id;
             pythonNode.HasElse = HasElse;

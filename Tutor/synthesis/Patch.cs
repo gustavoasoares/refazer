@@ -43,8 +43,15 @@ namespace Tutor
             {
                 combination.ForEach(e => e.Applied = false);
                 var rewriter = new Rewriter2(combination);
-                var newAst = ast.Rewrite(rewriter);
-                results.Add(newAst);
+                try
+                {
+                    var newAst = ast.Rewrite(rewriter);
+                    results.Add(newAst);
+                }
+                catch (TransformationNotApplicableExpection e)
+                {
+                    Console.Out.WriteLine(e.Message);
+                }
             }
             return results;
         }

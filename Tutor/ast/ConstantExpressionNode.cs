@@ -9,25 +9,26 @@ namespace Tutor.ast
 {
     class ConstantExpressionNode : LeafNode
     {
-        public ConstantExpressionNode(Node innerNode, bool isAbstract) : base(innerNode, isAbstract)
+        public ConstantExpressionNode(Node innerNode) : base(innerNode)
         {
         }
-
-        public ConstantExpressionNode(Node innerNode, bool isAbstract, int editId) : base(innerNode, isAbstract, editId)
-        {
-        }
-
         protected override bool IsEqualToInnerNode(Node node)
         {
             var inner = InnerNode as ConstantExpression;
             var comparedNode = node as ConstantExpression;
             if (comparedNode == null) return false;
+            if (Value == null && comparedNode.Value == null)
+                return true;
+            if (Value == null && comparedNode.Value != null)
+                return false;
+            if (Value != null && comparedNode.Value == null)
+                return false;
             return inner.Value.Equals(comparedNode.Value);
         }
 
         public override PythonNode Clone()
         {
-            var pythonNode = new ConstantExpressionNode(InnerNode, IsAbstract, EditId);
+            var pythonNode = new ConstantExpressionNode(InnerNode);
             pythonNode.Id = Id;
             if (Value != null) pythonNode.Value = Value;
             return pythonNode;

@@ -12,6 +12,7 @@ using System.Collections.Generic;
 using System.Linq;
 using Microsoft.ProgramSynthesis;
 using Microsoft.ProgramSynthesis.Compiler;
+using Microsoft.ProgramSynthesis.Diagnostics;
 using Microsoft.ProgramSynthesis.Learning;
 using Microsoft.ProgramSynthesis.Learning.Logging;
 using Microsoft.ProgramSynthesis.Specifications;
@@ -131,7 +132,7 @@ n>1";
         {
             var before = @"
 def product(n, term):
-    k, product = 1, 0
+    k, product = 1, 1
     while k <= n:
         product, k = (product * term(k)), k + 1
     return product";
@@ -203,7 +204,7 @@ def product(n, term):
         {
             var before = @"
 def product(n, term):
-    x = n
+    x = y
     y = 1
     while x>1:
         x -= 1
@@ -214,13 +215,6 @@ def product(n, term):
     x, y = n, 1
     while x>=1:
         x, y = x-1, y*term(x)
-    return y
-    x = n
-    y = 1
-    while x>=1:
-        temp = x
-        x -= 1
-        y = y*term(temp)
     return y";
             AssertCorrectTransformation(before, after);
         }
@@ -435,25 +429,24 @@ def product(n, term):
         {
             var before = @"
 def product(n, term):
-    x = 1
-    _sum_ = 1
-    while x<=n:
-        _sum_, = _sum_*term(x)
-        x += 1
-    return _sum_
-";
+    i, Total = 0, 1
+    while item<=n:
+        i, Total = i + 1, Total * term(i)
+        return Total";
+
             var after = @"
 def product(n, term):
-    x = 1
-    _sum_ = 1
-    while x<=n:
-        _sum_ = _sum_*term(x)
-        x += 1
-    return _sum_";
+    i, Total = 0, 1
+    while i<=n:
+        i, Total = i+1, Total*term(i)
+    return Total";
+
             AssertCorrectTransformation(before, after);
         }
 
-     
+      
+
+
         [TestMethod]
         public void TestLearnMultipleExamples1()
         {
@@ -588,10 +581,139 @@ def product(n, term):
             AssertCorrectTransformation(examples);
         }
 
+
+        [TestMethod]
+        public void TestLearnMultipleExamples3()
+        {
+            var examples = new List<Tuple<string, string>>();
+            var before = @"
+def product(n, term):
+    i = 1
+    total =1
+    while i <= n:        
+        total *=i
+        i+=1
+    return total";
+            var after = @"
+def product(n, term):
+    i = 1
+    total = 1
+    while i<=n:
+        total *= term(i)
+        i += 1
+    return total";
+            examples.Add(Tuple.Create(before, after));
+            before = @"
+def product(n, term):
+    counter, product = 1, 1
+    while counter <= n:
+        product *= counter
+        counter += 1
+    return product";
+            after = @"
+def product(n, term):
+    counter, product = 1, 1
+    while counter<=n:
+        product *= term(counter)
+        counter += 1
+    return product";
+            examples.Add(Tuple.Create(before, after));
+            AssertCorrectTransformation(examples);
+        }
+
+
+        [TestMethod]
+        public void TestLearnMultipleExamples4()
+        {
+            var examples = new List<Tuple<string, string>>();
+            var before = @"
+def product(n, term):
+    total = 1
+    k = 1
+    if k <= n:
+        total = total * term(k)
+        k += 1";
+            var after = @"
+def product(n, term):
+    total = 1
+    k = 1
+    if k<=n:
+        total = total*term(k)
+        k += 1
+    return total";
+            examples.Add(Tuple.Create(before, after));
+            before = @"
+def product(n, term):
+    total = 1
+    k = 1";
+            after = @"
+def product(n, term):
+    total = 1
+    k = 1
+    return total";
+            examples.Add(Tuple.Create(before, after));
+            AssertCorrectTransformation(examples);
+        }
+
+
+        [TestMethod]
+        public void TestLearnMultipleExamples5()
+        {
+            var examples = new List<Tuple<string, string>>();
+            var before = @"
+def product(n, term):
+    trial, result = 1, 1
+    while trial <= n:
+        result = result * trial
+        trial = trial + 1
+    return result";
+            var after = @"
+def product(n, term):
+    trial, result = 1, 1
+    while trial<=n:
+        result = result*term(trial)
+        trial = trial+1
+    return result";
+            examples.Add(Tuple.Create(before, after));
+            before = @"
+def product(n, term):
+    total = 1
+    while n != 0:
+        total = total*n
+        n -= 1
+    return total";
+            after = @"
+def product(n, term):
+    total = 1
+    while n!=0:
+        total = total*term(n)
+        n -= 1
+    return total";
+            examples.Add(Tuple.Create(before, after));
+
+            before = @"
+def product(n, term):
+    x = 1
+    total = 1
+    while x <= n:
+        total = total * x
+        x += 1
+    return total";
+            after = @"
+def product(n, term):
+    x = 1
+    total = 1
+    while x<=n:
+        total = total*term(x)
+        x += 1
+    return total";
+            examples.Add(Tuple.Create(before, after));
+
+            AssertCorrectTransformation(examples);
+        }
+
         private static void AssertCorrectTransformation(IEnumerable<Tuple<string,string>> mistakes) 
         {
-            var grammar = DSLCompiler.LoadGrammarFromFile(@"..\..\..\Tutor\synthesis\Transformation.grammar");
-
             var examples = new Dictionary<State, object>();
             foreach (var mistake in mistakes)
             {
@@ -602,9 +724,8 @@ def product(n, term):
                 examples.Add(input,astAfter);
             }
             var spec = new ExampleSpec(examples);
-            var prose = new SynthesisEngine(grammar.Value);
-            var learned = prose.LearnGrammarTopK(spec, "Score", k: 1);
-            var first = learned.First();
+            var learned = prose.LearnGrammar(spec);
+            var first = learned.RealizedPrograms.First();
 
             foreach (var mistake in mistakes)
             {
@@ -625,9 +746,11 @@ def product(n, term):
             }
         }
 
+        private static Result<Grammar> grammar = DSLCompiler.LoadGrammarFromFile(@"..\..\..\Tutor\synthesis\Transformation.grammar");
+        private static SynthesisEngine prose = new SynthesisEngine(grammar.Value, new SynthesisEngine.Config { LogListener = new LogListener() });
+
         private static void AssertCorrectTransformation(string before, string after)
         {
-            var grammar = DSLCompiler.LoadGrammarFromFile(@"..\..\..\Tutor\synthesis\Transformation.grammar");
 
             var astBefore = NodeWrapper.Wrap(ASTHelper.ParseContent(before));
 
@@ -638,8 +761,7 @@ def product(n, term):
             var spec = new ExampleSpec(examples);
 
             
-            var prose = new SynthesisEngine(grammar.Value, new SynthesisEngine.Config { LogListener = new LogListener() });
-            var learned = prose.LearnGrammarTopK(spec,"Score", k:1);
+            var learned = prose.LearnGrammarTopK(spec, "Score");
             prose.Configuration.LogListener.SaveLogToXML("log.xml");
             var first = learned.First();
             var output = first.Invoke(input) as IEnumerable<PythonNode>;
@@ -793,7 +915,6 @@ def product(n, term):
             var actual = new Unparser().Unparse(ast);
             Assert.AreEqual(code, actual);
         }
-
 
         private PythonNode ParseContent(string content, ScriptEngine py)
         {

@@ -9,15 +9,11 @@ namespace Tutor.ast
 {
     class SuiteStatementNode : InternalNode
     {
-        public SuiteStatementNode(Node innerNode, bool isAbstract) : base(innerNode, isAbstract)
+        public SuiteStatementNode(Node innerNode) : base(innerNode)
         {
             InsertStrategy = new InsertNodeInDynamicList();
         }
 
-        public SuiteStatementNode(Node innerNode, bool isAbstract, int editId) : base(innerNode, isAbstract, editId)
-        {
-            InsertStrategy = new InsertNodeInDynamicList();
-        }
 
         protected override bool IsEqualToInnerNode(Node node)
         {
@@ -28,7 +24,7 @@ namespace Tutor.ast
 
         public override PythonNode Clone()
         {
-            var pythonNode = new SuiteStatementNode(InnerNode, IsAbstract, EditId);
+            var pythonNode = new SuiteStatementNode(InnerNode);
             pythonNode.Children = Children;
             pythonNode.Id = Id;
             if (Value != null) pythonNode.Value = Value;

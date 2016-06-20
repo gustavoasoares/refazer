@@ -9,12 +9,7 @@ namespace Tutor.ast
 {
     class BinaryExpressionNode : InternalNode
     {
-        public BinaryExpressionNode(Node innerNode, bool isAbstract) : base(innerNode, isAbstract)
-        {
-            InsertStrategy = new InsertFixedList();
-        }
-
-        public BinaryExpressionNode(Node innerNode, bool isAbstract, int editId) : base(innerNode, isAbstract, editId)
+        public BinaryExpressionNode(Node innerNode) : base(innerNode)
         {
             InsertStrategy = new InsertFixedList();
         }
@@ -27,7 +22,7 @@ namespace Tutor.ast
 
         public override PythonNode Clone()
         {
-            var pythonNode = new BinaryExpressionNode(InnerNode, IsAbstract, EditId);
+            var pythonNode = new BinaryExpressionNode(InnerNode);
             pythonNode.Children = Children;
             pythonNode.Id = Id;
             if (Value != null) pythonNode.Value = Value;

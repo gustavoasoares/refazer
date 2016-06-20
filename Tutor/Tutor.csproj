@@ -236,6 +236,7 @@
     <Compile Include="ast\InternalNode.cs" />
     <Compile Include="ast\ListComprehensionNode.cs" />
     <Compile Include="ast\ListExpressionNode.cs" />
+    <Compile Include="ast\MatchNode.cs" />
     <Compile Include="ast\MemberExpressionNode.cs" />
     <Compile Include="ast\NameExpressionNode.cs" />
     <Compile Include="ast\NodeBuilder.cs" />
@@ -252,6 +253,7 @@
     <Compile Include="ast\UnaryExpressionNode.cs" />
     <Compile Include="ast\WhileStatementNode.cs" />
     <Compile Include="Logger.cs" />
+    <Compile Include="synthesis\InvalidTemplate.cs" />
     <Compile Include="synthesis\NodeInfo.cs" />
     <Compile Include="ast\NodeWrapper.cs" />
     <Compile Include="synthesis\Edit.cs" />
@@ -269,6 +271,8 @@
     <Compile Include="feedback\Report.cs" />
     <Compile Include="ast\TestCaseException.cs" />
     <Compile Include="ast\Unparser.cs" />
+    <Compile Include="synthesis\TreeTemplate.cs" />
+    <Compile Include="synthesis\Wildcard.cs" />
     <Compile Include="synthesis\WitnessFunctions.cs" />
     <Compile Include="treediff\Zss.cs" />
   </ItemGroup>

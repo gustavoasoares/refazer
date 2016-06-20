@@ -49,13 +49,12 @@ namespace Tutor
             return parser.ParseFile(true);
         }
 
-        private static AppDomain testDomain = AppDomain.CreateDomain("TestDomain", null);
-
         public static dynamic Run(string s)
         {
-            StartCodeService();
             try
             {
+                StartCodeService();
+
                 var serviceResult = _serviceProxy.Execute(s);
                 if (serviceResult != null && serviceResult.Equals("aborted"))
                     _timeout = true;
@@ -68,6 +67,12 @@ namespace Tutor
             {
                 _timeout = true;
                 throw new TestCaseException(e);
+            }
+            catch (Exception e)
+            {
+                _timeout = true;
+                throw new TestCaseException(e);
+                Console.Out.WriteLine(e.StackTrace);
             }
         }
 

@@ -9,11 +9,7 @@ namespace Tutor.ast
 {
     class ComprehensionIteratorNode : InternalNode
     {
-        public ComprehensionIteratorNode(Node innerNode, bool isAbstract) : base(innerNode, isAbstract)
-        {
-        }
-
-        public ComprehensionIteratorNode(Node innerNode, bool isAbstract, int editId) : base(innerNode, isAbstract, editId)
+        public ComprehensionIteratorNode(Node innerNode) : base(innerNode)
         {
         }
 

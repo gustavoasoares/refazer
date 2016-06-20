@@ -26,39 +26,6 @@ namespace Tutor
             _template = template;
         }
 
-        public bool Run(PythonNode code, bool exact)
-        {
-            var targetInfo = _template.FindHeightTarget(0).Item2;
-            var root = code; 
-            while (targetInfo > 0)
-            {
-                if (code.Parent == null)
-                    return false;
-                root = code.Parent;
-                targetInfo --;
-            }
-
-            var checkTemplateWaker = new CheckTemplateWalker(_template, exact);
-            root.Walk(checkTemplateWaker);
-            MatchResult = checkTemplateWaker.MatchResult;
-            if (exact)
-                return checkTemplateWaker.HasMatch && code.MatchTemplate(MatchResult);
-            return checkTemplateWaker.HasMatch;
-        }
-
-        public bool ExactMatch(PythonNode ast)
-        {
-            return Run(ast, true);
-        }
-
-        public bool HasMatch(PythonNode ast)
-        {
-            return Run(ast, false);
-        }
-
-
-
-
 
         class CheckTemplateWalker : IVisitor
         {
