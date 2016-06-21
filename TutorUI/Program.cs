@@ -6,6 +6,7 @@ using System.Linq;
 using System.Runtime.Serialization.Formatters.Binary;
 using System.Text;
 using System.Text.RegularExpressions;
+using Community.CsharpSqlite;
 using Microsoft.ProgramSynthesis.AST;
 using Microsoft.Scripting;
 using Newtonsoft.Json;
@@ -330,24 +331,53 @@ namespace TutorUI
             var fileName = "../../results/" + problemName.ToString() + "-mistakes.json";
             var submissions = JsonConvert.DeserializeObject<List<Mistake>>(File.ReadAllText(fileName));
 
-            var usedPrograms = new HashSet<string>();
+            var cluster = new Dictionary<string, List<Mistake>>();
             foreach (var submission in submissions)
             {
-                if (submission.IsFixed && !usedPrograms.Contains(submission.UsedFix))
+                if (submission.IsFixed)
                 {
-                    Console.Out.WriteLine("Diff:");
+                    if (cluster.ContainsKey(submission.UsedFix))
+                    {
+                        cluster[submission.UsedFix].Add(submission);
+                    }
+                    else
+                    {
+                        cluster.Add(submission.UsedFix, new List<Mistake>() {submission});
+                    }
+                }               
+            }
+            var ordered = from entry in cluster
+                          orderby entry.Value.Count descending
+                          select entry;
+
+            foreach (var mistake in ordered)
+            {
+                Console.Out.WriteLine("===========================================");
+                Console.Out.WriteLine("Used program");
+                Console.Out.WriteLine("===========================================");
+                Console.Out.WriteLine(mistake.Key);
+                Console.Out.WriteLine("===========================================");
+                Console.Out.WriteLine("Total submissions: " + mistake.Value.Count);
+                Console.Out.WriteLine("===========================================");
+                Console.Out.WriteLine("Examples");
+                Console.Out.WriteLine("===========================================");
+                var numberOfExamples = mistake.Value.Count > 1 ? 2 : 1;
+                for (int i = 0; i < numberOfExamples; i++)
+                {
+                    Console.Out.WriteLine("Diff");
+                    Console.Out.WriteLine("===========================================");
+                    var submission = mistake.Value[i];
                     Console.Out.WriteLine(submission.diff);
-                    Console.Out.WriteLine("Used program:");
-                    Console.Out.WriteLine(submission.UsedFix);
+                    Console.Out.WriteLine("===========================================");
                     Console.Out.WriteLine("\r\nBefore:");
                     Console.Out.WriteLine(submission.before);
                     Console.Out.WriteLine("\r\nFixed After:");
                     Console.Out.WriteLine(submission.SynthesizedAfter);
                     Console.Out.WriteLine("\r\nAfter:");
                     Console.Out.WriteLine(submission.after);
-                    usedPrograms.Add(submission.UsedFix);
-
+                    Console.Out.WriteLine("===========================================");
                 }
+                
             }
             Console.Out.WriteLine("Total: " + submissions.Count);
             Console.Out.WriteLine("Fixed: " + submissions.Where(e => e.IsFixed).Count());
