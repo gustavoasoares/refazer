@@ -188,7 +188,17 @@ namespace Tutor.Transformation
             return result;
         }
 
-        public static TreeTemplate Skip(TreeTemplate template)
+        public static TreeTemplate StartsWithTarget(TreeTemplate template)
+        {
+            return TreeTemplate(template);
+        }
+
+        public static TreeTemplate StartsWithParent(TreeTemplate template)
+        {
+            return TreeTemplate(template);
+        }
+
+        private static TreeTemplate TreeTemplate(TreeTemplate template)
         {
             TreeTemplate result;
             if (template is Wildcard)

@@ -296,8 +296,7 @@ namespace Tutor.Transformation
             foreach (State input in spec.ProvidedInputs)
             {
                 var selectedNode = (PythonNode)input[rule.Body[0]];
-                examples[input] = selectedNode.Parent != null? Tuple.Create(selectedNode.Parent, selectedNode) : 
-                    Tuple.Create(selectedNode, selectedNode);
+                examples[input] = selectedNode;
             }
             return new ExampleSpec(examples);
         }
@@ -519,16 +518,35 @@ namespace Tutor.Transformation
             return new ExampleSpec(result);
         }
 
-        [WitnessFunction("Skip", 0)]
-        public static ExampleSpec WitnessSkipTemplate(GrammarRule rule, int parameter, ExampleSpec spec)
+        [WitnessFunction("StartsWithTarget", 0)]
+        public static ExampleSpec WitnessStartsWithTargetTemplate(GrammarRule rule, int parameter, ExampleSpec spec)
         {
             var result = new Dictionary<State, object>();
             foreach (var input in spec.ProvidedInputs)
             {
-                var contextTarget = spec.Examples[input] as Tuple<PythonNode, PythonNode>;
-                if (contextTarget.Item2 != null && contextTarget.Item2.Parent.Equals(contextTarget.Item1))
+                var expspec = spec.Examples[input] as PythonNode;
+                if (expspec != null)
                 {
-                    result[input] = Tuple.Create(contextTarget.Item2, contextTarget.Item2);
+                    result[input] = Tuple.Create(expspec, expspec);
+                }
+                else
+                {
+                    return null;
+                }
+            }
+            return new ExampleSpec(result);
+        }
+
+        [WitnessFunction("StartsWithParent", 0)]
+        public static ExampleSpec WitnessStartsWithParentTemplate(GrammarRule rule, int parameter, ExampleSpec spec)
+        {
+            var result = new Dictionary<State, object>();
+            foreach (var input in spec.ProvidedInputs)
+            {
+                var expspec = spec.Examples[input] as PythonNode;
+                if (expspec != null && expspec.Parent != null)
+                {
+                    result[input] = Tuple.Create(expspec.Parent, expspec);
                 }
                 else
                 {

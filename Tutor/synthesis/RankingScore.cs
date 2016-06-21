@@ -53,8 +53,11 @@ namespace Tutor.Transformation
         [FeatureCalculator("Target")]
         public static double Score_Target(double template) => template;
 
-        [FeatureCalculator("Skip")]
-        public static double Score_Skip(double template) => template * 0.8;
+        [FeatureCalculator("StartsWithParent")]
+        public static double Score_StartsWithParent(double template) => template * 0.8;
+
+        [FeatureCalculator("StartsWithTarget")]
+        public static double Score_StartsWithTarget(double template) => template * 0.8;
 
         [FeatureCalculator("TChild")]
         public static double Score_TemplateChild(double template) => template;
