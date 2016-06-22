@@ -17,7 +17,7 @@ namespace Tutor
     {
         protected bool Equals(Mistake other)
         {
-            return string.Equals(diff, other.diff) && string.Equals(before, other.before) && string.Equals(after, other.after) && Equals(failed, other.failed);
+            return string.Equals(diff, other.diff) && string.Equals(before, other.before) && string.Equals(after, other.after);
         }
 
         public override bool Equals(object obj)
