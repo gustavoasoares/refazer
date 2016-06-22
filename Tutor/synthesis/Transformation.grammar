@@ -29,7 +29,7 @@ TreeTemplate template := Node(info, tchildren) | LeafNode(info)
 IEnumerable<TreeTemplate> tchildren := TChild(template) | TChildren(template, tchildren);
 
 Edit edit := Update(node, c) | Insert(node, n, k) | Delete(node, r) | Move(node, r, k);
-PythonNode r := ReferenceNode(node, template, k); 
+PythonNode r := ReferenceNode(node, templateExp, k); 
 PythonNode n := c | r;
 PythonNode c := LeafConstNode(info) | ConstNode(info, children);
 IEnumerable<PythonNode> children := SingleChild(n) | Children(n, children);
