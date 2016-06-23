@@ -6,6 +6,7 @@ using System.Linq;
 using System.Runtime.Serialization.Formatters.Binary;
 using System.Text;
 using System.Text.RegularExpressions;
+using System.Threading.Tasks;
 using Community.CsharpSqlite;
 using Microsoft.ProgramSynthesis.AST;
 using Microsoft.Scripting;
@@ -603,24 +604,24 @@ namespace TutorUI
         {
             var fixer = new SubmissionFixer(classification);
             var notFixed = new List<Mistake>();
-            var doesNotCompile = 0;
-            var notImplementedYet = 0;
-            var transformationNotImplemented = 0;
-            var count = 0;
+            //var doesNotCompile = 0;
+            //var notImplementedYet = 0;
+            //var transformationNotImplemented = 0;
+            //var count = 0;
 
-            var results = new List<Tuple<int,int>>();
-            foreach (var student in problem.AttemptsPerStudent)
+            var results = new System.Collections.Concurrent.ConcurrentQueue<Tuple<int,int>>();
+
+            Parallel.ForEach(problem.AttemptsPerStudent, (student) =>
             {
                 Source.TraceEvent(TraceEventType.Start, 1, "Student " + student.Key);
                 var submissions = student.Value;
                 var attemptCount = 0;
-                
                 var fixedAttempt = 0;
-                foreach (var mistake in submissions)
+                foreach (var mistake in submissions.Reverse())
                 {
                     attemptCount++;
-                    Source.TraceEvent(TraceEventType.Start, 1, "Attempt " + attemptCount);
-                    var unparser = new Unparser();
+                    Source.TraceEvent(TraceEventType.Start, 1, "Student " + student.Key + ", Attempt " + attemptCount);
+                    var unparser = new Unparser(); 
                     PythonNode before = null;
                     try
                     {
@@ -630,13 +631,13 @@ namespace TutorUI
                     catch (SyntaxErrorException)
                     {
                         Source.TraceEvent(TraceEventType.Information, 0, "Input does not compile");
-                        doesNotCompile++;
+                        //doesNotCompile++;
                         continue;
                     }
                     catch (NotImplementedException)
                     {
                         Source.TraceEvent(TraceEventType.Error, 0, mistake.before);
-                        notImplementedYet++;
+                        //notImplementedYet++;
                         continue;
                     }
 
@@ -651,10 +652,10 @@ namespace TutorUI
                         mistake.IsFixed = isFixed;
                         if (isFixed)
                         {
-                            count++;
+                            //count++;
                             fixedAttempt = attemptCount;
                             Source.TraceEvent(TraceEventType.Information, 4,
-                                "Program fixed: " + count);
+                                "Student " + student.Key + ", Fixed Attempt " + attemptCount);
                             break;
                         }
                         notFixed.Add(mistake);
@@ -667,23 +668,87 @@ namespace TutorUI
                         Source.TraceEvent(TraceEventType.Error, 2,
                                         "Transformation not implemented:\r\nbefore\r\n" + mistake.before + " \r\n" +
                                         mistake.after + "\r\n" + e.Message);
-                        transformationNotImplemented++;
+                        //transformationNotImplemented++;
                     }
                 }
-                results.Add(Tuple.Create(fixedAttempt, submissions.Count));             
-            }
+                results.Enqueue(Tuple.Create(fixedAttempt, submissions.Count));
+            });
+
+            //foreach (var student in problem.AttemptsPerStudent)
+            //{
+                
+            //    var submissions = student.Value;
+            //    var attemptCount = 0;
+                
+            //    var fixedAttempt = 0;
+            //    foreach (var mistake in submissions)
+            //    {
+            //        attemptCount++;
+            //        Source.TraceEvent(TraceEventType.Start, 1, "Attempt " + attemptCount);
+            //        var unparser = new Unparser();
+            //        PythonNode before = null;
+            //        try
+            //        {
+            //            before = NodeWrapper.Wrap(ASTHelper.ParseContent(mistake.before));
+            //            before = NodeWrapper.Wrap(ASTHelper.ParseContent(unparser.Unparse(before)));
+            //        }
+            //        catch (SyntaxErrorException)
+            //        {
+            //            Source.TraceEvent(TraceEventType.Information, 0, "Input does not compile");
+            //            doesNotCompile++;
+            //            continue;
+            //        }
+            //        catch (NotImplementedException)
+            //        {
+            //            Source.TraceEvent(TraceEventType.Error, 0, mistake.before);
+            //            notImplementedYet++;
+            //            continue;
+            //        }
+
+            //        try
+            //        {
+            //            var watch = Stopwatch.StartNew();
+            //            var isFixed = fixer.Fix(mistake, problem.Tests);
+            //            watch.Stop();
+            //            var timeInMS = watch.ElapsedMilliseconds;
+            //            TimeToFix.Add(timeInMS);
+
+            //            mistake.IsFixed = isFixed;
+            //            if (isFixed)
+            //            {
+            //                count++;
+            //                fixedAttempt = attemptCount;
+            //                Source.TraceEvent(TraceEventType.Information, 4,
+            //                    "Program fixed: " + count);
+            //                break;
+            //            }
+            //            notFixed.Add(mistake);
+            //            Source.TraceEvent(TraceEventType.Error, 3,
+            //            "Program not fixed:\r\nbefore\r\n" + mistake.before + " \r\n" +
+            //            mistake.after);
+            //        }
+            //        catch (NotImplementedException e)
+            //        {
+            //            Source.TraceEvent(TraceEventType.Error, 2,
+            //                            "Transformation not implemented:\r\nbefore\r\n" + mistake.before + " \r\n" +
+            //                            mistake.after + "\r\n" + e.Message);
+            //            transformationNotImplemented++;
+            //        }
+            //    }
+            //    results.Enqueue(Tuple.Create(fixedAttempt, submissions.Count));             
+            //}
             Source.TraceEvent(TraceEventType.Information, 5, "Fixed, Total");
             foreach (var result in results)
             {
                 Source.TraceEvent(TraceEventType.Information, 5, result.Item1 + ", " + result.Item2);
             }
-            Source.TraceEvent(TraceEventType.Information, 5, "input does not compile: " + doesNotCompile);
-            Source.TraceEvent(TraceEventType.Information, 5, "Fixed: " + count);
-            Source.TraceEvent(TraceEventType.Information, 5, "Not Fixed: " + notFixed.Count);
-            Source.TraceEvent(TraceEventType.Information, 5, "parser not implemented: " + notImplementedYet);
-            Source.TraceEvent(TraceEventType.Information, 5, "transformation not implemented: " + transformationNotImplemented);
-            Source.TraceEvent(TraceEventType.Information, 5, "Script sets: " + fixer.ProsePrograms.Count);
-            Source.TraceEvent(TraceEventType.Information, 5, "Used Programs: " + (fixer.UsedPrograms.Count));
+            //Source.TraceEvent(TraceEventType.Information, 5, "input does not compile: " + doesNotCompile);
+            //Source.TraceEvent(TraceEventType.Information, 5, "Fixed: " + count);
+            //Source.TraceEvent(TraceEventType.Information, 5, "Not Fixed: " + notFixed.Count);
+            //Source.TraceEvent(TraceEventType.Information, 5, "parser not implemented: " + notImplementedYet);
+            //Source.TraceEvent(TraceEventType.Information, 5, "transformation not implemented: " + transformationNotImplemented);
+            //Source.TraceEvent(TraceEventType.Information, 5, "Script sets: " + fixer.ProsePrograms.Count);
+            //Source.TraceEvent(TraceEventType.Information, 5, "Used Programs: " + (fixer.UsedPrograms.Count));
         }
 
         private static void SaveClassification(List<Tuple<List<Mistake>, ProgramNode>> classification, string id)
