@@ -669,9 +669,9 @@ namespace TutorUI
                                 mistake.after + "\r\n" + e.Message);
                             //transformationNotImplemented++;
                         }
-                        catch (AggregateException)
+                        catch (Exception e)
                         {
-                            Source.TraceEvent(TraceEventType.Error, 2, "This aggregate exception should not happen");
+                            Source.TraceEvent(TraceEventType.Error, 2, e.StackTrace);
                         }
                     }
                     results.Enqueue(Tuple.Create(fixedAttempt, submissions.Count));
