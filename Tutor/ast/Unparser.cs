@@ -31,6 +31,10 @@ namespace Tutor
             {
                 Console.Out.WriteLine("Invalid output program");
             }
+            catch (AggregateException)
+            {
+                Console.Out.WriteLine("Invalid output program");
+            }
             return _code.ToString();
         }
 
@@ -341,7 +345,8 @@ namespace Tutor
 
         private void Write(ConstantExpressionNode exp)
         {
-            _code.Append(exp.Value.ToString());
+            if (exp.Value != null)
+                _code.Append(exp.Value.ToString());
         }
 
         private void Write(CallExpressionNode exp)

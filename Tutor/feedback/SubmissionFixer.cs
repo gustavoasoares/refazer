@@ -275,7 +275,7 @@ namespace Tutor
                             {
                                 p.Kill();
                             }
-                            catch (System.AggregateException)
+                            catch (AggregateException)
                             {
                              //do nothing   
                             }

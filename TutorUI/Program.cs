@@ -611,63 +611,74 @@ namespace TutorUI
 
             var results = new System.Collections.Concurrent.ConcurrentQueue<Tuple<int,int>>();
 
-            Parallel.ForEach(problem.AttemptsPerStudent, (student) =>
+            try
             {
-                Source.TraceEvent(TraceEventType.Start, 1, "Student " + student.Key);
-                var submissions = student.Value;
-                var attemptCount = 0;
-                var fixedAttempt = 0;
-                foreach (var mistake in submissions.Reverse())
+                Parallel.ForEach(problem.AttemptsPerStudent, (student) =>
                 {
-                    attemptCount++;
-                    Source.TraceEvent(TraceEventType.Start, 1, "Student " + student.Key + ", Attempt " + attemptCount);
-                    var unparser = new Unparser(); 
-                    PythonNode before = null;
-                    try
+                    Source.TraceEvent(TraceEventType.Start, 1, "Student " + student.Key);
+                    var submissions = student.Value;
+                    var attemptCount = 0;
+                    var fixedAttempt = 0;
+                    foreach (var mistake in submissions.Reverse())
                     {
-                        before = NodeWrapper.Wrap(ASTHelper.ParseContent(mistake.before));
-                        before = NodeWrapper.Wrap(ASTHelper.ParseContent(unparser.Unparse(before)));
-                    }
-                    catch (SyntaxErrorException)
-                    {
-                        Source.TraceEvent(TraceEventType.Information, 0, "Input does not compile");
-                        //doesNotCompile++;
-                        continue;
-                    }
-                    catch (NotImplementedException)
-                    {
-                        Source.TraceEvent(TraceEventType.Error, 0, mistake.before);
-                        //notImplementedYet++;
-                        continue;
-                    }
-
-                    try
-                    {
-                        var isFixed = fixer.Fix(mistake, problem.Tests);
-                        mistake.IsFixed = isFixed;
-                        if (isFixed)
+                        attemptCount++;
+                        Source.TraceEvent(TraceEventType.Start, 1, "Student " + student.Key + ", Attempt " + attemptCount);
+                        var unparser = new Unparser();
+                        PythonNode before = null;
+                        try
                         {
-                            //count++;
-                            fixedAttempt = attemptCount;
-                            Source.TraceEvent(TraceEventType.Information, 4,
-                                "Student " + student.Key + ", Fixed Attempt " + attemptCount);
-                            break;
+                            before = NodeWrapper.Wrap(ASTHelper.ParseContent(mistake.before));
+                            before = NodeWrapper.Wrap(ASTHelper.ParseContent(unparser.Unparse(before)));
                         }
-                        Source.TraceEvent(TraceEventType.Error, 3,
-                        "Program not fixed:\r\nbefore\r\n" + mistake.before + " \r\n" +
-                        mistake.after);
-                    }
-                    catch (NotImplementedException e)
-                    {
-                        Source.TraceEvent(TraceEventType.Error, 2,
-                                        "Transformation not implemented:\r\nbefore\r\n" + mistake.before + " \r\n" +
-                                        mistake.after + "\r\n" + e.Message);
-                        //transformationNotImplemented++;
-                    }
-                }
-                results.Enqueue(Tuple.Create(fixedAttempt, submissions.Count));
-            });
+                        catch (SyntaxErrorException)
+                        {
+                            Source.TraceEvent(TraceEventType.Information, 0, "Input does not compile");
+                            //doesNotCompile++;
+                            continue;
+                        }
+                        catch (NotImplementedException)
+                        {
+                            Source.TraceEvent(TraceEventType.Error, 0, mistake.before);
+                            //notImplementedYet++;
+                            continue;
+                        }
 
+                        try
+                        {
+                            var isFixed = fixer.Fix(mistake, problem.Tests);
+                            mistake.IsFixed = isFixed;
+                            if (isFixed)
+                            {
+                                //count++;
+                                fixedAttempt = attemptCount;
+                                Source.TraceEvent(TraceEventType.Information, 4,
+                                    "Student " + student.Key + ", Fixed Attempt " + attemptCount);
+                                break;
+                            }
+                            Source.TraceEvent(TraceEventType.Error, 3,
+                                "Program not fixed:\r\nbefore\r\n" + mistake.before + " \r\n" +
+                                mistake.after);
+                        }
+                        catch (NotImplementedException e)
+                        {
+                            Source.TraceEvent(TraceEventType.Error, 2,
+                                "Transformation not implemented:\r\nbefore\r\n" + mistake.before + " \r\n" +
+                                mistake.after + "\r\n" + e.Message);
+                            //transformationNotImplemented++;
+                        }
+                        catch (AggregateException)
+                        {
+                            Source.TraceEvent(TraceEventType.Error, 2, "This aggregate exception should not happen");
+                        }
+                    }
+                    results.Enqueue(Tuple.Create(fixedAttempt, submissions.Count));
+                });
+
+            }
+            catch (AggregateException)
+            {
+                
+            }
             //foreach (var student in problem.AttemptsPerStudent)
             //{
                 
