@@ -27,9 +27,9 @@ namespace Tutor
             {
                 ast.Children.ForEach(e => Write(e));
             }
-            catch (ArgumentOutOfRangeException e)
+            catch (ArgumentOutOfRangeException)
             {
-                Console.Out.WriteLine(e.StackTrace);
+                Console.Out.WriteLine("Invalid output program");
             }
             return _code.ToString();
         }

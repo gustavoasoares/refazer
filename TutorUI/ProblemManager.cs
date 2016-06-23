@@ -106,10 +106,10 @@ def increment(x):
                 case ProblemNames.Product:
                     return new Dictionary<string, long>
                     {
-                        {testSetup + "product(3, identity)", 6},
-                        {testSetup + "product(5, identity)", 120},
-                        {testSetup + "product(3, square)", 36},
-                        {testSetup + "product(5, square)", 14400}
+                        {testSetup + "assert(product(3, identity)==6)", 6},
+                        {"assert(product(5, identity)==120)", 120},
+                        {"assert(product(3, square)==36)", 36},
+                        {"assert(product(5, square)==14400)", 14400}
                     };
                 case ProblemNames.Repeated:
                     return new Dictionary<string, long>

@@ -68,9 +68,10 @@ namespace Tutor.Transformation
             return wrapped;
         }
 
-        public static PythonNode ReferenceNode(PythonNode ast, TreeTemplate template, int k)
+        public static PythonNode ReferenceNode(PythonNode ast, TreeTemplate template, MagicK magicK)
         {
             template.Target = true;
+            var k = magicK.GetK(template);
             var referenceNode = ReferenceNodeHelper(ast, template, ref k);
             return referenceNode;
         }

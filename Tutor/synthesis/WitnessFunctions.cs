@@ -685,9 +685,8 @@ namespace Tutor.Transformation
             return new DisjunctiveExamplesSpec(templateExamples);
         }
 
-        [WitnessFunction("ReferenceNode", 2, DependsOnParameters = new []{1})]
-        public static ExampleSpec WitnessK(GrammarRule rule, int parameter, ExampleSpec spec, 
-            ExampleSpec templateSpec)
+        [WitnessFunction("ReferenceNode", 2)]
+        public static ExampleSpec WitnessK(GrammarRule rule, int parameter, ExampleSpec spec)
         {
             var result = new Dictionary<State, object>();
 
@@ -695,22 +694,8 @@ namespace Tutor.Transformation
             {
                 var inp = (PythonNode)input[rule.Body[0]];
                 var node = spec.Examples[input] as PythonNode;
-                var template = (TreeTemplate)templateSpec.Examples[input];
-                var matches = template.Matches(inp);
-                var witness = -1;
-                for (var i = 0; i < matches.Count; i++)
-                {
-                    if (matches[i].Id == node.Id)
-                    {
-                        witness = i;
-                        break;
-                    }
-                }
-                if (witness < 0)
-                    return null;
-                var positions = new List<int>();
-                positions.Add(witness);
-                result[input] = witness;
+
+                result[input] = new MagicK(inp,node);
             }
             return new ExampleSpec(result);
         }

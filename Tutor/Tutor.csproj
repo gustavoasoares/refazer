@@ -254,6 +254,7 @@
     <Compile Include="ast\WhileStatementNode.cs" />
     <Compile Include="Logger.cs" />
     <Compile Include="synthesis\InvalidTemplate.cs" />
+    <Compile Include="synthesis\MagicK.cs" />
     <Compile Include="synthesis\NodeInfo.cs" />
     <Compile Include="ast\NodeWrapper.cs" />
     <Compile Include="synthesis\Edit.cs" />

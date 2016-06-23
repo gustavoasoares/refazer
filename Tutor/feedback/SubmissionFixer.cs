@@ -105,6 +105,44 @@ namespace Tutor
             return false;
         }
 
+        public bool ParallelFix(Mistake mistake, Dictionary<string, long> tests)
+        {
+            PythonAst ast = null;
+            try
+            {
+                ast = ASTHelper.ParseContent(mistake.before);
+            }
+            catch (Exception e)
+            {
+                Console.Error.WriteLine(e.Message);
+                return false;
+            }
+            var input = State.Create(grammar.Value.InputSymbol, NodeWrapper.Wrap(ast));
+            var unparser = new Unparser();
+            var isFixed = false;
+            foreach (var tuple in _classification)
+            {
+                if (isFixed)
+                    break;
+                isFixed = TryInParallel(mistake, tests, tuple.Item2, input);
+            }
+            return isFixed;
+        }
+
+        private bool TryInParallel(Mistake mistake, Dictionary<string, long> tests, ProgramNode program, State input)
+        {
+            var  unparser = new Unparser();
+            bool isFixed = false;
+            var fixedCode = TryFix(tests, program, input, unparser);
+            if (fixedCode != null)
+            {
+                mistake.UsedFix = program.ToString();
+                mistake.SynthesizedAfter = fixedCode;
+                isFixed = true;
+            }
+            return isFixed;
+        }
+
         private static Result<Grammar> grammar =
             DSLCompiler.LoadGrammarFromFile(@"C:\Users\Gustavo\git\Tutor\Tutor\synthesis\Transformation.grammar");
 
@@ -204,25 +242,44 @@ namespace Tutor
         public static bool IsFixed(Dictionary<string, long> tests, string newCode)
         {
             var isFixed = true;
+            var script = newCode;
             foreach (var test in tests)
             {
-                var script = newCode + Environment.NewLine + test.Key;
-                try
+               script +=  Environment.NewLine + test.Key;
+            }
+            try
+            {
+                ProcessStartInfo psi = new ProcessStartInfo("python.exe", "-c \"" + script + "\"")
                 {
-                    var result = ASTHelper.Run(script);
-                    if (result != test.Value)
+                    CreateNoWindow = true,
+                    WindowStyle = ProcessWindowStyle.Hidden
+                };
+                var p = Process.Start(psi);
+                if (p == null)
+                    isFixed = false;
+                else
+                {
+                    if (!p.HasExited)
+                    {
+                        p.WaitForExit(600);
+                    }
+                    if (!p.HasExited || p.ExitCode != 0)
                         isFixed = false;
+                    if (!p.HasExited)
+                        p.Kill();
+                    p.Close();
+                    //var result = ASTHelper.Run(script);
+                    //if (result != test.Value)
+                    //    isFixed = false;
                 }
-                catch (TestCaseException)
-                {
-                    isFixed = false;
-                }
-                catch (RuntimeBinderException)
-                {
-                    isFixed = false;
-                }
-                if (!isFixed)
-                    break;
+            }
+            catch (TestCaseException)
+            {
+                isFixed = false;
+            }
+            catch (RuntimeBinderException)
+            {
+                isFixed = false;
             }
             return isFixed;
         }
