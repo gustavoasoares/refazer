@@ -263,7 +263,7 @@ namespace Tutor
                 {
                     if (!p.HasExited)
                     {
-                        p.WaitForExit(600);
+                        p.WaitForExit(1500);
                     }
                     if (!p.HasExited || p.ExitCode != 0)
                         isFixed = false;
