@@ -341,7 +341,7 @@ namespace Tutor
 
         private void Write(ConstantExpressionNode exp)
         {
-            _code.Append(exp.Value);
+            _code.Append(exp.Value.ToString());
         }
 
         private void Write(CallExpressionNode exp)

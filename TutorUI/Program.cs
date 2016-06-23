@@ -643,12 +643,7 @@ namespace TutorUI
 
                     try
                     {
-                        var watch = Stopwatch.StartNew();
                         var isFixed = fixer.Fix(mistake, problem.Tests);
-                        watch.Stop();
-                        var timeInMS = watch.ElapsedMilliseconds;
-                        TimeToFix.Add(timeInMS);
-
                         mistake.IsFixed = isFixed;
                         if (isFixed)
                         {
@@ -658,7 +653,6 @@ namespace TutorUI
                                 "Student " + student.Key + ", Fixed Attempt " + attemptCount);
                             break;
                         }
-                        notFixed.Add(mistake);
                         Source.TraceEvent(TraceEventType.Error, 3,
                         "Program not fixed:\r\nbefore\r\n" + mistake.before + " \r\n" +
                         mistake.after);

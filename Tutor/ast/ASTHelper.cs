@@ -51,6 +51,7 @@ namespace Tutor
 
         public static dynamic Run(string s)
         {
+            var p = Process.Start("", "");
             try
             {
                 StartCodeService();
