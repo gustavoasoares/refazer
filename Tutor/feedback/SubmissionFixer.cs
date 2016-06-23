@@ -239,9 +239,9 @@ namespace Tutor
             return null;
         }
 
-        private static Object thisLock = new Object();
+        private Object thisLock = new Object();
 
-        public static bool IsFixed(Dictionary<string, long> tests, string newCode)
+        public bool IsFixed(Dictionary<string, long> tests, string newCode)
         {
             var isFixed = true;
             var script = newCode;
@@ -267,21 +267,19 @@ namespace Tutor
                     }
                     if (!p.HasExited || p.ExitCode != 0)
                         isFixed = false;
-                    lock (thisLock)
+                    if (!p.HasExited)
                     {
-                        if (!p.HasExited)
+                        try
                         {
-                            try
-                            {
-                                p.Kill();
-                            }
-                            catch (AggregateException)
-                            {
-                             //do nothing   
-                            }
+                            p.Kill();
                         }
-                        p.Close();
+                        catch (Exception)
+                        {
+                            Console.Out.WriteLine("Exception when trying to kill process");
+                            //do nothing   
+                        }
                     }
+                    p.Close();
                     //var result = ASTHelper.Run(script);
                     //if (result != test.Value)
                     //    isFixed = false;

@@ -145,7 +145,8 @@ namespace TutorUI
                 foreach (var mistake in problem.Mistakes)
                 {
                     Source.TraceEvent(TraceEventType.Start, 1, "Testing Mistake " + i);
-                    if (SubmissionFixer.IsFixed(problem.Tests, mistake.after))
+                    var submissionFixer = new SubmissionFixer();
+                    if (submissionFixer.IsFixed(problem.Tests, mistake.after))
                     {
                         Source.TraceEvent(TraceEventType.Information, 1, "Fixed " + ++isfixed);
                         cleanMistakes.Add(mistake);
@@ -176,9 +177,11 @@ namespace TutorUI
                 var tests = GetTests("product");
                 var isfixed = 0;
                 var notfixed = 0;
+                var subFixer = new SubmissionFixer();
                 foreach (var mistake in problem.Mistakes)
                 {
-                    if (SubmissionFixer.IsFixed(tests, mistake.after))
+
+                    if (subFixer.IsFixed(tests, mistake.after))
                     {
                         Console.Out.WriteLine("Fixed " + ++isfixed);
                     }
@@ -677,7 +680,7 @@ namespace TutorUI
             }
             catch (AggregateException)
             {
-                
+                Source.TraceEvent(TraceEventType.Error, 2, "Exception in the outer loop. This aggregate exception should not happen");
             }
             //foreach (var student in problem.AttemptsPerStudent)
             //{
