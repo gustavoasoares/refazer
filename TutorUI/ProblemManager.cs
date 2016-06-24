@@ -28,8 +28,11 @@ namespace TutorUI
                 var submissions =
                     JsonConvert.DeserializeObject<List<Mistake>>(File.ReadAllText(file.FullName, Encoding.ASCII));
                 var mistakes = new List<Mistake>();
+                var count = 1; 
                 foreach (var mistake in submissions)
                 {
+                    mistake.Id = count;
+                    count++;
                     mistake.before = GetQuestion(mistake.before, problemName);
                     mistake.after = GetQuestion(mistake.after, problemName);
 
