@@ -507,6 +507,8 @@ namespace TutorUI
             }
             else if (!learn)
             {
+                var watch = new Stopwatch();
+                watch.Start();
                 Parallel.ForEach(submissions, (mistake) =>
                 {
                     Source.TraceEvent(TraceEventType.Start, 1, "Submission " + mistake.Id);
@@ -544,6 +546,9 @@ namespace TutorUI
                         Source.TraceEvent(TraceEventType.Error, 0, "Transformation not tested");
                     }
                 });
+                watch.Stop();
+                double total = ((double)watch.ElapsedMilliseconds / 1000) / 60;
+                Source.TraceEvent(TraceEventType.Information, 0, "Total time: " + total);
                 //foreach (var mistake in submissions)
                 //{
                 //    submissionCount += 1;
@@ -647,6 +652,8 @@ namespace TutorUI
             var fixer = new SubmissionFixer(classification);
             var results = new System.Collections.Concurrent.ConcurrentDictionary<int, Tuple<int,int>>();
             
+            var watch =  new Stopwatch();
+            watch.Start();
             try
             {
                 Parallel.ForEach(problem.AttemptsPerStudent, (student) =>
@@ -715,12 +722,15 @@ namespace TutorUI
             {
                 Source.TraceEvent(TraceEventType.Error, 2, "Exception in the outer loop. This aggregate exception should not happen");
             }
+            watch.Stop();
+            double total = ((double) watch.ElapsedMilliseconds / 1000)/60;
+            Source.TraceEvent(TraceEventType.Information, 0, "Total time: " + total);
             //foreach (var student in problem.AttemptsPerStudent)
             //{
-                
+
             //    var submissions = student.Value;
             //    var attemptCount = 0;
-                
+
             //    var fixedAttempt = 0;
             //    foreach (var mistake in submissions)
             //    {

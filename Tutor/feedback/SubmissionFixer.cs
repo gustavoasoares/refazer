@@ -193,11 +193,6 @@ namespace Tutor
 
         private string TryFix(Dictionary<string, long> tests, ProgramNode current, State input, Unparser unparser)
         {
-            //Console.Out.WriteLine("===================");
-            //Console.Out.WriteLine("TRY:");
-            //Console.Out.WriteLine(current);
-            //Console.Out.WriteLine("===================");
-
             object output = null;
             try
             {
@@ -214,33 +209,32 @@ namespace Tutor
                 foreach (var changedProgram in range)
                 {
                     var newCode = unparser.Unparse(changedProgram);
-
-                    //Console.Out.WriteLine(changedProgram);
-                    //Console.Out.WriteLine("===================");
-                    //Console.Out.WriteLine("Fixed:");
-                    //Console.Out.WriteLine(newCode);
-
-                    var isFixed = IsFixed(tests, newCode);
-                    if (isFixed)
+                    try
                     {
-                        if (UsedPrograms.ContainsKey(current.ToString()))
+                        var isFixed = IsFixed(tests, newCode);
+                        if (isFixed)
                         {
-                            var count = UsedPrograms[current.ToString()];
-                            UsedPrograms.Remove(current.ToString());
-                            UsedPrograms.Add(current.ToString(), count + 1);
+                            if (UsedPrograms.ContainsKey(current.ToString()))
+                            {
+                                var count = UsedPrograms[current.ToString()];
+                                UsedPrograms.Remove(current.ToString());
+                                UsedPrograms.Add(current.ToString(), count + 1);
+                            }
+                            else
+                            {
+                                UsedPrograms.Add(current.ToString(), 1);
+                            }
+                            return newCode;
                         }
-                        else
-                        {
-                            UsedPrograms.Add(current.ToString(), 1);
-                        }
-                        return newCode;
+                    }
+                    catch (Exception)
+                    {
+                        //exception during the execution of the test case. Do nothing. 
                     }
                 }
             }
             return null;
         }
-
-        private Object thisLock = new Object();
 
         public bool IsFixed(Dictionary<string, long> tests, string newCode)
         {
@@ -281,9 +275,6 @@ namespace Tutor
                         }
                     }
                     p.Close();
-                    //var result = ASTHelper.Run(script);
-                    //if (result != test.Value)
-                    //    isFixed = false;
                 }
             }
             catch (TestCaseException)
