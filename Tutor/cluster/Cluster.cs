@@ -35,7 +35,6 @@ namespace Tutor
                 var hashCode = (diff != null ? diff.GetHashCode() : 0);
                 hashCode = (hashCode*397) ^ (before != null ? before.GetHashCode() : 0);
                 hashCode = (hashCode*397) ^ (after != null ? after.GetHashCode() : 0);
-                hashCode = (hashCode*397) ^ (failed != null ? failed.GetHashCode() : 0);
                 return hashCode;
             }
         }
@@ -44,7 +43,8 @@ namespace Tutor
 
         public int studentId { set; get; }
 
-        public String diff { set; get; }
+        public string date { get; set; }
+        public string diff { set; get; }
         public string before { set; get; }
         public string after { set; get; }
 

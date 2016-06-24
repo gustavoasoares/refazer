@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
@@ -19,14 +20,14 @@ namespace Tutor
 {
     public class SubmissionFixer
     {
-        private readonly List<Tuple<List<Mistake>, ProgramNode>> _classification;
+        private readonly ConcurrentQueue<Tuple<List<Mistake>, ProgramNode>> _classification;
         public List<IEnumerable<ProgramNode>> ProsePrograms { get; }
 
         public Dictionary<string, int> UsedPrograms { get; }
 
         private Result<Grammar> _grammar = DSLCompiler.LoadGrammarFromFile(@"C:\Users\Gustavo\git\Tutor\Tutor\synthesis\Transformation.grammar");
 
-        public SubmissionFixer(List<Tuple<List<Mistake>, ProgramNode>> classification)
+        public SubmissionFixer(ConcurrentQueue<Tuple<List<Mistake>, ProgramNode>> classification)
         {
             _classification = classification;
             ProsePrograms = new List<IEnumerable<ProgramNode>>();

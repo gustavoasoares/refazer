@@ -56,7 +56,8 @@ namespace TutorUI
                 var submissions =
                     JsonConvert.DeserializeObject<List<Mistake>>(File.ReadAllText(file.FullName, Encoding.ASCII));
                 var dic = new Dictionary<int, IList<Mistake>>();
-                foreach (var mistake in submissions)
+                submissions.Reverse();
+                foreach (var mistake in submissions.GetRange(0, 20))
                 {
                     mistake.before = GetQuestion(mistake.before, problemName);
                     if (dic.ContainsKey(mistake.studentId))
