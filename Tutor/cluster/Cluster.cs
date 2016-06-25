@@ -39,6 +39,8 @@ namespace Tutor
             }
         }
 
+        //0 - no error; 1 - compilation error; 2 - not implemented yet error;
+        public int ErrorFlag { set; get; }
         public int Id { set; get; }
 
         public int studentId { set; get; }

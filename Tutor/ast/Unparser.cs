@@ -208,6 +208,9 @@ namespace Tutor
                 case PythonOperator.Not:
                     _code.Append("not");
                     break;
+                case PythonOperator.In:
+                    _code.Append(" in ");
+                    break;
                 default:
                     throw new NotImplementedException("Operator string not defined: " + op);
             }

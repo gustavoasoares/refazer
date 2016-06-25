@@ -217,6 +217,8 @@
     <None Include="benchmark\Accumulate.json" />
     <None Include="benchmark\CountChange.json" />
     <None Include="benchmark\FilteredAccumulate.json" />
+    <None Include="benchmark\G.json" />
+    <None Include="benchmark\G_iter.json" />
     <None Include="benchmark\Product.json" />
     <None Include="benchmark\Repeated.json" />
     <None Include="benchmark\Summation.json" />

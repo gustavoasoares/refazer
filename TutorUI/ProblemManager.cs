@@ -10,7 +10,8 @@ namespace TutorUI
 {
     enum ProblemNames
     {
-        Product = 1, Repeated =2, CountChange = 3, Accumulate = 4, FilteredAccumulate = 5, Summation = 6
+        Product = 1, Repeated =2, CountChange = 3, Accumulate = 4, FilteredAccumulate = 5, Summation = 6,
+        G = 7, G_iter = 8, Pingping = 9
     }
 
     internal class ProblemManager
@@ -56,6 +57,10 @@ namespace TutorUI
             {
                 case ProblemNames.Summation:
                     return Tuple.Create("summation_using_accumulate", new List<string>() { "recursion", "for", "while" });
+                case ProblemNames.G:
+                    return Tuple.Create("g", new List<string>() { "for", "while" });
+                case ProblemNames.G_iter:
+                    return Tuple.Create("g_iter", new List<string>() { "recursion"});
                 default:
                     return null;
             }
@@ -136,6 +141,24 @@ def increment(x):
                         {"assert(repeated(square, 3)(5)==390625)", 390625},
                         {"assert(repeated(square, 0)(5)==5)", 5}
                     };
+                case ProblemNames.G: 
+                    return new Dictionary<string, long>
+                    {
+                        {testSetup + "assert(g(1)==1)", 15},
+                        {"assert(g(2)==2)", 26},
+                        {"assert(g(3)==3)", 11},
+                        {"assert(g(4)==10)", 25},
+                        {"assert(g(5)==22)", 72}
+                    };
+                case ProblemNames.G_iter:
+                    return new Dictionary<string, long>
+                    {
+                        {testSetup + "assert(g_iter(1)==1)", 15},
+                        {"assert(g_iter(2)==2)", 26},
+                        {"assert(g_iter(3)==3)", 11},
+                        {"assert(g_iter(4)==10)", 25},
+                        {"assert(g_iter(5)==22)", 72}
+                    };
                 case ProblemNames.Accumulate:
                     return new Dictionary<string, long>
                     {
@@ -200,6 +223,14 @@ def increment(x):
                 case ProblemNames.CountChange:
                     start = backup.IndexOf("def count_change(", StringComparison.Ordinal);
                     end = backup.IndexOf("def move_stack(", StringComparison.Ordinal);
+                    break;
+                case ProblemNames.G:
+                    start = backup.IndexOf("def g(", StringComparison.Ordinal);
+                    end = backup.IndexOf("def g_iter(", StringComparison.Ordinal);
+                    break;
+                case ProblemNames.G_iter:
+                    start = backup.IndexOf("def g_iter(", StringComparison.Ordinal);
+                    end = backup.IndexOf("def pingpong(", StringComparison.Ordinal);
                     break;
                 default:
                     start = 0;
