@@ -639,7 +639,7 @@ namespace TutorUI
             watch.Start();
             try
             {
-                Parallel.ForEach(problem.AttemptsPerStudent, (student) =>
+                foreach (var student in problem.AttemptsPerStudent)
                 {
                     Source.TraceEvent(TraceEventType.Start, 1, "Student " + student.Key);
                     var submissions = student.Value;
@@ -698,7 +698,7 @@ namespace TutorUI
                     }
                     var newItem = Tuple.Create(fixedAttempt, submissions.Count);
                     results.AddOrUpdate(student.Key, newItem, (key, existing) => newItem);
-                });
+                }
 
             }
             catch (AggregateException)
@@ -708,69 +708,6 @@ namespace TutorUI
             watch.Stop();
             double total = ((double) watch.ElapsedMilliseconds / 1000)/60;
             Source.TraceEvent(TraceEventType.Information, 0, "Total time: " + total);
-            //foreach (var student in problem.AttemptsPerStudent)
-            //{
-
-            //    var submissions = student.Value;
-            //    var attemptCount = 0;
-
-            //    var fixedAttempt = 0;
-            //    foreach (var mistake in submissions)
-            //    {
-            //        attemptCount++;
-            //        Source.TraceEvent(TraceEventType.Start, 1, "Attempt " + attemptCount);
-            //        var unparser = new Unparser();
-            //        PythonNode before = null;
-            //        try
-            //        {
-            //            before = NodeWrapper.Wrap(ASTHelper.ParseContent(mistake.before));
-            //            before = NodeWrapper.Wrap(ASTHelper.ParseContent(unparser.Unparse(before)));
-            //        }
-            //        catch (SyntaxErrorException)
-            //        {
-            //            Source.TraceEvent(TraceEventType.Information, 0, "Input does not compile");
-            //            doesNotCompile++;
-            //            continue;
-            //        }
-            //        catch (NotImplementedException)
-            //        {
-            //            Source.TraceEvent(TraceEventType.Error, 0, mistake.before);
-            //            notImplementedYet++;
-            //            continue;
-            //        }
-
-            //        try
-            //        {
-            //            var watch = Stopwatch.StartNew();
-            //            var isFixed = fixer.Fix(mistake, problem.Tests);
-            //            watch.Stop();
-            //            var timeInMS = watch.ElapsedMilliseconds;
-            //            TimeToFix.Add(timeInMS);
-
-            //            mistake.IsFixed = isFixed;
-            //            if (isFixed)
-            //            {
-            //                count++;
-            //                fixedAttempt = attemptCount;
-            //                Source.TraceEvent(TraceEventType.Information, 4,
-            //                    "Program fixed: " + count);
-            //                break;
-            //            }
-            //            notFixed.Add(mistake);
-            //            Source.TraceEvent(TraceEventType.Error, 3,
-            //            "Program not fixed:\r\nbefore\r\n" + mistake.before + " \r\n" +
-            //            mistake.after);
-            //        }
-            //        catch (NotImplementedException e)
-            //        {
-            //            Source.TraceEvent(TraceEventType.Error, 2,
-            //                            "Transformation not implemented:\r\nbefore\r\n" + mistake.before + " \r\n" +
-            //                            mistake.after + "\r\n" + e.Message);
-            //            transformationNotImplemented++;
-            //        }
-            //    }
-            //    results.Enqueue(Tuple.Create(fixedAttempt, submissions.Count));             
-            //}
             Source.TraceEvent(TraceEventType.Information, 5, "Fixed, Total");
             foreach (var current in results)
             {
