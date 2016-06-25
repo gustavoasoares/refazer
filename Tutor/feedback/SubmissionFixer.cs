@@ -8,6 +8,7 @@ using System.Threading.Tasks;
 using CsQuery.ExtensionMethods.Internal;
 using IronPython.Compiler.Ast;
 using IronPython.Modules;
+using Microsoft.CodeAnalysis.Semantics;
 using Microsoft.CSharp.RuntimeBinder;
 using Microsoft.ProgramSynthesis;
 using Microsoft.ProgramSynthesis.AST;
@@ -15,6 +16,7 @@ using Microsoft.ProgramSynthesis.Compiler;
 using Microsoft.ProgramSynthesis.Diagnostics;
 using Microsoft.ProgramSynthesis.Learning;
 using Microsoft.ProgramSynthesis.Specifications;
+using Tutor.ast;
 
 namespace Tutor
 {
@@ -53,13 +55,9 @@ namespace Tutor
                 return false;
             }
             var input = State.Create(grammar.Value.InputSymbol, NodeWrapper.Wrap(ast));
-
             var unparser = new Unparser();
-
-            long totalTime = 0;
             foreach (var tuple in _classification)
             {
-                mistake.Time = totalTime;
                 var belongs = false;
                 foreach (var mistake1 in tuple.Item1)
                 {
@@ -73,14 +71,9 @@ namespace Tutor
                     var program = LearnProgram(listWithoutCurrentMistake.ToList());
                     if (program == null) return false;
 
-                    var watch = new Stopwatch();
-                    watch.Start();
                     var fixedCode = TryFix(tests, program, input, unparser);
-                    watch.Stop();
-                    totalTime += watch.ElapsedMilliseconds;
                     if (fixedCode != null)
                     {
-                        mistake.Time = totalTime;
                         mistake.UsedFix = program.ToString();
                         mistake.SynthesizedAfter = fixedCode;
                         return true;
@@ -88,21 +81,15 @@ namespace Tutor
                 }
                 else
                 {
-                    var watch = new Stopwatch();
-                    watch.Start();
                     var fixedCode = TryFix(tests, tuple.Item2, input, unparser);
-                    watch.Stop();
-                    totalTime += watch.ElapsedMilliseconds;
                     if (fixedCode != null)
                     {
-                        mistake.Time = totalTime;
                         mistake.UsedFix = tuple.Item2.ToString();
                         mistake.SynthesizedAfter = fixedCode;
                         return true;
                     }
                 }
             }
-            mistake.Time = totalTime;
             return false;
         }
 
@@ -191,8 +178,9 @@ namespace Tutor
         }
 
 
-        private string TryFix(Dictionary<string, long> tests, ProgramNode current, State input, Unparser unparser)
-        {
+        private string TryFix(Dictionary<string, long> tests, ProgramNode current, 
+            State input, Unparser unparser, Tuple<string, List<string>> staticTests = null)
+        {            
             object output = null;
             try
             {
@@ -208,6 +196,8 @@ namespace Tutor
                 var range = programSet.Count() < 10 ? programSet.ToList() : programSet.ToList().GetRange(0, 10); 
                 foreach (var changedProgram in range)
                 {
+                    if (staticTests != null && !CheckStaticTests(changedProgram, staticTests))
+                        continue; 
                     var newCode = unparser.Unparse(changedProgram);
                     try
                     {
@@ -234,6 +224,19 @@ namespace Tutor
                 }
             }
             return null;
+        }
+
+        public bool CheckStaticTests(PythonNode changedProgram, Tuple<string, List<string>> staticTests)
+        {
+            var findFunctionVisitor = new FindFunctionVisitor(staticTests.Item1);
+            changedProgram.Walk(findFunctionVisitor);
+            if (findFunctionVisitor.Function != null)
+            {
+                var visitor = new StaticAnalysisTester(staticTests);
+                findFunctionVisitor.Function.Walk(visitor);
+                return visitor.Passed;
+            }
+            return false;
         }
 
         public bool IsFixed(Dictionary<string, long> tests, string newCode)
@@ -319,6 +322,67 @@ namespace Tutor
                 return true;
             }
             return false;
+        }
+    }
+
+    public class StaticAnalysisTester : IVisitor
+    {
+        private readonly Tuple<string, List<string>> _tests;
+
+        public bool Passed { set; get; } = true;
+
+        public StaticAnalysisTester(Tuple<string, List<string>> tests)
+        {
+            _tests = tests;
+        }
+
+        public bool Visit(PythonNode pythonNode)
+        {
+            foreach (var test in _tests.Item2)
+            {
+                switch (test)
+                {
+                    case "recursion":
+                        if (pythonNode is CallExpressionNode)
+                        {
+                            if (pythonNode.Children.Any() && pythonNode.Children.First() is NameExpressionNode
+                                && pythonNode.Children.First().Value.Equals(_tests.Item1))
+                                Passed = false; 
+                        }
+                            break;
+                    case "for":
+                        if (pythonNode is ForStatementNode)
+                            Passed = false;
+                        break;
+                    case "while":
+                        if (pythonNode is WhileStatementNode)
+                            Passed = false;
+                        break;
+                }
+            }
+            return Passed;
+        }
+    }
+
+    public class FindFunctionVisitor : IVisitor
+    {
+        private readonly string _name;
+
+        public PythonNode Function { set; get; }
+
+        public FindFunctionVisitor(string name)
+        {
+            _name = name;
+        }
+
+        public bool Visit(PythonNode pythonNode)
+        {
+            if (pythonNode is FunctionDefinitionNode &&
+                pythonNode.Value != null && Equals(pythonNode.Value, _name))
+            {
+                Function = pythonNode;
+            }
+            return Function == null;
         }
     }
 }

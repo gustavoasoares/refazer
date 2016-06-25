@@ -44,9 +44,21 @@ namespace TutorUI
                 }
                 var problem = new Problem(problemName.ToString(), mistakes);
                 problem.Tests = GetTests(problemName);
+                problem.StaticTests = GetStaticTests(problemName);
                 Problems.Add(problem);
             }
             AddIncorrectAttempts();
+        }
+
+        private Tuple<string, List<string>>  GetStaticTests(ProblemNames problem)
+        {
+            switch (problem)
+            {
+                case ProblemNames.Summation:
+                    return Tuple.Create("summation_using_accumulate", new List<string>() { "recursion", "for", "while" });
+                default:
+                    return null;
+            }
         }
 
         private void AddIncorrectAttempts()
@@ -118,38 +130,43 @@ def increment(x):
                 case ProblemNames.Repeated:
                     return new Dictionary<string, long>
                     {
-                        {testSetup + "add_three = repeated(increment, 3)\nadd_three(5)", 8},
-                        {testSetup + "repeated(triple, 5)(1)", 243},
-                        {testSetup + "repeated(square, 2)(5)", 625},
-                        {testSetup + "repeated(square, 3)(5)", 390625},
-                        {testSetup + "repeated(square, 0)(5)", 5}
+                        {testSetup + "add_three = repeated(increment, 3)\nadd_three(5)\\assert(add_three == 8)", 8},
+                        {"assert(repeated(triple, 5)(1)==243)", 243},
+                        {"assert(repeated(square, 2)(5)==625)", 625},
+                        {"assert(repeated(square, 3)(5)==390625)", 390625},
+                        {"assert(repeated(square, 0)(5)==5)", 5}
                     };
                 case ProblemNames.Accumulate:
                     return new Dictionary<string, long>
                     {
-                        {testSetup + "accumulate(add, 0, 5, identity)", 15},
-                        {testSetup + "accumulate(add, 11, 5, identity)", 26},
-                        {testSetup + "accumulate(add, 11, 0, identity)", 11},
-                        {testSetup + "accumulate(add, 11, 3, square)", 25},
-                        {testSetup + "accumulate(mul, 2, 3, square)", 72}
+                        {testSetup + "assert(accumulate(add, 0, 5, identity)==15)", 15},
+                        {"assert(accumulate(add, 11, 5, identity)==26)", 26},
+                        {"assert(accumulate(add, 11, 0, identity)==11)", 11},
+                        {"assert(accumulate(add, 11, 3, square)==25)", 25},
+                        {"assert(accumulate(mul, 2, 3, square)==72)", 72}
                     };
                 case ProblemNames.CountChange:
                     return new Dictionary<string, long>
                     {
-                        {testSetup + "count_change(7)", 6},
-                        {testSetup + "count_change(10)", 14},
-                        {testSetup + "count_change(20)", 60},
-                        {testSetup + "count_change(100)", 9828}
+                        {testSetup + "assert(count_change(7)==6)", 6},
+                        {"assert(count_change(10)==14)", 14},
+                        {"assert(count_change(20)==60)", 60},
+                        {"assert(count_change(100)==9828)", 9828}
+                    };
+                case ProblemNames.Summation:
+                    return new Dictionary<string, long>
+                    {
+                        {testSetup + "assert(summation_using_accumulate(5, square)==55)", 6},
+                        {"assert(summation_using_accumulate(5, triple)==45)", 14},
                     };
                 case ProblemNames.FilteredAccumulate:
                     return new Dictionary<string, long>
                     {
-                        {testSetup + "filtered_accumulate(add, 0, true, 5, identity)", 15},
-                        {testSetup + "filtered_accumulate(add, 11, false, 5, identity)", 11},
-                        {testSetup + "filtered_accumulate(add, 0, odd, 5, identity)", 9},
-                        {testSetup + "filtered_accumulate(mul, 1, odd, 5, square)", 255},
+                        {testSetup + "assert(filtered_accumulate(add, 0, true, 5, identity)==15)", 15},
+                        {"assert(filtered_accumulate(add, 11, false, 5, identity)==11)", 11},
+                        {"assert(filtered_accumulate(add, 0, odd, 5, identity)==9)", 9},
+                        {"assert(filtered_accumulate(mul, 1, odd, 5, square)==255)", 255},
                     };
-
             }
             return null;
         }
@@ -169,7 +186,7 @@ def increment(x):
                     end = backup.IndexOf("def summation_using_accumulate(", StringComparison.Ordinal);
                     break;
                 case ProblemNames.Summation:
-                    start = backup.IndexOf("def summation_using_accumulate(", StringComparison.Ordinal);
+                    start = backup.IndexOf("def accumulate(", StringComparison.Ordinal);
                     end = backup.IndexOf("def product_using_accumulate(", StringComparison.Ordinal);
                     break;
                 case ProblemNames.FilteredAccumulate:

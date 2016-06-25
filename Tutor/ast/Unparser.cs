@@ -65,8 +65,42 @@ namespace Tutor
             else if (stmt is UnaryExpressionNode) Write((UnaryExpressionNode)stmt);
             else if (stmt is ParameterNode) Write((ParameterNode)stmt);
             else if (stmt is PrintStatementNode) Write((PrintStatementNode)stmt);
+            else if (stmt is FromImportStatementNode) Write((FromImportStatementNode)stmt);
             else
                 throw new NotImplementedException();
+        }
+
+        private void Write(FromImportStatementNode stmt)
+        {
+            
+            if (stmt.Children.Any())
+            {
+                Fill();
+                _code.Append("from ");
+                var root = stmt.Children.First().Value as string[];
+                if (root != null)
+                {
+                    for (var i = 0; i < root.Length; i++)
+                    {
+                        var name = root[i];
+                        _code.Append(name);
+                        if (i < root.Length - 1)
+                            _code.Append(", ");
+                    }
+                    _code.Append(" import ");
+                    var names = stmt.Value as string[];
+                    if (names != null)
+                    {
+                        for (var i = 0; i < names.Length; i++)
+                        {
+                            var name = names[i];
+                            _code.Append(name);
+                            if (i < names.Length - 1)
+                                _code.Append(", ");
+                        }
+                    }
+                }
+            }
         }
 
         private void Write(ImportStatementNode stmt)

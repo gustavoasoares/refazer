@@ -9,6 +9,7 @@ using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using Community.CsharpSqlite;
+using CsQuery.ExtensionMethods.Internal;
 using Microsoft.ProgramSynthesis.AST;
 using Microsoft.Scripting;
 using Newtonsoft.Json;
@@ -135,6 +136,7 @@ namespace TutorUI
 
         private static void CleanProblemSumissions(ProblemNames problemName)
         {
+            var unparser = new Unparser();
             var problem = ProblemManager.Instance.GetProblemByName(problemName);
             if (problem != null)
             {
@@ -147,14 +149,23 @@ namespace TutorUI
                 {
                     Source.TraceEvent(TraceEventType.Start, 1, "Testing Mistake " + i);
                     var submissionFixer = new SubmissionFixer();
-                    if (submissionFixer.IsFixed(problem.Tests, mistake.after))
+
+                    var after = NodeWrapper.Wrap(ASTHelper.ParseContent(mistake.after));
+                    if (problem.StaticTests != null && !submissionFixer.CheckStaticTests(after, problem.StaticTests))
+                    {
+                        Source.TraceEvent(TraceEventType.Information, 1, "Not Fixed by static analysis " + ++notfixed);
+                        i++;
+                        continue;
+                    }
+                    var code = unparser.Unparse(after);
+                    if (submissionFixer.IsFixed(problem.Tests, code))
                     {
                         Source.TraceEvent(TraceEventType.Information, 1, "Fixed " + ++isfixed);
                         cleanMistakes.Add(mistake);
                     }
                     else
                     {
-                        Source.TraceEvent(TraceEventType.Information, 1, "Not Fixed " + ++notfixed);
+                        Source.TraceEvent(TraceEventType.Information, 1, "Not Fixed by tests" + ++notfixed);
                     }
                     Source.TraceEvent(TraceEventType.Stop, 1, "Testing Mistake " + i);
                     i++;
@@ -509,7 +520,7 @@ namespace TutorUI
             {
                 var watch = new Stopwatch();
                 watch.Start();
-                Parallel.ForEach(submissions, (mistake) =>
+                foreach (var mistake in submissions)
                 {
                     Source.TraceEvent(TraceEventType.Start, 1, "Submission " + mistake.Id);
                     var unparser = new Unparser();
@@ -545,7 +556,7 @@ namespace TutorUI
                     {
                         Source.TraceEvent(TraceEventType.Error, 0, "Transformation not tested");
                     }
-                });
+                }
                 watch.Stop();
                 double total = ((double)watch.ElapsedMilliseconds / 1000) / 60;
                 Source.TraceEvent(TraceEventType.Information, 0, "Total time: " + total);

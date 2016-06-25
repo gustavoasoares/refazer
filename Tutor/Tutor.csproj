@@ -220,8 +220,10 @@
     <Compile Include="ast\CallExpressionNode.cs" />
     <Compile Include="ast\ComprehensionIteratorNode.cs" />
     <Compile Include="ast\ConstantExpressionNode.cs" />
+    <Compile Include="ast\DottedNameNode.cs" />
     <Compile Include="ast\ExpressionStatementNode.cs" />
     <Compile Include="ast\ForStatementNode.cs" />
+    <Compile Include="ast\FromImportStatementNode.cs" />
     <Compile Include="ast\FunctionDefinitionNode.cs" />
     <Compile Include="ast\IfStatementNode.cs" />
     <Compile Include="ast\IfStatementTestNode.cs" />

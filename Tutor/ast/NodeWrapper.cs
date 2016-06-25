@@ -38,6 +38,7 @@ namespace Tutor
         {
             if (stmt is SuiteStatement) return Wrap(stmt as SuiteStatement, parent);
             if (stmt is FunctionDefinition) return Wrap(stmt as FunctionDefinition, parent);
+            if (stmt is FromImportStatement) return Wrap(stmt as FromImportStatement, parent);
             if (stmt is ReturnStatement) return Wrap(stmt as ReturnStatement, parent);
             if (stmt is IfStatement) return Wrap(stmt as IfStatement, parent);
             if (stmt is AssignmentStatement) return Wrap(stmt as AssignmentStatement, parent);
@@ -50,6 +51,27 @@ namespace Tutor
             throw new NotImplementedException(stmt.NodeName);
         }
 
+        private static PythonNode Wrap(DottedName stmt, PythonNode parent)
+        {
+            var result = new DottedNameNode(stmt) { Parent = parent };
+            if (stmt.Names != null)
+            {
+                result.Value = stmt.Names;
+            }
+            //result.AddChild(Wrap(stmt.Root));
+            return result;
+        }
+
+        private static PythonNode Wrap(FromImportStatement stmt, PythonNode parent)
+        {
+            var result = new FromImportStatementNode(stmt) { Parent = parent };
+            if (stmt.Names != null)
+            {
+                result.Value = stmt.Names;
+            }
+            result.AddChild(Wrap(stmt.Root, result));
+            return result;
+        }
         private static PythonNode Wrap(PrintStatement stmt, PythonNode parent)
         {
             var result = new PrintStatementNode(stmt) { Parent = parent };

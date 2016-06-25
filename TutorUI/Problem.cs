@@ -1,4 +1,5 @@
-﻿using System.Collections;
+﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using Tutor;
 
@@ -11,6 +12,8 @@ namespace TutorUI
 
         internal IDictionary<int, IList<Mistake>> AttemptsPerStudent { get; set; }
         internal Dictionary<string, long> Tests { get; set; }
+
+        internal Tuple<string, List<string>> StaticTests { get; set; } 
 
         internal Problem(string id, IEnumerable<Mistake> mistakes)
         {
