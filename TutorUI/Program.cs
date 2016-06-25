@@ -542,7 +542,7 @@ namespace TutorUI
             {
                 var watch = new Stopwatch();
                 watch.Start();
-                foreach (var mistake in submissions)
+                Parallel.ForEach(submissions, (mistake) =>
                 {
                     Source.TraceEvent(TraceEventType.Start, 1, "Submission " + mistake.Id);
                     var unparser = new Unparser();
@@ -580,7 +580,7 @@ namespace TutorUI
                     {
                         Source.TraceEvent(TraceEventType.Error, 0, "Transformation not tested");
                     }
-                }
+                });
                 watch.Stop();
                 double total = ((double)watch.ElapsedMilliseconds / 1000) / 60;
                 Source.TraceEvent(TraceEventType.Information, 0, "Total time: " + total);
