@@ -26,7 +26,8 @@ namespace TutorUI
             AnalyzeResults = 2,
             TestExperiment = 3,
             PrintMistakes = 4,
-            CleanData = 5
+            CleanData = 5, 
+            PrintIncorretAttempts = 6
         }
 
         
@@ -120,11 +121,41 @@ namespace TutorUI
                     problemName = (ProblemNames)choice;
                     CleanProblemSumissions(problemName);
                     break;
+                case (int)Options.PrintIncorretAttempts:
+                    PrintProblemsMenu();
+                    choice = int.Parse(Console.ReadLine());
+                    problemName = (ProblemNames)choice;
+                    PrintIncorrectAttemptResults(problemName);
+                    break;
                 default:
                     Console.Out.WriteLine("Invalid option.");
                     break;
             }
             Console.ReadKey();
+        }
+
+        private static void PrintIncorrectAttemptResults(ProblemNames problemName)
+        {
+            var fileName = "../../results/attemptperstudent-" + problemName.ToString() + ".json";
+            var students = JsonConvert.DeserializeObject<Dictionary<int,IList<Mistake>>>(File.ReadAllText(fileName));
+
+            var cluster = new Dictionary<string, List<Mistake>>();
+            Console.Out.WriteLine("Student, Fixed, Total");
+            foreach (var student in students)
+            {
+                var id = student.Key;
+                var total = student.Value.Count;
+                var fixedIndex = 0;
+                for (var i = 0; i < student.Value.Count; i++)
+                {
+                    if (student.Value[i].IsFixed)
+                    {
+                        fixedIndex = i + 1;
+                        break;
+                    }
+                }
+                Console.Out.WriteLine(id + ", " + fixedIndex + ", " + total);
+            }
         }
 
         private static void PrintExperimentOptions()
@@ -266,6 +297,7 @@ namespace TutorUI
             Console.Out.WriteLine("3. Test experiment");
             Console.Out.WriteLine("4. Print mistakes");
             Console.Out.WriteLine("5. Check and Clean submissions");
+            Console.Out.WriteLine("6. Print incorrect attempts results");
         }
 
         private static void CheckCanFixItself(Problem problem, int numberOfSubmissions = 0)
