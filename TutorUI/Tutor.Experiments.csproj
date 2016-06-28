@@ -230,6 +230,7 @@
     <None Include="Resources\Repeated-classification.json" />
     <None Include="results\attemptperstudent-Accumulate.json" />
     <None Include="results\attemptperstudent-Product.json" />
+    <None Include="results\G-mistakes.json" />
     <None Include="results\TextWriterOutput-product.log" />
     <None Include="packages.config" />
     <None Include="Resources\Accumulate-classification.json" />

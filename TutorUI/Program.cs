@@ -27,7 +27,8 @@ namespace TutorUI
             TestExperiment = 3,
             PrintMistakes = 4,
             CleanData = 5, 
-            PrintIncorretAttempts = 6
+            PrintIncorretAttempts = 6,
+            PrintNotFixed = 7
         }
 
         
@@ -127,11 +128,56 @@ namespace TutorUI
                     problemName = (ProblemNames)choice;
                     PrintIncorrectAttemptResults(problemName);
                     break;
+                case (int)Options.PrintNotFixed:
+                    PrintProblemsMenu();
+                    choice = int.Parse(Console.ReadLine());
+                    problemName = (ProblemNames)choice;
+                    PrintNotFixed(problemName);
+                    break;
                 default:
                     Console.Out.WriteLine("Invalid option.");
                     break;
             }
             Console.ReadKey();
+        }
+
+        private static void PrintNotFixed(ProblemNames problemName)
+        {
+            var problem = ProblemManager.Instance.GetProblemByName(problemName);
+            if (problem != null)
+            {
+                Console.Out.WriteLine("Problem: " + problem.Id);
+                int i = 1;
+                var tests = GetTests("product");
+                foreach (var mistake in problem.Mistakes)
+                {
+                    if (!mistake.IsFixed)
+                    {
+                        Console.Out.WriteLine("======================================");
+                        Console.Out.WriteLine("Mistake " + i);
+                        Console.Out.WriteLine("======================================");
+                        Console.Out.WriteLine("Before");
+                        Console.Out.WriteLine("======================================");
+                        Console.Out.WriteLine(mistake.before);
+                        Console.Out.WriteLine("======================================");
+                        Console.Out.WriteLine("After");
+                        Console.Out.WriteLine("======================================");
+                        Console.Out.WriteLine(mistake.after);
+                        Console.Out.WriteLine("======================================");
+                        Console.Out.WriteLine("Diff");
+                        Console.Out.WriteLine("======================================");
+                        Console.Out.WriteLine(mistake.diff);
+                        i++;
+                    }
+                    if (i % 50 == 0)
+                        Console.ReadKey();
+                }
+                
+            }
+            else
+            {
+                Console.Out.WriteLine("Invalid problem.");
+            }
         }
 
         private static void PrintIncorrectAttemptResults(ProblemNames problemName)
@@ -451,6 +497,7 @@ namespace TutorUI
             }
             Console.Out.WriteLine("Total: " + submissions.Count);
             Console.Out.WriteLine("Fixed: " + submissions.Where(e => e.IsFixed).Count());
+            Console.Out.WriteLine("Total of scripts: " + cluster.Count);
         }
 
         private static void RunExperiment(Problem problem, int numberOfSumissions = 0, bool learn = false, bool incorrect = false)
@@ -628,7 +675,7 @@ namespace TutorUI
                     if (submission.ErrorFlag == 1)
                         compError++;
                     else if (submission.ErrorFlag == 2)
-                        notImpYet = 0;
+                        notImpYet++;
                 }
 
                 Source.TraceEvent(TraceEventType.Information, 5, "Total submissions: " + submissions.Count);
