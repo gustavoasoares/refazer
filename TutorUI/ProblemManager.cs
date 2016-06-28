@@ -135,7 +135,7 @@ def increment(x):
                 case ProblemNames.Repeated:
                     return new Dictionary<string, long>
                     {
-                        {testSetup + "add_three = repeated(increment, 3)\nadd_three(5)\\assert(add_three == 8)", 8},
+                        {testSetup + "assert(repeated(increment, 3)(5)== 8)", 8},
                         {"assert(repeated(triple, 5)(1)==243)", 243},
                         {"assert(repeated(square, 2)(5)==625)", 625},
                         {"assert(repeated(square, 3)(5)==390625)", 390625},
