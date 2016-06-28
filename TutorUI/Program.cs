@@ -229,7 +229,7 @@ namespace TutorUI
                     Source.TraceEvent(TraceEventType.Start, 1, "Testing Mistake " + i);
                     var submissionFixer = new SubmissionFixer();
 
-                    PythonAst ast = null;
+                    PythonAst ast;
                     try
                     {
                         ast = ASTHelper.ParseContent(mistake.after);

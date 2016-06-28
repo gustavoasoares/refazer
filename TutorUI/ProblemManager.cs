@@ -240,9 +240,8 @@ def increment(x):
             //it may be possible that the student changed the signature of the method, invalidating the pattern
             //in this case, consider the whole file.
             start = start == -1 ? 0 : start;
-            end = (end == -1 || end < start) ? backup.Length - 1 : end;
-
-            return backup.Substring(start, end - start);
+            var result = (end == -1 || end < start) ? backup.Substring(start) : backup.Substring(start, end - start);
+            return result;
         }
 
         public Problem GetProblemByName(ProblemNames problemName)
