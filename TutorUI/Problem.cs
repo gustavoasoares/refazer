@@ -5,6 +5,7 @@ using Tutor;
 
 namespace TutorUI
 {
+    [Serializable]
     internal class Problem
     {
         internal string Id { get; }

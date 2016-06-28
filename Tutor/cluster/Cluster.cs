@@ -13,6 +13,7 @@ namespace Tutor
         public List<Mistake> Mistakes { set; get; } 
     }
 
+    [Serializable]
     public class Mistake
     {
         protected bool Equals(Mistake other)

@@ -223,6 +223,7 @@ namespace TutorUI
                 var isfixed = 0;
                 var notfixed = 0;
                 var cleanMistakes = new List<Mistake>();
+                Source.TraceEvent(TraceEventType.Information, 1, "Total mistakes: " + problem.Mistakes.Count());
                 foreach (var mistake in problem.Mistakes)
                 {
                     Source.TraceEvent(TraceEventType.Start, 1, "Testing Mistake " + i);
@@ -233,7 +234,7 @@ namespace TutorUI
                     {
                         ast = ASTHelper.ParseContent(mistake.after);
                     }
-                    catch (Exception)
+                    catch (SyntaxErrorException)
                     {
                         Source.TraceEvent(TraceEventType.Information, 1, "Input does not compile");
                         i++;
@@ -270,6 +271,7 @@ namespace TutorUI
                     }
                 }
                 problem.Mistakes = cleanMistakes;
+                Source.TraceEvent(TraceEventType.Information, 1, "Total mistakes after clean: " + problem.Mistakes.Count());
                 ProblemManager.Save(problem);
             }
             else
