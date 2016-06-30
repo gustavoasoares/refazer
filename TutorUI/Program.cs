@@ -185,11 +185,11 @@ namespace TutorUI
                                             clustersBiggerThanTwo++;
 
                                         var fixer = new SubmissionFixer();
-                                        var program = SubmissionFixer.LearnProgram(mistakes.Where(m => !m.Equals(mistake)).ToList());
+                                        var program = fixer.LearnProgram(mistakes.Where(m => !m.Equals(mistake)).ToList());
                                         if (program == null) throw new Exception();
                                         PythonAst ast = null;
                                         ast = ASTHelper.ParseContent(mistake.before);
-                                        var input = State.Create(SubmissionFixer.grammar.Value.InputSymbol, NodeWrapper.Wrap(ast));
+                                        var input = State.Create(fixer.grammar.Value.InputSymbol, NodeWrapper.Wrap(ast));
                                         var unparser = new Unparser();
                                         var fixedCode = fixer.TryFix(tests, program, input, unparser);
                                         if (fixedCode == null)
@@ -589,6 +589,7 @@ namespace TutorUI
             var classification = new ConcurrentQueue<Tuple<List<Mistake>, ProgramNode>>();
             var backupName = "../../resources/" + problem.Id + "-classification.json";
             var backup = new FileInfo(backupName);
+            var tempFixer = new SubmissionFixer();
             if (backup.Exists && !learn)
             {
                 Source.TraceEvent(TraceEventType.Start, 6, "Learning scripts from existing classification");
@@ -601,7 +602,7 @@ namespace TutorUI
                 foreach (var list in backupClass)
                 {
                     Source.TraceEvent(TraceEventType.Information, 6, "Learning cluster " + clusterCount + " with mistakes: " + list.Count);
-                    var learnProgram = SubmissionFixer.LearnProgram(list);
+                    var learnProgram = tempFixer.LearnProgram(list);
                     if (learnProgram != null)
                     {
                         classification.Enqueue(Tuple.Create(list, learnProgram));
@@ -647,7 +648,7 @@ namespace TutorUI
                                 Source.TraceEvent(TraceEventType.Information, 6, "Trying to add mistake " + j);
                                 try
                                 {
-                                    var topProgram = SubmissionFixer.LearnProgram(list, next);
+                                    var topProgram = tempFixer.LearnProgram(list, next);
                                     if (topProgram != null)
                                     {
                                         list.Add(next);
@@ -669,7 +670,7 @@ namespace TutorUI
                         }
                         try
                         {
-                            var learnProgram = SubmissionFixer.LearnProgram(list);
+                            var learnProgram = tempFixer.LearnProgram(list);
                             if (learnProgram != null)
                             {
                                 classification.Enqueue(Tuple.Create(list, learnProgram));

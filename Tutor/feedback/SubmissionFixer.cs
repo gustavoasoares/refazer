@@ -124,10 +124,10 @@ namespace Tutor
             return isFixed;
         }
 
-        public static Result<Grammar> grammar =
+        public Result<Grammar> grammar =
             DSLCompiler.LoadGrammarFromFile(@"C:\Users\Gustavo\git\Tutor\Tutor\synthesis\Transformation.grammar");
 
-        public static ProgramNode LearnProgram(List<Mistake> list, Mistake next)
+        public ProgramNode LearnProgram(List<Mistake> list, Mistake next)
         {
             var mistakes =  (list.Any()) ?  new List<Mistake>() { list.First(),  next } :
                 new List<Mistake>() { next };
@@ -140,7 +140,7 @@ namespace Tutor
             return null;
         }
 
-        public static ProgramNode LearnProgram(List<Mistake> mistakes)
+        public ProgramNode LearnProgram(List<Mistake> mistakes)
         {
             var examples = new Dictionary<State, object>();
             var unparser = new Unparser();
@@ -157,7 +157,7 @@ namespace Tutor
             return learned.Any() ? learned.First() : null;
         }
 
-        public static ProgramNode LearnProgram(Mistake mistake, State input)
+        public ProgramNode LearnProgram(Mistake mistake, State input)
         {
             var examples = new Dictionary<State, object>();
 
