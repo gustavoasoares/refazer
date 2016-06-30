@@ -29,11 +29,11 @@ namespace Tutor
             }
             catch (ArgumentOutOfRangeException)
             {
-                Console.Out.WriteLine("Invalid output program");
+                //Console.Out.WriteLine("Invalid output program");
             }
             catch (AggregateException)
             {
-                Console.Out.WriteLine("Invalid output program");
+                //Console.Out.WriteLine("Invalid output program");
             }
             return _code.ToString();
         }

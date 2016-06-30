@@ -11,6 +11,7 @@ using System.Threading.Tasks;
 using Community.CsharpSqlite;
 using CsQuery.ExtensionMethods.Internal;
 using IronPython.Compiler.Ast;
+using Microsoft.ProgramSynthesis;
 using Microsoft.ProgramSynthesis.AST;
 using Microsoft.Scripting;
 using Newtonsoft.Json;
@@ -144,38 +145,93 @@ namespace TutorUI
         private static void PrintNotFixed(ProblemNames problemName)
         {
             var problem = ProblemManager.Instance.GetProblemByName(problemName);
+            
             if (problem != null)
             {
+                var classification = new ConcurrentQueue<Tuple<List<Mistake>, ProgramNode>>();
+                var backupName = "../../resources/" + problem.Id + "-classification.json";
+                var backup = new FileInfo(backupName);
+                var backupClass = (backup.Exists) ?
+                    JsonConvert.DeserializeObject<List<List<Mistake>>>(
+                        File.ReadAllText(backupName)) : null;
+
+
                 Console.Out.WriteLine("Problem: " + problem.Id);
                 int i = 1;
                 var tests = GetTests("product");
                 var fileName = "../../results/" + problemName.ToString() + "-mistakes.json";
                 var submissions = JsonConvert.DeserializeObject<List<Mistake>>(File.ReadAllText(fileName));
 
+                var clustersBiggerThanOne = 0;
+                var clustersBiggerThanTwo = 0;
+                var countFixed = 0;
+                var countNotFixed = 0;
                 foreach (var mistake in submissions)
                 {
                     if (!mistake.IsFixed && mistake.ErrorFlag == 0)
                     {
-                        Console.Out.WriteLine("======================================");
-                        Console.Out.WriteLine("Mistake " + i);
-                        Console.Out.WriteLine("======================================");
-                        Console.Out.WriteLine("Before");
-                        Console.Out.WriteLine("======================================");
-                        Console.Out.WriteLine(mistake.before);
-                        Console.Out.WriteLine("======================================");
-                        Console.Out.WriteLine("After");
-                        Console.Out.WriteLine("======================================");
-                        Console.Out.WriteLine(mistake.after);
-                        Console.Out.WriteLine("======================================");
-                        Console.Out.WriteLine("Diff");
-                        Console.Out.WriteLine("======================================");
-                        Console.Out.WriteLine(mistake.diff);
+                        
+
+                        if (backupClass != null)
+                        {
+                            foreach (var mistakes in backupClass)
+                            {
+                                if (mistakes.Contains(mistake))
+                                {
+                                    if (mistakes.Count > 1)
+                                    {
+                                        clustersBiggerThanOne++;
+                                        if (mistakes.Count > 2)
+                                            clustersBiggerThanTwo++;
+
+                                        var fixer = new SubmissionFixer();
+                                        var program = SubmissionFixer.LearnProgram(mistakes.Where(m => !m.Equals(mistake)).ToList());
+                                        if (program == null) throw new Exception();
+                                        PythonAst ast = null;
+                                        ast = ASTHelper.ParseContent(mistake.before);
+                                        var input = State.Create(SubmissionFixer.grammar.Value.InputSymbol, NodeWrapper.Wrap(ast));
+                                        var unparser = new Unparser();
+                                        var fixedCode = fixer.TryFix(tests, program, input, unparser);
+                                        if (fixedCode == null)
+                                        {
+                                            Console.Out.WriteLine("Should have fixed");
+                                            countNotFixed++;
+                                        }
+                                        else
+                                        {
+                                            Console.Out.WriteLine("PPROGRAM WAS FIXED");
+                                            countFixed++;
+                                        }
+
+                                        Console.Out.WriteLine("======================================");
+                                        Console.Out.WriteLine("Size of the cluster: " + mistakes.Count);
+                                        Console.Out.WriteLine("======================================");
+                                        Console.Out.WriteLine("Mistake " + i);
+                                        Console.Out.WriteLine("======================================");
+                                        Console.Out.WriteLine("Before");
+                                        Console.Out.WriteLine("======================================");
+                                        Console.Out.WriteLine(mistake.before);
+                                        Console.Out.WriteLine("======================================");
+                                        Console.Out.WriteLine("After");
+                                        Console.Out.WriteLine("======================================");
+                                        Console.Out.WriteLine(mistake.after);
+                                        Console.Out.WriteLine("======================================");
+                                        Console.Out.WriteLine("Diff");
+                                        Console.Out.WriteLine("======================================");
+                                        Console.Out.WriteLine(mistake.diff);
+                                    }
+                                }
+                            }
+                        }
                         i++;
                     }
-                    if (i % 50 == 0)
-                        Console.ReadKey();
+                    //if (i % 50 == 0)
+                    //    Console.ReadKey();
                 }
-                
+                Console.Out.WriteLine("Clusters bigger than one: " + clustersBiggerThanOne);
+                Console.Out.WriteLine("Clusters bigger than two: " + clustersBiggerThanTwo);
+                Console.Out.WriteLine("Fixed: " + countFixed);
+                Console.Out.WriteLine("Not Fixed: " + countNotFixed);
             }
             else
             {

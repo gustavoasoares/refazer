@@ -124,7 +124,7 @@ namespace Tutor
             return isFixed;
         }
 
-        private static Result<Grammar> grammar =
+        public static Result<Grammar> grammar =
             DSLCompiler.LoadGrammarFromFile(@"C:\Users\Gustavo\git\Tutor\Tutor\synthesis\Transformation.grammar");
 
         public static ProgramNode LearnProgram(List<Mistake> list, Mistake next)
@@ -171,7 +171,7 @@ namespace Tutor
         }
 
 
-        private string TryFix(Dictionary<string, long> tests, ProgramNode current, 
+        public string TryFix(Dictionary<string, long> tests, ProgramNode current, 
             State input, Unparser unparser, Tuple<string, List<string>> staticTests = null)
         {            
             object output = null;
@@ -186,7 +186,7 @@ namespace Tutor
             if (output != null)
             {
                 var programSet = output as IEnumerable<PythonNode>;
-                var range = programSet.Count() < 10 ? programSet.ToList() : programSet.ToList().GetRange(0, 10); 
+                var range = programSet.Count() < 100 ? programSet.ToList() : programSet.ToList().GetRange(0, 100); 
                 foreach (var changedProgram in range)
                 {
                     if (staticTests != null && !CheckStaticTests(changedProgram, staticTests))
