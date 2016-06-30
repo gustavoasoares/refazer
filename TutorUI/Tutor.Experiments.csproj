@@ -227,20 +227,19 @@
     <None Include="benchmark_incorrect\Product.json" />
     <None Include="Resources\CountChange-classification.json" />
     <None Include="Resources\G-classification.json" />
+    <None Include="Resources\Product-classification.json" />
     <None Include="Resources\Repeated-classification.json" />
     <None Include="results\attemptperstudent-Accumulate.json" />
     <None Include="results\attemptperstudent-Product.json" />
     <None Include="results\G-mistakes.json" />
-    <None Include="results\TextWriterOutput-product.log" />
+    <None Include="results\CountChange-mistakes.json" />
     <None Include="packages.config" />
     <None Include="Resources\Accumulate-classification.json" />
     <None Include="Resources\construct_check.py" />
-    <None Include="Resources\Product-classification.json" />
-    <None Include="results\bkpRepeated-mistakes.json" />
-    <None Include="results\Product-mistakes.json" />
     <None Include="results\Accumulate-mistakes.json" />
     <None Include="results\Repeated-mistakes.json" />
-    <None Include="results\TextWriterOutput-repeated.log" />
+    <None Include="results\Product-mistakes.json" />
+    <None Include="results\TextWriterOutput-product.log" />
   </ItemGroup>
   <ItemGroup>
     <Analyzer Include="..\packages\Microsoft.CodeAnalysis.Analyzers.1.1.0\analyzers\dotnet\cs\Microsoft.CodeAnalysis.Analyzers.dll" />

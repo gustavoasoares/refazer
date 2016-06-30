@@ -383,7 +383,15 @@ namespace Tutor
         private void Write(ConstantExpressionNode exp)
         {
             if (exp.Value != null)
-                _code.Append(exp.Value.ToString());
+            {
+                if (exp.Value is string)
+                {
+                    _code.Append("'" + exp.Value.ToString() + "'");
+                } else
+                {
+                    _code.Append(exp.Value.ToString());
+                }
+            }
         }
 
         private void Write(CallExpressionNode exp)

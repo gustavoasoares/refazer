@@ -802,8 +802,8 @@ def product(n, term):
         public void TestUnparser2()
         {
             var py = Python.CreateEngine();
-            var code = ParseContent("def identity(n) : \n    return n == 0", py);
-            Assert.AreEqual("\r\ndef identity(n):\r\n    return n==0", new Unparser().Unparse(code));
+            var code = ParseContent("def identity(n) : \n    term(n) == \"teste\"", py);
+            Assert.AreEqual("\r\ndef identity(n):\r\n    term(n)==\"teste\"", new Unparser().Unparse(code));
         }
 
         [TestMethod]

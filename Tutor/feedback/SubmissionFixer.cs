@@ -45,15 +45,8 @@ namespace Tutor
         public bool Fix(Mistake mistake, Dictionary<string, long> tests)
         {
             PythonAst ast = null;
-            try
-            {
-                ast = ASTHelper.ParseContent(mistake.before);
-            }
-            catch (Exception e)
-            {
-                Console.Error.WriteLine(e.Message);
-                return false;
-            }
+            ast = ASTHelper.ParseContent(mistake.before);
+
             var input = State.Create(grammar.Value.InputSymbol, NodeWrapper.Wrap(ast));
             var unparser = new Unparser();
             foreach (var tuple in _classification)

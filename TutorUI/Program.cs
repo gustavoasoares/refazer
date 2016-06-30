@@ -149,9 +149,12 @@ namespace TutorUI
                 Console.Out.WriteLine("Problem: " + problem.Id);
                 int i = 1;
                 var tests = GetTests("product");
-                foreach (var mistake in problem.Mistakes)
+                var fileName = "../../results/" + problemName.ToString() + "-mistakes.json";
+                var submissions = JsonConvert.DeserializeObject<List<Mistake>>(File.ReadAllText(fileName));
+
+                foreach (var mistake in submissions)
                 {
-                    if (!mistake.IsFixed)
+                    if (!mistake.IsFixed && mistake.ErrorFlag == 0)
                     {
                         Console.Out.WriteLine("======================================");
                         Console.Out.WriteLine("Mistake " + i);
@@ -346,6 +349,7 @@ namespace TutorUI
             Console.Out.WriteLine("4. Print mistakes");
             Console.Out.WriteLine("5. Check and Clean submissions");
             Console.Out.WriteLine("6. Print incorrect attempts results");
+            Console.Out.WriteLine("7. Print not fixed submissions");
         }
 
         private static void CheckCanFixItself(Problem problem, int numberOfSubmissions = 0)
@@ -468,6 +472,10 @@ namespace TutorUI
                           orderby entry.Value.Count descending
                           select entry;
 
+            var problem = ProblemManager.Instance.GetProblemByName(problemName);
+            var fixer = new SubmissionFixer();
+            var tests = problem.Tests;
+            var mistakeCount = 0;
             foreach (var mistake in ordered)
             {
                 Console.Out.WriteLine("===========================================");
@@ -480,8 +488,9 @@ namespace TutorUI
                 Console.Out.WriteLine("Examples");
                 Console.Out.WriteLine("===========================================");
                 var numberOfExamples = mistake.Value.Count > 1 ? 2 : 1;
-                for (int i = 0; i < numberOfExamples; i++)
+                for (int i = 0; i < mistake.Value.Count; i++)
                 {
+                    mistakeCount++;
                     Console.Out.WriteLine("Diff");
                     Console.Out.WriteLine("===========================================");
                     var submission = mistake.Value[i];
@@ -494,7 +503,18 @@ namespace TutorUI
                     Console.Out.WriteLine("\r\nAfter:");
                     Console.Out.WriteLine(submission.after);
                     Console.Out.WriteLine("===========================================");
+
+                    if (fixer.IsFixed(tests, submission.SynthesizedAfter)) {
+                        Console.Out.WriteLine("Fixed"); 
+                    } else
+                    {
+                        Console.Out.WriteLine("Not fixed");
+                    }
+
+                    if (mistakeCount % 50 == 0)
+                        Console.ReadKey();
                 }
+                
                 
             }
             Console.Out.WriteLine("Total: " + submissions.Count);
