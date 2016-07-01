@@ -231,7 +231,6 @@
     <None Include="Resources\Repeated-classification.json" />
     <None Include="results\attemptperstudent-Accumulate.json" />
     <None Include="results\attemptperstudent-Product.json" />
-    <None Include="results\G-mistakes.json" />
     <None Include="results\CountChange-mistakes.json" />
     <None Include="packages.config" />
     <None Include="Resources\Accumulate-classification.json" />
@@ -239,7 +238,9 @@
     <None Include="results\Accumulate-mistakes.json" />
     <None Include="results\Repeated-mistakes.json" />
     <None Include="results\Product-mistakes.json" />
+    <None Include="results\G-mistakes.json" />
     <None Include="results\TextWriterOutput-product.log" />
+    <None Include="results\TextWriterOutput-g.log" />
   </ItemGroup>
   <ItemGroup>
     <Analyzer Include="..\packages\Microsoft.CodeAnalysis.Analyzers.1.1.0\analyzers\dotnet\cs\Microsoft.CodeAnalysis.Analyzers.dll" />
