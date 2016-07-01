@@ -130,12 +130,18 @@ namespace Tutor
             Fill();
             _code.Append("print");
             //todo print destination
+
+            var addParenthesis = (stmt.Children.Any() && !(stmt.Children.First() is ParenthesisExpressionNode));
+            if (addParenthesis)
+                _code.Append("(");
             for (var i = 0; i < stmt.Children.Count; i++)
             {
                 Write(stmt.Children[i]);
                 if (i < stmt.Children.Count - 1)
                     _code.Append(", ");
             }
+            if (addParenthesis)
+                _code.Append(")");
         }
 
         private void Write(ForStatementNode stmt)
