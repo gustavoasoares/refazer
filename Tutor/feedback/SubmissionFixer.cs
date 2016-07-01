@@ -124,7 +124,7 @@ namespace Tutor
             return isFixed;
         }
 
-        public Result<Grammar> grammar =
+        public static Result<Grammar> grammar =
             DSLCompiler.LoadGrammarFromFile(@"C:\Users\Gustavo\git\Tutor\Tutor\synthesis\Transformation.grammar");
 
         public ProgramNode LearnProgram(List<Mistake> list, Mistake next)
