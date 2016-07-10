@@ -226,6 +226,7 @@
     <None Include="benchmark_incorrect\G.json" />
     <None Include="benchmark_incorrect\Repeated.json" />
     <None Include="benchmark_incorrect\Product.json" />
+    <None Include="Resources\Accumulate-classification.json" />
     <None Include="Resources\CountChange-classification.json" />
     <None Include="Resources\G-classification.json" />
     <None Include="Resources\Product-classification.json" />
@@ -234,14 +235,13 @@
     <None Include="results\attemptperstudent-Product.json" />
     <None Include="results\CountChange-mistakes.json" />
     <None Include="packages.config" />
-    <None Include="Resources\Accumulate-classification.json" />
     <None Include="Resources\construct_check.py" />
     <None Include="results\Accumulate-mistakes.json" />
+    <None Include="results\Repeated-mistakes.json" />
     <None Include="results\Product-mistakes.json" />
+    <None Include="results\Accumulate-mistakes.json" />
     <None Include="results\G-mistakes.json" />
-    <None Include="results\TextWriterOutput-product.log" />
     <None Include="results\TextWriterOutput-g.log" />
-    <None Include="results\TextWriterOutput.log" />
   </ItemGroup>
   <ItemGroup>
     <Analyzer Include="..\packages\Microsoft.CodeAnalysis.Analyzers.1.1.0\analyzers\dotnet\cs\Microsoft.CodeAnalysis.Analyzers.dll" />
@@ -253,7 +253,9 @@
       <Name>Tutor</Name>
     </ProjectReference>
   </ItemGroup>
-  <ItemGroup />
+  <ItemGroup>
+    <Content Include="results\TextWriterOutput-accumulate.txt" />
+  </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.
