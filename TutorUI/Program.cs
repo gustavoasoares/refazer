@@ -81,6 +81,9 @@ namespace TutorUI
                         else if (choice == 4)
                         {
                             RunExperiment(problem, incorrect: true);
+                        } else if (choice == 5)
+                        {
+                            RunBootstrapExperiment(problem); 
                         }
                     }
                        
@@ -142,6 +145,134 @@ namespace TutorUI
             Console.ReadKey();
         }
 
+        private static void RunBootstrapExperiment(Problem problem)
+        {
+            var fixedStudents = new List<int>();
+            var classification = new ConcurrentQueue<Tuple<List<Mistake>, ProgramNode>>();
+            var fixer = new SubmissionFixer(classification);
+            var incorrect = new List<Mistake>();
+            foreach (var student in problem.AttemptsPerStudent)
+            {
+                incorrect.AddRange(student.Value);
+            }
+            incorrect.Sort((a, b) => a.SubmissionTime.CompareTo(b.SubmissionTime));
+
+            var correctList = problem.Mistakes.ToList();
+            correctList.Sort((a, b) => a.SubmissionTime.CompareTo(b.SubmissionTime));
+            var correct = new Queue<Mistake>(correctList);
+
+            var tempFixer = new SubmissionFixer();
+            var count = 0;
+            foreach (var mistake in incorrect)
+            {
+                count++;
+                //if this student has already received a hint, there will be no attempts after that
+                //so ignore attempts from student's that already received hints
+                if (fixedStudents.Contains(mistake.studentId))
+                    continue;
+
+                while (mistake.SubmissionTime.CompareTo(correct.First().SubmissionTime) > 0)
+                {
+                    var pair = correct.Dequeue();
+                    //if this student has already received a hint, there will be no attempts after that
+                    //so ignore correct solutions from student's that already received hints
+                    if (fixedStudents.Contains(pair.studentId))
+                        continue;
+                    var hasGroup = false;
+                    foreach (var current in classification)
+                    {
+                        try
+                        {
+                            var topProgram = tempFixer.LearnProgram(current.Item1, pair);
+                            if (topProgram != null)
+                            {
+                                current.Item1.Add(pair);
+                                pair.GeneratedFix = topProgram.ToString();
+                                Source.TraceEvent(TraceEventType.Information, 6, "Added");
+                                hasGroup = true;
+                                break;
+                            }
+                        }
+                        catch (SyntaxErrorException)
+                        {
+                            Source.TraceEvent(TraceEventType.Information, 0, "Input does not compile");
+                        }
+                        catch (NotImplementedException e)
+                        {
+                            Source.TraceEvent(TraceEventType.Error, 2,
+                                "Transformation not implemented:\r\nbefore\r\n" + pair.before + " \r\n" +
+                                pair.after + "\r\n" + e.Message);
+                        }
+                    }
+                    if (!hasGroup)
+                    {
+                        var newList = new List<Mistake>() { pair };
+                        try
+                        {
+                            var program = tempFixer.LearnProgram(newList);
+                            classification.Enqueue(Tuple.Create(newList, program));
+                        }
+                        catch (SyntaxErrorException)
+                        {
+                            Source.TraceEvent(TraceEventType.Information, 0, "Input does not compile");
+                        }
+                        catch (NotImplementedException e)
+                        {
+                            Source.TraceEvent(TraceEventType.Error, 2,
+                                "Transformation not implemented:\r\nbefore\r\n" + pair.before + " \r\n" +
+                                pair.after + "\r\n" + e.Message);
+                        }
+                    }
+                }
+
+                Source.TraceEvent(TraceEventType.Start, 1, "Submission " + count);
+                var unparser = new Unparser();
+                PythonNode before = null;
+                try
+                {
+                    before = NodeWrapper.Wrap(ASTHelper.ParseContent(mistake.before));
+                    before = NodeWrapper.Wrap(ASTHelper.ParseContent(unparser.Unparse(before)));
+                    var isFixed = fixer.Fix(mistake, problem.Tests);
+                    mistake.IsFixed = isFixed;
+                    if (isFixed)
+                    {
+                        Source.TraceEvent(TraceEventType.Information, 4,
+                            "Program fixed: " + mistake.Id);
+                        fixedStudents.Add(mistake.studentId);
+                    }
+                    else
+                    {
+                        Source.TraceEvent(TraceEventType.Error, 3,
+                            "Program not fixed:\r\nbefore\r\n" + mistake.before + " \r\n" +
+                            mistake.after);
+                    }
+                }
+                catch (SyntaxErrorException)
+                {
+                    mistake.ErrorFlag = 1;
+                    Source.TraceEvent(TraceEventType.Information, 0, "Input does not compile");
+                }
+                catch (NotImplementedException)
+                {
+                    mistake.ErrorFlag = 2;
+                    Source.TraceEvent(TraceEventType.Error, 0, mistake.before);
+                }
+                catch (Exception)
+                {
+                    Source.TraceEvent(TraceEventType.Error, 0, "Transformation not tested");
+                }
+
+            }
+            Source.TraceEvent(TraceEventType.Information, 1, "Summary of results");
+            Source.TraceEvent(TraceEventType.Information, 1, "Students that received hints");
+            foreach (var student in fixedStudents)
+            {
+                Source.TraceEvent(TraceEventType.Information, 1, student.ToString());
+            }
+            var submissionsToJson = JsonConvert.SerializeObject(incorrect);
+            File.WriteAllText(problem.Id + "_bootstrap.json", submissionsToJson);
+        }
+
         private static void PrintNotFixed(ProblemNames problemName)
         {
             var problem = ProblemManager.Instance.GetProblemByName(problemName);
@@ -185,23 +316,23 @@ namespace TutorUI
                                             clustersBiggerThanTwo++;
 
                                         var fixer = new SubmissionFixer();
-                                        var program = fixer.LearnProgram(mistakes.Where(m => !m.Equals(mistake)).ToList());
-                                        if (program == null) throw new Exception();
+                                        //var program = fixer.LearnProgram(mistakes.Where(m => !m.Equals(mistake)).ToList());
+                                        //if (program == null) throw new Exception();
                                         PythonAst ast = null;
                                         ast = ASTHelper.ParseContent(mistake.before);
                                         var input = State.Create(SubmissionFixer.grammar.Value.InputSymbol, NodeWrapper.Wrap(ast));
                                         var unparser = new Unparser();
-                                        var fixedCode = fixer.TryFix(tests, program, input, unparser);
-                                        if (fixedCode == null)
-                                        {
-                                            Console.Out.WriteLine("Should have fixed");
-                                            countNotFixed++;
-                                        }
-                                        else
-                                        {
-                                            Console.Out.WriteLine("PPROGRAM WAS FIXED");
-                                            countFixed++;
-                                        }
+                                        //var fixedCode = fixer.TryFix(tests, program, input, unparser);
+                                        //if (fixedCode == null)
+                                        //{
+                                        //    Console.Out.WriteLine("Should have fixed");
+                                        //    countNotFixed++;
+                                        //}
+                                        //else
+                                        //{
+                                        //    Console.Out.WriteLine("PPROGRAM WAS FIXED");
+                                        //    countFixed++;
+                                        //}
 
                                         Console.Out.WriteLine("======================================");
                                         Console.Out.WriteLine("Size of the cluster: " + mistakes.Count);
@@ -353,14 +484,6 @@ namespace TutorUI
                 foreach (var mistake in problem.Mistakes)
                 {
 
-                    if (subFixer.IsFixed(tests, mistake.after))
-                    {
-                        Console.Out.WriteLine("Fixed " + ++isfixed);
-                    }
-                    else
-                    {
-                        Console.Out.WriteLine("NotFixed " + ++notfixed);
-                    }
                     //Console.Out.WriteLine("======================================");
                     //Console.Out.WriteLine("Mistake " + i);
                     //Console.Out.WriteLine("======================================");
@@ -510,72 +633,82 @@ namespace TutorUI
             var submissions = JsonConvert.DeserializeObject<List<Mistake>>(File.ReadAllText(fileName));
 
             var cluster = new Dictionary<string, List<Mistake>>();
+            var unparser = new Unparser();
             foreach (var submission in submissions)
             {
                 if (submission.IsFixed)
                 {
-                    if (cluster.ContainsKey(submission.UsedFix))
-                    {
-                        cluster[submission.UsedFix].Add(submission);
-                    }
-                    else
-                    {
-                        cluster.Add(submission.UsedFix, new List<Mistake>() {submission});
-                    }
-                }               
-            }
-            var ordered = from entry in cluster
-                          orderby entry.Value.Count descending
-                          select entry;
-
-            var problem = ProblemManager.Instance.GetProblemByName(problemName);
-            var fixer = new SubmissionFixer();
-            var tests = problem.Tests;
-            var mistakeCount = 0;
-            foreach (var mistake in ordered)
-            {
-                Console.Out.WriteLine("===========================================");
-                Console.Out.WriteLine("Used program");
-                Console.Out.WriteLine("===========================================");
-                Console.Out.WriteLine(mistake.Key);
-                Console.Out.WriteLine("===========================================");
-                Console.Out.WriteLine("Total submissions: " + mistake.Value.Count);
-                Console.Out.WriteLine("===========================================");
-                Console.Out.WriteLine("Examples");
-                Console.Out.WriteLine("===========================================");
-                var numberOfExamples = mistake.Value.Count > 1 ? 2 : 1;
-                for (int i = 0; i < mistake.Value.Count; i++)
-                {
-                    mistakeCount++;
-                    Console.Out.WriteLine("Diff");
-                    Console.Out.WriteLine("===========================================");
-                    var submission = mistake.Value[i];
-                    Console.Out.WriteLine(submission.diff);
-                    Console.Out.WriteLine("===========================================");
-                    Console.Out.WriteLine("\r\nBefore:");
-                    Console.Out.WriteLine(submission.before);
-                    Console.Out.WriteLine("\r\nFixed After:");
-                    Console.Out.WriteLine(submission.SynthesizedAfter);
-                    Console.Out.WriteLine("\r\nAfter:");
-                    Console.Out.WriteLine(submission.after);
-                    Console.Out.WriteLine("===========================================");
-
-                    if (fixer.IsFixed(tests, submission.SynthesizedAfter)) {
-                        Console.Out.WriteLine("Fixed"); 
-                    } else
-                    {
-                        Console.Out.WriteLine("Not fixed");
-                    }
-
-                    if (mistakeCount % 50 == 0)
-                        Console.ReadKey();
+                    var before = ASTHelper.ParseContent(submission.before);
+                    submission.before = unparser.Unparse(NodeWrapper.Wrap(before));
                 }
-                
-                
+
+                //if (submission.IsFixed)
+                //{
+                //    if (cluster.ContainsKey(submission.UsedFix))
+                //    {
+                //        cluster[submission.UsedFix].Add(submission);
+                //    }
+                //    else
+                //    {
+                //        cluster.Add(submission.UsedFix, new List<Mistake>() {submission});
+                //    }
+                //}               
             }
-            Console.Out.WriteLine("Total: " + submissions.Count);
-            Console.Out.WriteLine("Fixed: " + submissions.Where(e => e.IsFixed).Count());
-            Console.Out.WriteLine("Total of scripts: " + cluster.Count);
+            var submissionsToJson = JsonConvert.SerializeObject(submissions);
+            File.WriteAllText(fileName, submissionsToJson);
+
+            //var ordered = from entry in cluster
+            //              orderby entry.Value.Count descending
+            //              select entry;
+
+            //var problem = ProblemManager.Instance.GetProblemByName(problemName);
+            //var fixer = new SubmissionFixer();
+            //var tests = problem.Tests;
+            //var mistakeCount = 0;
+            //foreach (var mistake in ordered)
+            //{
+            //    Console.Out.WriteLine("===========================================");
+            //    Console.Out.WriteLine("Used program");
+            //    Console.Out.WriteLine("===========================================");
+            //    Console.Out.WriteLine(mistake.Key);
+            //    Console.Out.WriteLine("===========================================");
+            //    Console.Out.WriteLine("Total submissions: " + mistake.Value.Count);
+            //    Console.Out.WriteLine("===========================================");
+            //    Console.Out.WriteLine("Examples");
+            //    Console.Out.WriteLine("===========================================");
+            //    var numberOfExamples = mistake.Value.Count > 1 ? 2 : 1;
+            //    for (int i = 0; i < numberOfExamples; i++)
+            //    {
+            //        mistakeCount++;
+            //        Console.Out.WriteLine("Diff");
+            //        Console.Out.WriteLine("===========================================");
+            //        var submission = mistake.Value[i];
+            //        Console.Out.WriteLine(submission.diff);
+            //        Console.Out.WriteLine("===========================================");
+            //        Console.Out.WriteLine("\r\nBefore:");
+            //        Console.Out.WriteLine(submission.before);
+            //        Console.Out.WriteLine("\r\nFixed After:");
+            //        Console.Out.WriteLine(submission.SynthesizedAfter);
+            //        Console.Out.WriteLine("\r\nAfter:");
+            //        Console.Out.WriteLine(submission.after);
+            //        Console.Out.WriteLine("===========================================");
+
+            //        //if (fixer.IsFixed(tests, submission.SynthesizedAfter)) {
+            //        //    Console.Out.WriteLine("Fixed"); 
+            //        //} else
+            //        //{
+            //        //    Console.Out.WriteLine("Not fixed");
+            //        //}
+
+            //        if (mistakeCount % 50 == 0)
+            //            Console.ReadKey();
+            //    }
+
+
+            //}
+            //Console.Out.WriteLine("Total: " + submissions.Count);
+            //Console.Out.WriteLine("Fixed: " + submissions.Where(e => e.IsFixed).Count());
+            //Console.Out.WriteLine("Total of scripts: " + cluster.Count);
         }
 
         private static void RunExperiment(Problem problem, int numberOfSumissions = 0, bool learn = false, bool incorrect = false)

@@ -50,8 +50,8 @@ namespace Tutor
         public string diff { set; get; }
         public string before { set; get; }
         public string after { set; get; }
+        public DateTime SubmissionTime { get; set; }
 
-        public long Time { get; set; }
         public string SynthesizedAfter { set; get; }
 
         public bool IsFixed { set; get; } = false;

@@ -36,7 +36,8 @@ namespace TutorUI
                     count++;
                     mistake.before = GetQuestion(mistake.before, problemName);
                     mistake.after = GetQuestion(mistake.after, problemName);
-
+                    if (mistake.date != null)
+                        mistake.SubmissionTime = DateTime.Parse(mistake.date);
                     //Notice that some submissions have the same before and after
                     //probabily some error during ok python. Let's igore them for now
                     if (mistake.before.Equals(mistake.after))
@@ -79,6 +80,9 @@ namespace TutorUI
                 submissions.Reverse();
                 foreach (var mistake in submissions)
                 {
+                    if (mistake.date != null)
+                        mistake.SubmissionTime = DateTime.Parse(mistake.date);
+
                     mistake.before = GetQuestion(mistake.before, problemName);
                     if (dic.ContainsKey(mistake.studentId))
                     {
