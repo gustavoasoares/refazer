@@ -400,6 +400,7 @@ namespace TutorUI
             Console.Out.WriteLine("2. Run all submissions");
             Console.Out.WriteLine("3. Set number of submissions");
             Console.Out.WriteLine("4. Run on incorrect submissions");
+            Console.Out.WriteLine("5. Bootstrap");
         }
 
         private static void CleanProblemSumissions(ProblemNames problemName)
