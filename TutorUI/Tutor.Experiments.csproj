@@ -237,11 +237,12 @@
     <None Include="packages.config" />
     <None Include="Resources\construct_check.py" />
     <None Include="results\Accumulate-mistakes.json" />
-    <None Include="results\Repeated-mistakes.json" />
     <None Include="results\G-mistakes.json" />
     <None Include="results\Product-mistakes.json" />
+    <None Include="results\Repeated-mistakes.json" />
     <None Include="results\TextWriterOutput-g.log" />
     <None Include="results\TextWriterOutput-product.log" />
+    <None Include="results\TextWriterOutput-repeated.log" />
   </ItemGroup>
   <ItemGroup>
     <Analyzer Include="..\packages\Microsoft.CodeAnalysis.Analyzers.1.1.0\analyzers\dotnet\cs\Microsoft.CodeAnalysis.Analyzers.dll" />
