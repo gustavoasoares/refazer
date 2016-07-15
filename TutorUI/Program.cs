@@ -123,8 +123,19 @@ namespace TutorUI
                 case (int)Options.CleanData:
                     PrintProblemsMenu();
                     choice = int.Parse(Console.ReadLine());
+
                     problemName = (ProblemNames)choice;
-                    CleanProblemSumissions(problemName);
+                    PrintCleaningOptions();
+                    choice = int.Parse(Console.ReadLine());
+                    if (choice == 1)
+                    {
+                        CleanProblemSumissions(problemName);
+                    }
+                    else if (choice == 2)
+                    {
+                        CleanIncorrectBenchmark(problemName);
+                    }
+                   
                     break;
                 case (int)Options.PrintIncorretAttempts:
                     PrintProblemsMenu();
@@ -143,6 +154,17 @@ namespace TutorUI
                     break;
             }
             Console.ReadKey();
+        }
+
+        private static void CleanIncorrectBenchmark(ProblemNames problemName)
+        {
+            ProblemManager.Instance.ExtractFunctionAndSaveIncorrectBenchmark(problemName);
+        }
+
+        private static void PrintCleaningOptions()
+        {
+            Console.Out.WriteLine("1. Remove incorrect input/output examples");
+            Console.Out.WriteLine("2. Extract problem functions from incorrect benchmark");
         }
 
         private static void RunBootstrapExperiment(Problem problem)

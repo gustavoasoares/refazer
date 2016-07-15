@@ -29,7 +29,7 @@ namespace TutorUI
                 var submissions =
                     JsonConvert.DeserializeObject<List<Mistake>>(File.ReadAllText(file.FullName, Encoding.ASCII));
                 var mistakes = new List<Mistake>();
-                var count = 1; 
+                var count = 1;
                 foreach (var mistake in submissions)
                 {
                     mistake.Id = count;
@@ -52,16 +52,16 @@ namespace TutorUI
             AddIncorrectAttempts();
         }
 
-        private Tuple<string, List<string>>  GetStaticTests(ProblemNames problem)
+        private Tuple<string, List<string>> GetStaticTests(ProblemNames problem)
         {
             switch (problem)
             {
                 case ProblemNames.Summation:
-                    return Tuple.Create("summation_using_accumulate", new List<string>() { "recursion", "for", "while" });
+                    return Tuple.Create("summation_using_accumulate", new List<string>() {"recursion", "for", "while"});
                 case ProblemNames.G:
-                    return Tuple.Create("g", new List<string>() { "for", "while" });
+                    return Tuple.Create("g", new List<string>() {"for", "while"});
                 case ProblemNames.G_iter:
-                    return Tuple.Create("g_iter", new List<string>() { "recursion"});
+                    return Tuple.Create("g_iter", new List<string>() {"recursion"});
                 default:
                     return null;
             }
@@ -72,7 +72,7 @@ namespace TutorUI
             var dir = new DirectoryInfo("../../benchmark_incorrect/");
             foreach (var file in dir.GetFiles())
             {
-                var problemName = (ProblemNames)Enum.Parse(typeof(ProblemNames), file.Name.Split('.')[0]);
+                var problemName = (ProblemNames) Enum.Parse(typeof (ProblemNames), file.Name.Split('.')[0]);
 
                 var submissions =
                     JsonConvert.DeserializeObject<List<Mistake>>(File.ReadAllText(file.FullName, Encoding.ASCII));
@@ -145,7 +145,7 @@ def increment(x):
                         {"assert(repeated(square, 3)(5)==390625)", 390625},
                         {"assert(repeated(square, 0)(5)==5)", 5}
                     };
-                case ProblemNames.G: 
+                case ProblemNames.G:
                     return new Dictionary<string, long>
                     {
                         {testSetup + "assert(g(1)==1)", 15},
@@ -258,6 +258,27 @@ def increment(x):
             var dir = new DirectoryInfo("../../benchmark/");
             var submissionsToJson = JsonConvert.SerializeObject(problem.Mistakes);
             File.WriteAllText(dir + problem.Id + ".json", submissionsToJson);
+        }
+
+        public void ExtractFunctionAndSaveIncorrectBenchmark(ProblemNames problemName)
+        {
+            var problem = GetProblemByName(problemName);
+            if (problem != null)
+            {
+                var file = new DirectoryInfo("../../benchmark_incorrect/" + problem.Id + ".json");
+                var submissions =
+                    JsonConvert.DeserializeObject<List<Mistake>>(File.ReadAllText(file.FullName, Encoding.ASCII));
+
+                foreach (var mistake in submissions)
+                {
+                    if (mistake.date != null)
+                        mistake.SubmissionTime = DateTime.Parse(mistake.date);
+                    mistake.before = GetQuestion(mistake.before, problemName);
+                }
+                var submissionsToJson = JsonConvert.SerializeObject(submissions);
+                File.WriteAllText(file.FullName, submissionsToJson);
+            }
+
         }
     }
 }
