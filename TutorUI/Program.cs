@@ -14,6 +14,7 @@ using IronPython.Compiler.Ast;
 using Microsoft.ProgramSynthesis;
 using Microsoft.ProgramSynthesis.AST;
 using Microsoft.Scripting;
+using Microsoft.Scripting.Utils;
 using Newtonsoft.Json;
 using Tutor;
 
@@ -29,7 +30,8 @@ namespace TutorUI
             PrintMistakes = 4,
             CleanData = 5, 
             PrintIncorretAttempts = 6,
-            PrintNotFixed = 7
+            PrintNotFixed = 7,
+            GetTimeTable =8
         }
 
         
@@ -148,6 +150,13 @@ namespace TutorUI
                     choice = int.Parse(Console.ReadLine());
                     problemName = (ProblemNames)choice;
                     PrintNotFixed(problemName);
+                    break;
+                case (int)Options.GetTimeTable:
+                    PrintProblemsMenu();
+                    choice = int.Parse(Console.ReadLine());
+                    problemName = (ProblemNames)choice;
+                    problem = ProblemManager.Instance.GetProblemByName(problemName);
+                    ExtractTimeFromIncorrectResults(problem);
                     break;
                 default:
                     Console.Out.WriteLine("Invalid option.");
@@ -552,6 +561,7 @@ namespace TutorUI
             Console.Out.WriteLine("5. Check and Clean submissions");
             Console.Out.WriteLine("6. Print incorrect attempts results");
             Console.Out.WriteLine("7. Print not fixed submissions");
+            Console.Out.WriteLine("8. Extract time table from incorrect results");
         }
 
         private static void CheckCanFixItself(Problem problem, int numberOfSubmissions = 0)
@@ -944,7 +954,57 @@ namespace TutorUI
             }
         }
 
-        private static void RunIncorrectAttemptExperiment(Problem problem, ConcurrentQueue<Tuple<List<Mistake>, ProgramNode>> classification)
+
+        private static void ExtractTimeFromIncorrectResults(Problem problem)
+        {
+            var results = new Queue<string>(File.ReadAllLines("../../results/" + problem.Id +".csv"));
+            //remove header
+            results.Dequeue();
+
+            //the list of results / 2 should have the same size of the list of students 
+            //because we have two lines per result (no hint and hint) 
+            Debug.Assert(results.Count /2 == problem.AttemptsPerStudent.Count);
+
+            var sb = new StringBuilder();
+            var count = 1;
+            sb.Append("Subject, Feedback, Time" + Environment.NewLine);
+            var countIncorrect = 0;
+            foreach (var student in problem.AttemptsPerStudent.Reverse())
+            {
+                if (count == 395)
+                    Console.Out.WriteLine("Achei");
+                var submissions = student.Value;
+
+                var l1 = submissions.ToList();
+                var l2 = submissions.ToList();
+                l2.Sort((a, b) => a.SubmissionTime.CompareTo(b.SubmissionTime));
+
+                if (!l1.SequenceEqual(l2))
+                {
+                    Console.Out.WriteLine("this is wrong");
+                    countIncorrect++;
+                }
+
+                var startTime = submissions.First().SubmissionTime;
+
+                //the first line is the hint treatment
+                var hintResult = results.Dequeue().Split(',');
+                var attempt = int.Parse(hintResult[2]);
+                var hintEndTime = attempt != 0 ? submissions[attempt - 1].SubmissionTime : submissions.Last().SubmissionTime;
+                var noHintEndTime = submissions.Last().SubmissionTime;
+
+                sb.Append(count + ",hint," + hintEndTime.Subtract(startTime).TotalMinutes + Environment.NewLine);
+                sb.Append(count + ",no hint," + noHintEndTime.Subtract(startTime).TotalMinutes + Environment.NewLine);
+
+                //the second line is the no hint treatment, just ignore
+                var noHintResult = results.Dequeue();
+                count++;
+            }
+            Console.Out.WriteLine(sb.ToString());
+        }
+
+        private static
+            void RunIncorrectAttemptExperiment(Problem problem, ConcurrentQueue<Tuple<List<Mistake>, ProgramNode>> classification)
         {
             var fixer = new SubmissionFixer(classification);
             var results = new System.Collections.Concurrent.ConcurrentDictionary<int, Tuple<int,int>>();
