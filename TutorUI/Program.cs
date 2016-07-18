@@ -1146,7 +1146,7 @@ namespace TutorUI
             ValidateResults(results, problem.AttemptsPerStudent, problem);
         }
 
-        private static void ValidateResults(ConcurrentDictionary<int, Tuple<int, int>> results, IDictionary<int, IList<Mistake>> attemptsPerStudent, Problem p)
+        private static void ValidateResults(ConcurrentDictionary<int, Tuple<int, int>> results, IDictionary<int, List<Mistake>> attemptsPerStudent, Problem p)
         {
             foreach (var student in attemptsPerStudent)
             {
