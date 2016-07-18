@@ -31,7 +31,8 @@ namespace TutorUI
             CleanData = 5, 
             PrintIncorretAttempts = 6,
             PrintNotFixed = 7,
-            GetTimeTable =8
+            GetTimeTable =8,
+            GetBootstrapTable=9
         }
 
         
@@ -157,6 +158,13 @@ namespace TutorUI
                     problemName = (ProblemNames)choice;
                     problem = ProblemManager.Instance.GetProblemByName(problemName);
                     ExtractTimeFromIncorrectResults(problem);
+                    break;
+                case (int)Options.GetBootstrapTable:
+                    PrintProblemsMenu();
+                    choice = int.Parse(Console.ReadLine());
+                    problemName = (ProblemNames)choice;
+                    problem = ProblemManager.Instance.GetProblemByName(problemName);
+                    ExtractBootsrapTable(problem);
                     break;
                 default:
                     Console.Out.WriteLine("Invalid option.");
@@ -954,6 +962,45 @@ namespace TutorUI
             }
         }
 
+        private static void ExtractBootsrapTable(Problem problem)
+        {
+            var fileName = "../../results/" + problem.Id.ToString() + "_bootstrap.json";
+            var submissions = JsonConvert.DeserializeObject<List<Mistake>>(File.ReadAllText(fileName));
+            var students = new Dictionary<int, List<Mistake>>();
+            foreach (var submission in submissions)
+            {
+                if (students.ContainsKey(submission.studentId))
+                {
+                    students[submission.studentId].Add(submission);
+                }
+                else
+                {
+                    students.Add(submission.studentId, new List<Mistake>() {submission});
+                }
+            }
+            var csv = new StringBuilder();
+            csv.Append("Subject,Feedback,Attempt,Time" + Environment.NewLine);
+            foreach (var student in students)
+            {
+                var attempts = student.Value;
+                attempts.Sort((a,b)=> a.SubmissionTime.CompareTo(b.SubmissionTime));
+                var attemptIndex = 0;
+                var startTime = attempts.First().SubmissionTime;
+                if (attempts.Exists(a => a.IsFixed))
+                {
+                    var index = attempts.FindIndex(a => a.IsFixed);
+                    attemptIndex = index + 1; 
+                }
+                var hintEndTime = attemptIndex == 0
+                    ? attempts.Last().SubmissionTime
+                    : attempts[attemptIndex - 1].SubmissionTime;
+                var totalTime = hintEndTime.Subtract(startTime).TotalMinutes;
+                csv.Append(student.Key + ",hint," + attemptIndex + "," + totalTime + Environment.NewLine);
+                csv.Append(student.Key + ",no hint," + attempts.Count + "," + attempts.Last().SubmissionTime.Subtract(startTime).TotalMinutes + Environment.NewLine);
+            }
+            Console.Out.WriteLine(csv.ToString());
+        }
+
 
         private static void ExtractTimeFromIncorrectResults(Problem problem)
         {
@@ -1013,7 +1060,7 @@ namespace TutorUI
             watch.Start();
             try
             {
-                foreach (var student in problem.AttemptsPerStudent)
+                Parallel.ForEach(problem.AttemptsPerStudent, (student) =>
                 {
                     Source.TraceEvent(TraceEventType.Start, 1, "Student " + student.Key);
                     var submissions = student.Value;
@@ -1022,7 +1069,8 @@ namespace TutorUI
                     foreach (var mistake in submissions)
                     {
                         attemptCount++;
-                        Source.TraceEvent(TraceEventType.Start, 1, "Student " + student.Key + ", Attempt " + attemptCount);
+                        Source.TraceEvent(TraceEventType.Start, 1,
+                            "Student " + student.Key + ", Attempt " + attemptCount);
                         var unparser = new Unparser();
                         PythonNode before = null;
                         try
@@ -1072,8 +1120,7 @@ namespace TutorUI
                     }
                     var newItem = Tuple.Create(fixedAttempt, submissions.Count);
                     results.AddOrUpdate(student.Key, newItem, (key, existing) => newItem);
-                }
-
+                });
             }
             catch (AggregateException)
             {
@@ -1082,11 +1129,16 @@ namespace TutorUI
             watch.Stop();
             double total = ((double) watch.ElapsedMilliseconds / 1000)/60;
             Source.TraceEvent(TraceEventType.Information, 0, "Total time: " + total);
-            Source.TraceEvent(TraceEventType.Information, 5, "Fixed, Total");
+            Source.TraceEvent(TraceEventType.Information, 5, "Subject,Feedback,Attempt,Time");
             foreach (var current in results)
             {
                 var result = current.Value;
-                Source.TraceEvent(TraceEventType.Information, 5, result.Item1 + ", " + result.Item2);
+                var attempts = problem.AttemptsPerStudent[current.Key];
+                var startTime = attempts.First().SubmissionTime;
+                var endTime = attempts.Last().SubmissionTime;
+                var hintEndTime = result.Item1 != 0 ? attempts[result.Item1 - 1].SubmissionTime : endTime;
+                Source.TraceEvent(TraceEventType.Information, 5, current.Key + ",hint," + result.Item1 + "," + hintEndTime.Subtract(startTime).TotalMinutes);
+                Source.TraceEvent(TraceEventType.Information, 5, current.Key + ",no hint," + result.Item2 + "," + endTime.Subtract(startTime).TotalMinutes);
             }
             var submissionsToJson = JsonConvert.SerializeObject(problem.AttemptsPerStudent);
             File.WriteAllText("attemptperstudent-" + problem.Id + ".json", submissionsToJson);

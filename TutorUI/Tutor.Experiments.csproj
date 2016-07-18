@@ -240,10 +240,14 @@
     <None Include="results\Accumulate-mistakes.json" />
     <None Include="results\G-mistakes.json" />
     <None Include="results\g.csv" />
-    <None Include="results\Product-mistakes.json" />
     <None Include="results\product.csv" />
     <None Include="results\Repeated-mistakes.json" />
     <None Include="results\repeated.csv" />
+    <None Include="results\G_bootstrap.json" />
+    <None Include="results\Product-mistakes.json" />
+    <None Include="results\Product_bootstrap.json" />
+    <None Include="results\Repeated-mistakes.json" />
+    <None Include="results\Repeated_bootstrap.json" />
     <None Include="results\TextWriterOutput-g.log" />
     <None Include="results\TextWriterOutput-product.log" />
     <None Include="results\TextWriterOutput-repeated.log" />
@@ -259,6 +263,9 @@
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>
+    <Content Include="results\g-bootstrap.txt" />
+    <Content Include="results\product-bootstrap.txt" />
+    <Content Include="results\Repeated-bootstract.txt" />
     <Content Include="results\TextWriterOutput-accumulate.txt" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />

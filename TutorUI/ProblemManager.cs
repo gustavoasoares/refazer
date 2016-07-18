@@ -76,7 +76,7 @@ namespace TutorUI
 
                 var submissions =
                     JsonConvert.DeserializeObject<List<Mistake>>(File.ReadAllText(file.FullName, Encoding.ASCII));
-                var dic = new Dictionary<int, IList<Mistake>>();
+                var dic = new Dictionary<int, List<Mistake>>();
                 submissions.Reverse();
                 foreach (var mistake in submissions)
                 {
@@ -95,6 +95,10 @@ namespace TutorUI
                     {
                         dic.Add(mistake.studentId, new List<Mistake>() {mistake});
                     }
+                }
+                foreach (var student in dic)
+                {
+                    student.Value.Sort((a,b) => a.SubmissionTime.CompareTo(b.SubmissionTime));
                 }
                 var problem = GetProblemByName(problemName);
                 problem.AttemptsPerStudent = dic;

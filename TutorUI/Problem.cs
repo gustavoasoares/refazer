@@ -11,7 +11,7 @@ namespace TutorUI
         internal string Id { get; }
         internal IEnumerable<Mistake> Mistakes { get; set; }
 
-        internal IDictionary<int, IList<Mistake>> AttemptsPerStudent { get; set; }
+        internal IDictionary<int, List<Mistake>> AttemptsPerStudent { get; set; }
         internal Dictionary<string, long> Tests { get; set; }
 
         internal Tuple<string, List<string>> StaticTests { get; set; } 
