@@ -232,6 +232,7 @@
     <None Include="Resources\Product-classification.json" />
     <None Include="Resources\Repeated-classification.json" />
     <None Include="results\accumulate.csv" />
+    <None Include="results\Accumulate_bootstrap.json" />
     <None Include="results\attemptperstudent-Accumulate.json" />
     <None Include="results\attemptperstudent-Product.json" />
     <None Include="results\CountChange-mistakes.json" />
