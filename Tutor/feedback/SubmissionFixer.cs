@@ -351,6 +351,14 @@ namespace Tutor
                         if (pythonNode is WhileStatementNode)
                             Passed = false;
                         break;
+                    case "Assign":
+                        if (pythonNode is AssignmentStatementNode)
+                            Passed = false;
+                        break;
+                    case "AugAssign":
+                        if (pythonNode is AugmentedAssignStatementNode)
+                            Passed = false;
+                        break;
                 }
             }
             return Passed;
