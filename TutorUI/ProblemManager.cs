@@ -11,7 +11,7 @@ namespace TutorUI
     enum ProblemNames
     {
         Product = 1, Repeated =2, CountChange = 3, Accumulate = 4, FilteredAccumulate = 5, Summation = 6,
-        G = 7, G_iter = 8, Pingping = 9
+        G = 7, G_iter = 8, Pingpong = 9
     }
 
     internal class ProblemManager
@@ -191,6 +191,14 @@ def increment(x):
                         {"assert(summation_using_accumulate(5, triple)==45)", 14},
                     };
                 case ProblemNames.FilteredAccumulate:
+                    return new Dictionary<string, long>
+                    {
+                        {testSetup + "assert(filtered_accumulate(add, 0, true, 5, identity)==15)", 15},
+                        {"assert(filtered_accumulate(add, 11, false, 5, identity)==11)", 11},
+                        {"assert(filtered_accumulate(add, 0, odd, 5, identity)==9)", 9},
+                        {"assert(filtered_accumulate(mul, 1, odd, 5, square)==255)", 255},
+                    };
+                case ProblemNames.Pingpong:
                     return new Dictionary<string, long>
                     {
                         {testSetup + "assert(filtered_accumulate(add, 0, true, 5, identity)==15)", 15},
