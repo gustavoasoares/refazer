@@ -62,6 +62,8 @@ namespace TutorUI
                     return Tuple.Create("g", new List<string>() {"for", "while"});
                 case ProblemNames.G_iter:
                     return Tuple.Create("g_iter", new List<string>() {"recursion"});
+                case ProblemNames.Pingpong:
+                    return Tuple.Create("pingpong", new List<string>() { "Assign", "AugAssign" });
                 default:
                     return null;
             }
@@ -201,10 +203,18 @@ def increment(x):
                 case ProblemNames.Pingpong:
                     return new Dictionary<string, long>
                     {
-                        {testSetup + "assert(filtered_accumulate(add, 0, true, 5, identity)==15)", 15},
-                        {"assert(filtered_accumulate(add, 11, false, 5, identity)==11)", 11},
-                        {"assert(filtered_accumulate(add, 0, odd, 5, identity)==9)", 9},
-                        {"assert(filtered_accumulate(mul, 1, odd, 5, square)==255)", 255},
+                        {testSetup + "assert(pingpong(7)==7)", 7},
+                        {"assert(pingpong(8)==6)", 11},
+                        {"assert(pingpong(15)==1)", 9},
+                        {"assert(pingpong(21)==-1)", 255},
+                        {"assert(pingpong(22)==0)", 255},
+                        {"assert(pingpong(30)==6)", 255},
+                        {"assert(pingpong(68)==2)", 255},
+                        {"assert(pingpong(69)==1)", 255},
+                        {"assert(pingpong(70)==0)", 255},
+                        {"assert(pingpong(71)==1)", 255},
+                        {"assert(pingpong(72)==0)", 255},
+                        {"assert(pingpong(100)==2)", 255},
                     };
             }
             return null;
@@ -247,6 +257,10 @@ def increment(x):
                 case ProblemNames.G_iter:
                     start = backup.IndexOf("def g_iter(", StringComparison.Ordinal);
                     end = backup.IndexOf("def pingpong(", StringComparison.Ordinal);
+                    break;
+                case ProblemNames.Pingpong:
+                    start = backup.IndexOf("def pingpong(", StringComparison.Ordinal);
+                    end = backup.IndexOf("def count_change(", StringComparison.Ordinal);
                     break;
                 default:
                     start = 0;

@@ -217,6 +217,12 @@ namespace Tutor
                 case PythonOperator.In:
                     _code.Append(" in ");
                     break;
+                case PythonOperator.Mod:
+                    _code.Append(" % ");
+                    break;
+                case PythonOperator.FloorDivide:
+                    _code.Append(" // ");
+                    break;
                 default:
                     throw new NotImplementedException("Operator string not defined: " + op);
             }
