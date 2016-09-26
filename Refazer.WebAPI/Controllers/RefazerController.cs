@@ -71,9 +71,9 @@ def increment(x):
             if (input.Examples.Count() == 0)
                 throw new ArgumentException("Examples cannot be empty");
 
-            var transformation = SubmissionFixer.CreateTransformation(input.Examples.First());
-
-            var fixer = new SubmissionFixer(transformation);
+            var fixer = new SubmissionFixer(System.Web.Hosting.HostingEnvironment.MapPath(@"~/Content/"), System.Web.Hosting.HostingEnvironment.MapPath(@"~/bin"));
+            var transformation = fixer.CreateTransformation(input.Examples.First());
+            fixer._classification = transformation;
             foreach (var submission in input.submissions)
             {
                 var isFixed = (bool)submission["is_fixed"];

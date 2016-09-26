@@ -22,24 +22,36 @@ namespace Tutor
 {
     public class SubmissionFixer
     {
-        private ConcurrentQueue<Tuple<List<Mistake>, ProgramNode>> _classification;
+        public ConcurrentQueue<Tuple<List<Mistake>, ProgramNode>> _classification;
         public List<IEnumerable<ProgramNode>> ProsePrograms { get; }
 
         public Dictionary<string, int> UsedPrograms { get; }
 
-        private Result<Grammar> _grammar = DSLCompiler.LoadGrammarFromFile(@"C:\Users\Gustavo\git\Tutor\Tutor\synthesis\Transformation.grammar");
 
-        public SubmissionFixer(ConcurrentQueue<Tuple<List<Mistake>, ProgramNode>> classification)
+
+        public SubmissionFixer(ConcurrentQueue<Tuple<List<Mistake>, ProgramNode>> classification, 
+            string pathToGrammar = @"..\..\..\Tutor\synthesis\", string pathToDslLib = @"..\..\Tutor\bin\debug") : this(pathToGrammar, pathToDslLib)
         {
             _classification = classification;
             ProsePrograms = new List<IEnumerable<ProgramNode>>();
             UsedPrograms = new Dictionary<string, int>();
         }
 
-        public SubmissionFixer()
+        public SubmissionFixer(string pathToGrammar = @"..\..\..\Tutor\synthesis\", string pathToDslLib = @"..\..\Tutor\bin\debug")
         {
             ProsePrograms = new List<IEnumerable<ProgramNode>>();
             UsedPrograms = new Dictionary<string, int>();
+            if (pathToDslLib == null)
+            {
+                pathToDslLib = ".";
+            }
+            if (pathToGrammar == null)
+            {
+                pathToGrammar = "../../../Tutor/synthesis/";
+            }
+            grammar =
+                DSLCompiler.LoadGrammarFromFile(pathToGrammar + @"Transformation.grammar",
+                    libraryPaths: new[] { pathToDslLib });
         }
 
         public bool Fix(Mistake mistake, Dictionary<string, long> tests, bool leaveOneOut = true)
@@ -124,8 +136,9 @@ namespace Tutor
             return isFixed;
         }
 
-        public static Result<Grammar> grammar =
-            DSLCompiler.LoadGrammarFromFile(@"C:\Users\Gustavo\git\Tutor\Tutor\synthesis\Transformation.grammar", libraryPaths: new [] { @"C:\Users\Gustavo\git\Tutor\Tutor\bin\debug" });
+        public  string pathToGrammar;
+        public  string pathToDslLib;
+        public  Result<Grammar> grammar;
 
         public ProgramNode LearnProgram(List<Mistake> list, Mistake next)
         {
@@ -140,7 +153,7 @@ namespace Tutor
             return null;
         }
 
-        public static ProgramNode LearnProgram(List<Mistake> mistakes)
+        public ProgramNode LearnProgram(List<Mistake> mistakes)
         {
             var examples = new Dictionary<State, object>();
             var unparser = new Unparser();
@@ -317,7 +330,7 @@ namespace Tutor
             return false;
         }
 
-        public static ConcurrentQueue<Tuple<List<Mistake>, ProgramNode>> CreateTransformation(Dictionary<string, string> example)
+        public ConcurrentQueue<Tuple<List<Mistake>, ProgramNode>> CreateTransformation(Dictionary<string, string> example)
         {
             var result = new ConcurrentQueue<Tuple<List<Mistake>, ProgramNode>>();
             var unparser = new Unparser();
