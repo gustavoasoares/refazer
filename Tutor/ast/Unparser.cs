@@ -27,9 +27,13 @@ namespace Tutor
             {
                 ast.Children.ForEach(e => Write(e));
             }
-            catch (ArgumentOutOfRangeException e)
+            catch (ArgumentOutOfRangeException)
             {
-                Console.Out.WriteLine(e.StackTrace);
+                //Console.Out.WriteLine("Invalid output program");
+            }
+            catch (AggregateException)
+            {
+                //Console.Out.WriteLine("Invalid output program");
             }
             return _code.ToString();
         }
@@ -61,8 +65,42 @@ namespace Tutor
             else if (stmt is UnaryExpressionNode) Write((UnaryExpressionNode)stmt);
             else if (stmt is ParameterNode) Write((ParameterNode)stmt);
             else if (stmt is PrintStatementNode) Write((PrintStatementNode)stmt);
+            else if (stmt is FromImportStatementNode) Write((FromImportStatementNode)stmt);
             else
                 throw new NotImplementedException();
+        }
+
+        private void Write(FromImportStatementNode stmt)
+        {
+            
+            if (stmt.Children.Any())
+            {
+                Fill();
+                _code.Append("from ");
+                var root = stmt.Children.First().Value as string[];
+                if (root != null)
+                {
+                    for (var i = 0; i < root.Length; i++)
+                    {
+                        var name = root[i];
+                        _code.Append(name);
+                        if (i < root.Length - 1)
+                            _code.Append(", ");
+                    }
+                    _code.Append(" import ");
+                    var names = stmt.Value as string[];
+                    if (names != null)
+                    {
+                        for (var i = 0; i < names.Length; i++)
+                        {
+                            var name = names[i];
+                            _code.Append(name);
+                            if (i < names.Length - 1)
+                                _code.Append(", ");
+                        }
+                    }
+                }
+            }
         }
 
         private void Write(ImportStatementNode stmt)
@@ -92,12 +130,18 @@ namespace Tutor
             Fill();
             _code.Append("print");
             //todo print destination
+
+            var addParenthesis = (stmt.Children.Any() && !(stmt.Children.First() is ParenthesisExpressionNode));
+            if (addParenthesis)
+                _code.Append("(");
             for (var i = 0; i < stmt.Children.Count; i++)
             {
                 Write(stmt.Children[i]);
                 if (i < stmt.Children.Count - 1)
                     _code.Append(", ");
             }
+            if (addParenthesis)
+                _code.Append(")");
         }
 
         private void Write(ForStatementNode stmt)
@@ -169,6 +213,15 @@ namespace Tutor
                     break;
                 case PythonOperator.Not:
                     _code.Append("not");
+                    break;
+                case PythonOperator.In:
+                    _code.Append(" in ");
+                    break;
+                case PythonOperator.Mod:
+                    _code.Append(" % ");
+                    break;
+                case PythonOperator.FloorDivide:
+                    _code.Append(" // ");
                     break;
                 default:
                     throw new NotImplementedException("Operator string not defined: " + op);
@@ -341,7 +394,16 @@ namespace Tutor
 
         private void Write(ConstantExpressionNode exp)
         {
-            _code.Append(exp.Value);
+            if (exp.Value != null)
+            {
+                if (exp.Value is string)
+                {
+                    _code.Append("'" + exp.Value.ToString() + "'");
+                } else
+                {
+                    _code.Append(exp.Value.ToString());
+                }
+            }
         }
 
         private void Write(CallExpressionNode exp)

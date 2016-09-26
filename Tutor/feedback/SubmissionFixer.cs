@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
@@ -7,6 +8,7 @@ using System.Threading.Tasks;
 using CsQuery.ExtensionMethods.Internal;
 using IronPython.Compiler.Ast;
 using IronPython.Modules;
+using Microsoft.CodeAnalysis.Semantics;
 using Microsoft.CSharp.RuntimeBinder;
 using Microsoft.ProgramSynthesis;
 using Microsoft.ProgramSynthesis.AST;
@@ -14,19 +16,20 @@ using Microsoft.ProgramSynthesis.Compiler;
 using Microsoft.ProgramSynthesis.Diagnostics;
 using Microsoft.ProgramSynthesis.Learning;
 using Microsoft.ProgramSynthesis.Specifications;
+using Tutor.ast;
 
 namespace Tutor
 {
     public class SubmissionFixer
     {
-        private readonly List<Tuple<List<Mistake>, ProgramNode>> _classification;
+        private ConcurrentQueue<Tuple<List<Mistake>, ProgramNode>> _classification;
         public List<IEnumerable<ProgramNode>> ProsePrograms { get; }
 
         public Dictionary<string, int> UsedPrograms { get; }
 
         private Result<Grammar> _grammar = DSLCompiler.LoadGrammarFromFile(@"C:\Users\Gustavo\git\Tutor\Tutor\synthesis\Transformation.grammar");
 
-        public SubmissionFixer(List<Tuple<List<Mistake>, ProgramNode>> classification)
+        public SubmissionFixer(ConcurrentQueue<Tuple<List<Mistake>, ProgramNode>> classification)
         {
             _classification = classification;
             ProsePrograms = new List<IEnumerable<ProgramNode>>();
@@ -39,7 +42,51 @@ namespace Tutor
             UsedPrograms = new Dictionary<string, int>();
         }
 
-        public bool Fix(Mistake mistake, Dictionary<string, long> tests)
+        public bool Fix(Mistake mistake, Dictionary<string, long> tests, bool leaveOneOut = true)
+        {
+            PythonAst ast = null;
+            ast = ASTHelper.ParseContent(mistake.before);
+
+            var input = State.Create(grammar.Value.InputSymbol, NodeWrapper.Wrap(ast));
+            var unparser = new Unparser();
+            foreach (var tuple in _classification)
+            {
+                var belongs = false;
+                foreach (var mistake1 in tuple.Item1)
+                {
+                    if (mistake.Equals(mistake1))
+                        belongs = true;
+                }
+                if (belongs && leaveOneOut)
+                {
+                    var listWithoutCurrentMistake = tuple.Item1.Where(e => !e.Equals(mistake));
+                    if (!listWithoutCurrentMistake.Any()) return false;
+                    var program = LearnProgram(listWithoutCurrentMistake.ToList());
+                    if (program == null) return false;
+
+                    var fixedCode = TryFix(tests, program, input, unparser);
+                    if (fixedCode != null)
+                    {
+                        mistake.UsedFix = program.ToString();
+                        mistake.SynthesizedAfter = fixedCode;
+                        return true;
+                    }
+                }
+                else
+                {
+                    var fixedCode = TryFix(tests, tuple.Item2, input, unparser);
+                    if (fixedCode != null)
+                    {
+                        mistake.UsedFix = tuple.Item2.ToString();
+                        mistake.SynthesizedAfter = fixedCode;
+                        return true;
+                    }
+                }
+            }
+            return false;
+        }
+
+        public bool ParallelFix(Mistake mistake, Dictionary<string, long> tests)
         {
             PythonAst ast = null;
             try
@@ -52,63 +99,35 @@ namespace Tutor
                 return false;
             }
             var input = State.Create(grammar.Value.InputSymbol, NodeWrapper.Wrap(ast));
-
             var unparser = new Unparser();
-
-            long totalTime = 0;
+            var isFixed = false;
             foreach (var tuple in _classification)
             {
-                mistake.Time = totalTime;
-                var belongs = false;
-                foreach (var mistake1 in tuple.Item1)
-                {
-                    if (mistake.Equals(mistake1))
-                        belongs = true;
-                }
-                if (belongs)
-                {
-                    var listWithoutCurrentMistake = tuple.Item1.Where(e => !e.Equals(mistake));
-                    if (!listWithoutCurrentMistake.Any()) return false;
-                    var program = LearnProgram(listWithoutCurrentMistake.ToList());
-                    if (program == null) return false;
-
-                    var watch = new Stopwatch();
-                    watch.Start();
-                    var fixedCode = TryFix(tests, program, input, unparser);
-                    watch.Stop();
-                    totalTime += watch.ElapsedMilliseconds;
-                    if (fixedCode != null)
-                    {
-                        mistake.Time = totalTime;
-                        mistake.UsedFix = program.ToString();
-                        mistake.SynthesizedAfter = fixedCode;
-                        return true;
-                    }
-                }
-                else
-                {
-                    var watch = new Stopwatch();
-                    watch.Start();
-                    var fixedCode = TryFix(tests, tuple.Item2, input, unparser);
-                    watch.Stop();
-                    totalTime += watch.ElapsedMilliseconds;
-                    if (fixedCode != null)
-                    {
-                        mistake.Time = totalTime;
-                        mistake.UsedFix = tuple.Item2.ToString();
-                        mistake.SynthesizedAfter = fixedCode;
-                        return true;
-                    }
-                }
+                if (isFixed)
+                    break;
+                isFixed = TryInParallel(mistake, tests, tuple.Item2, input);
             }
-            mistake.Time = totalTime;
-            return false;
+            return isFixed;
         }
 
-        private static Result<Grammar> grammar =
-            DSLCompiler.LoadGrammarFromFile(@"C:\Users\Gustavo\git\Tutor\Tutor\synthesis\Transformation.grammar");
+        private bool TryInParallel(Mistake mistake, Dictionary<string, long> tests, ProgramNode program, State input)
+        {
+            var  unparser = new Unparser();
+            bool isFixed = false;
+            var fixedCode = TryFix(tests, program, input, unparser);
+            if (fixedCode != null)
+            {
+                mistake.UsedFix = program.ToString();
+                mistake.SynthesizedAfter = fixedCode;
+                isFixed = true;
+            }
+            return isFixed;
+        }
 
-        public static ProgramNode LearnProgram(List<Mistake> list, Mistake next)
+        public static Result<Grammar> grammar =
+            DSLCompiler.LoadGrammarFromFile(@"C:\Users\Gustavo\git\Tutor\Tutor\synthesis\Transformation.grammar", libraryPaths: new [] { @"C:\Users\Gustavo\git\Tutor\Tutor\bin\debug" });
+
+        public ProgramNode LearnProgram(List<Mistake> list, Mistake next)
         {
             var mistakes =  (list.Any()) ?  new List<Mistake>() { list.First(),  next } :
                 new List<Mistake>() { next };
@@ -138,7 +157,7 @@ namespace Tutor
             return learned.Any() ? learned.First() : null;
         }
 
-        public static ProgramNode LearnProgram(Mistake mistake, State input)
+        public ProgramNode LearnProgram(Mistake mistake, State input)
         {
             var examples = new Dictionary<State, object>();
 
@@ -152,13 +171,9 @@ namespace Tutor
         }
 
 
-        private string TryFix(Dictionary<string, long> tests, ProgramNode current, State input, Unparser unparser)
-        {
-            //Console.Out.WriteLine("===================");
-            //Console.Out.WriteLine("TRY:");
-            //Console.Out.WriteLine(current);
-            //Console.Out.WriteLine("===================");
-
+        public string TryFix(Dictionary<string, long> tests, ProgramNode current, 
+            State input, Unparser unparser, Tuple<string, List<string>> staticTests = null)
+        {            
             object output = null;
             try
             {
@@ -171,58 +186,100 @@ namespace Tutor
             if (output != null)
             {
                 var programSet = output as IEnumerable<PythonNode>;
-                var range = programSet.Count() < 10 ? programSet.ToList() : programSet.ToList().GetRange(0, 10); 
+                var range = programSet.Count() < 100 ? programSet.ToList() : programSet.ToList().GetRange(0, 10); 
                 foreach (var changedProgram in range)
                 {
+                    if (staticTests != null && !CheckStaticTests(changedProgram, staticTests))
+                        continue; 
                     var newCode = unparser.Unparse(changedProgram);
-
-                    //Console.Out.WriteLine(changedProgram);
-                    //Console.Out.WriteLine("===================");
-                    //Console.Out.WriteLine("Fixed:");
-                    //Console.Out.WriteLine(newCode);
-
-                    var isFixed = IsFixed(tests, newCode);
-                    if (isFixed)
+                    try
                     {
-                        if (UsedPrograms.ContainsKey(current.ToString()))
+                        var isFixed = IsFixed(tests, newCode);
+                        if (isFixed)
                         {
-                            var count = UsedPrograms[current.ToString()];
-                            UsedPrograms.Remove(current.ToString());
-                            UsedPrograms.Add(current.ToString(), count + 1);
+                            if (UsedPrograms.ContainsKey(current.ToString()))
+                            {
+                                var count = UsedPrograms[current.ToString()];
+                                UsedPrograms.Remove(current.ToString());
+                                UsedPrograms.Add(current.ToString(), count + 1);
+                            }
+                            else
+                            {
+                                UsedPrograms.Add(current.ToString(), 1);
+                            }
+                            return newCode;
                         }
-                        else
-                        {
-                            UsedPrograms.Add(current.ToString(), 1);
-                        }
-                        return newCode;
+                    }
+                    catch (Exception)
+                    {
+                        //exception during the execution of the test case. Do nothing. 
                     }
                 }
             }
             return null;
         }
 
-        public static bool IsFixed(Dictionary<string, long> tests, string newCode)
+        public bool CheckStaticTests(PythonNode changedProgram, Tuple<string, List<string>> staticTests)
+        {
+            var findFunctionVisitor = new FindFunctionVisitor(staticTests.Item1);
+            changedProgram.Walk(findFunctionVisitor);
+            if (findFunctionVisitor.Function != null)
+            {
+                var visitor = new StaticAnalysisTester(staticTests);
+                findFunctionVisitor.Function.Walk(visitor);
+                return visitor.Passed;
+            }
+            return false;
+        }
+
+        public bool IsFixed(Dictionary<string, long> tests, string newCode)
         {
             var isFixed = true;
+            var script = newCode;
             foreach (var test in tests)
             {
-                var script = newCode + Environment.NewLine + test.Key;
-                try
+               script +=  Environment.NewLine + test.Key;
+            }
+            try
+            {
+                ProcessStartInfo psi = new ProcessStartInfo("python.exe", "-c \"" + script + "\"")
                 {
-                    var result = ASTHelper.Run(script);
-                    if (result != test.Value)
+                    CreateNoWindow = true,
+                    WindowStyle = ProcessWindowStyle.Hidden
+                };
+                var p = Process.Start(psi);
+                if (p == null)
+                    isFixed = false;
+                else
+                {
+                    if (!p.HasExited)
+                    {
+                        p.WaitForExit(1500);
+                    }
+                    if (!p.HasExited || p.ExitCode != 0)
                         isFixed = false;
+                    if (!p.HasExited)
+                    {
+                        try
+                        {
+                            p.Kill();
+                        }
+                        catch (Exception)
+                        {
+                            Console.Out.WriteLine("Exception when trying to kill process");
+                            //do nothing   
+                        }
+                    }
+                    p.Close();
                 }
-                catch (TestCaseException)
-                {
-                    isFixed = false;
-                }
-                catch (RuntimeBinderException)
-                {
-                    isFixed = false;
-                }
-                if (!isFixed)
-                    break;
+            }
+            catch (TestCaseException)
+            {
+                isFixed = false;
+            }
+            catch (RuntimeBinderException)
+            {
+                isFixed = false;
             }
             return isFixed;
         }
@@ -258,6 +315,88 @@ namespace Tutor
                 return true;
             }
             return false;
+        }
+
+        public static ConcurrentQueue<Tuple<List<Mistake>, ProgramNode>> CreateTransformation(Dictionary<string, string> example)
+        {
+            var result = new ConcurrentQueue<Tuple<List<Mistake>, ProgramNode>>();
+            var unparser = new Unparser();
+            var before = unparser.Unparse(NodeWrapper.Wrap(ASTHelper.ParseContent(example["before"])));
+            var after = unparser.Unparse(NodeWrapper.Wrap(ASTHelper.ParseContent(example["after"])));
+            var mistake = new Mistake() {before = before, after = after};
+            var list = new List<Mistake>() {mistake};
+            var transformation = LearnProgram(list);
+            result.Enqueue(Tuple.Create(list,transformation));
+            return result;
+        }
+    }
+
+    public class StaticAnalysisTester : IVisitor
+    {
+        private readonly Tuple<string, List<string>> _tests;
+
+        public bool Passed { set; get; } = true;
+
+        public StaticAnalysisTester(Tuple<string, List<string>> tests)
+        {
+            _tests = tests;
+        }
+
+        public bool Visit(PythonNode pythonNode)
+        {
+            foreach (var test in _tests.Item2)
+            {
+                switch (test)
+                {
+                    case "recursion":
+                        if (pythonNode is CallExpressionNode)
+                        {
+                            if (pythonNode.Children.Any() && pythonNode.Children.First() is NameExpressionNode
+                                && pythonNode.Children.First().Value.Equals(_tests.Item1))
+                                Passed = false; 
+                        }
+                            break;
+                    case "for":
+                        if (pythonNode is ForStatementNode)
+                            Passed = false;
+                        break;
+                    case "while":
+                        if (pythonNode is WhileStatementNode)
+                            Passed = false;
+                        break;
+                    case "Assign":
+                        if (pythonNode is AssignmentStatementNode)
+                            Passed = false;
+                        break;
+                    case "AugAssign":
+                        if (pythonNode is AugmentedAssignStatementNode)
+                            Passed = false;
+                        break;
+                }
+            }
+            return Passed;
+        }
+    }
+
+    public class FindFunctionVisitor : IVisitor
+    {
+        private readonly string _name;
+
+        public PythonNode Function { set; get; }
+
+        public FindFunctionVisitor(string name)
+        {
+            _name = name;
+        }
+
+        public bool Visit(PythonNode pythonNode)
+        {
+            if (pythonNode is FunctionDefinitionNode &&
+                pythonNode.Value != null && Equals(pythonNode.Value, _name))
+            {
+                Function = pythonNode;
+            }
+            return Function == null;
         }
     }
 }

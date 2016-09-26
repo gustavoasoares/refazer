@@ -4,6 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using IronPython.Compiler.Ast;
+using Microsoft.Scripting;
 using Tutor.ast;
 
 namespace Tutor
@@ -39,6 +40,7 @@ namespace Tutor
                 return null;
 
             var combinations = GetAllCombinations();
+            var unparser = new Unparser();
             foreach (var combination in combinations)
             {
                 combination.ForEach(e => e.Applied = false);
@@ -46,11 +48,19 @@ namespace Tutor
                 try
                 {
                     var newAst = ast.Rewrite(rewriter);
+
+                    //hack to check if there is syntax errors: 
+                    var code = unparser.Unparse(newAst);
+                    ASTHelper.ParseContent(code);
                     results.Add(newAst);
                 }
                 catch (TransformationNotApplicableExpection e)
                 {
-                    Console.Out.WriteLine(e.Message);
+                    //does not add program
+                }
+                catch (SyntaxErrorException)
+                {
+                    //does not add program
                 }
             }
             return results;

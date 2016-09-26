@@ -1,18 +1,22 @@
-﻿using System.Collections;
+﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using Tutor;
 
 namespace TutorUI
 {
-    internal class Problem
+    [Serializable]
+    public class Problem
     {
-        internal string Id { get; }
-        internal IEnumerable<Mistake> Mistakes { get; set; }
+        public string Id { get; }
+        public IEnumerable<Mistake> Mistakes { get; set; }
 
-        internal IDictionary<int, IList<Mistake>> AttemptsPerStudent { get; set; }
-        internal Dictionary<string, long> Tests { get; set; }
+        public IDictionary<int, List<Mistake>> AttemptsPerStudent { get; set; }
+        public Dictionary<string, long> Tests { get; set; }
 
-        internal Problem(string id, IEnumerable<Mistake> mistakes)
+        public Tuple<string, List<string>> StaticTests { get; set; }
+
+        public Problem(string id, IEnumerable<Mistake> mistakes)
         {
             Id = id;
             Mistakes = mistakes;

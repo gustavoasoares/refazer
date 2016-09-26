@@ -3,6 +3,7 @@ using System.Diagnostics.CodeAnalysis;
 using System.Text.RegularExpressions;
 using Microsoft.ProgramSynthesis;
 using Microsoft.ProgramSynthesis.Extraction.Text.Semantics;
+using Tutor.synthesis;
 
 namespace Tutor.Transformation
 {
@@ -53,8 +54,11 @@ namespace Tutor.Transformation
         [FeatureCalculator("Target")]
         public static double Score_Target(double template) => template;
 
-        [FeatureCalculator("Skip")]
-        public static double Score_Skip(double template) => template * 0.8;
+        [FeatureCalculator("StartsWithParent")]
+        public static double Score_StartsWithParent(double template) => template * 0.8;
+
+        [FeatureCalculator("StartsWithTarget")]
+        public static double Score_StartsWithTarget(double template) => template * 0.8;
 
         [FeatureCalculator("TChild")]
         public static double Score_TemplateChild(double template) => template;
@@ -91,6 +95,9 @@ namespace Tutor.Transformation
 
         [FeatureCalculator(Method = CalculationMethod.FromLiteral)]
         public static double KScore(int k) => k < 0 ? 1 : 2;
+
+        [FeatureCalculator(Method = CalculationMethod.FromLiteral)]
+        public static double MagicKScore(MagicK k) => 1;
 
         [FeatureCalculator(Method = CalculationMethod.FromLiteral)]
         public static double TypeScore(string type) => (type.Equals("any")) ? 1 : 2;

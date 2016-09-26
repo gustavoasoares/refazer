@@ -289,17 +289,16 @@ namespace Tutor.Transformation
 
 
         [WitnessFunction("Match", 1)]
-        public static ExampleSpec WitnessMatchTemplate(GrammarRule rule, int parameter,
+        public static DisjunctiveExamplesSpec WitnessMatchTemplate(GrammarRule rule, int parameter,
             ExampleSpec spec)
         {
-            var examples = new Dictionary<State, object>();
+            var examples = new Dictionary<State, IEnumerable<object>>();
             foreach (State input in spec.ProvidedInputs)
             {
                 var selectedNode = (PythonNode)input[rule.Body[0]];
-                examples[input] = selectedNode.Parent != null? Tuple.Create(selectedNode.Parent, selectedNode) : 
-                    Tuple.Create(selectedNode, selectedNode);
+                examples[input] = new List<PythonNode>() {selectedNode};
             }
-            return new ExampleSpec(examples);
+            return new DisjunctiveExamplesSpec(examples);
         }
 
         [WitnessFunction("Update", 1)]
@@ -519,16 +518,35 @@ namespace Tutor.Transformation
             return new ExampleSpec(result);
         }
 
-        [WitnessFunction("Skip", 0)]
-        public static ExampleSpec WitnessSkipTemplate(GrammarRule rule, int parameter, ExampleSpec spec)
+        [WitnessFunction("StartsWithTarget", 0)]
+        public static ExampleSpec WitnessStartsWithTargetTemplate(GrammarRule rule, int parameter, DisjunctiveExamplesSpec spec)
         {
             var result = new Dictionary<State, object>();
             foreach (var input in spec.ProvidedInputs)
             {
-                var contextTarget = spec.Examples[input] as Tuple<PythonNode, PythonNode>;
-                if (contextTarget.Item2 != null && contextTarget.Item2.Parent.Equals(contextTarget.Item1))
+                var expspec = spec.DisjunctiveExamples[input].First() as PythonNode;
+                if (expspec != null)
                 {
-                    result[input] = Tuple.Create(contextTarget.Item2, contextTarget.Item2);
+                    result[input] = Tuple.Create(expspec, expspec);
+                }
+                else
+                {
+                    return null;
+                }
+            }
+            return new ExampleSpec(result);
+        }
+
+        [WitnessFunction("StartsWithParent", 0)]
+        public static ExampleSpec WitnessStartsWithParentTemplate(GrammarRule rule, int parameter, DisjunctiveExamplesSpec spec)
+        {
+            var result = new Dictionary<State, object>();
+            foreach (var input in spec.ProvidedInputs)
+            {
+                var expspec = spec.DisjunctiveExamples[input].First() as PythonNode;
+                if (expspec != null && expspec.Parent != null)
+                {
+                    result[input] = Tuple.Create(expspec.Parent, expspec);
                 }
                 else
                 {
@@ -649,7 +667,7 @@ namespace Tutor.Transformation
         [WitnessFunction("ReferenceNode", 1)]
         public static DisjunctiveExamplesSpec WitnessContext(GrammarRule rule, int parameter, ExampleSpec spec)
         {
-            var templateExamples = new Dictionary<State, object>();
+            var templateExamples = new Dictionary<State, IEnumerable<object>>();
             foreach (var input in spec.ProvidedInputs)
             {
                 var node = spec.Examples[input] as PythonNode;
@@ -662,17 +680,13 @@ namespace Tutor.Transformation
                 {
                     return null;
                 }
-                if (node.Parent != null && ast.Contains(node.Parent))
-                    templateExamples[input] = Tuple.Create(node.Parent, node);
-                else
-                    templateExamples[input] = Tuple.Create(node, node);
+                templateExamples[input] = new List<PythonNode>() { node };
             }
-            return new ExampleSpec(templateExamples);
+            return new DisjunctiveExamplesSpec(templateExamples);
         }
 
-        [WitnessFunction("ReferenceNode", 2, DependsOnParameters = new []{1})]
-        public static ExampleSpec WitnessK(GrammarRule rule, int parameter, ExampleSpec spec, 
-            ExampleSpec templateSpec)
+        [WitnessFunction("ReferenceNode", 2)]
+        public static ExampleSpec WitnessK(GrammarRule rule, int parameter, ExampleSpec spec)
         {
             var result = new Dictionary<State, object>();
 
@@ -680,22 +694,8 @@ namespace Tutor.Transformation
             {
                 var inp = (PythonNode)input[rule.Body[0]];
                 var node = spec.Examples[input] as PythonNode;
-                //var template = (TreeTemplate)templateSpec.Examples[input];
-                //var matches = template.Matches(inp);
-                //var witness = -1;
-                //for (var i = 0; i < matches.Count; i++)
-                //{
-                //    if (matches[i].Id == node.Id)
-                //    {
-                //        witness = i;
-                //        break;
-                //    }
-                //}
-                //if (witness < 0)
-                //    return null;
-                //var positions = new List<int>();
-                //positions.Add(witness);
-                result[input] = 0;
+
+                result[input] = new MagicK(inp,node);
             }
             return new ExampleSpec(result);
         }

@@ -282,6 +282,8 @@ namespace Tutor
 
         public virtual void Insert(PythonNode inserted, int index)
         {
+            if (InsertStrategy == null)
+                throw new TransformationNotApplicableExpection();
             Children = InsertStrategy.Insert(this, inserted, index);
         }
     }

@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text;
-using Newtonsoft.Json;
 
 namespace Tutor
 {
@@ -62,36 +61,36 @@ namespace Tutor
         
         public void GenerateCluster(Tuple<Question, string>[] questionLogs)
         {
-            foreach (var questionLog in questionLogs)
-            {
-                var cluster = new Dictionary<String, List<Mistake>>();
-                var submissions = JsonConvert.DeserializeObject<List<Mistake>>(File.ReadAllText(questionLog.Item2, Encoding.ASCII));
-                foreach (var submission in submissions)
-                {
-                    submission.before = GetQuestion(submission.before, questionLog.Item1);
-                    submission.after = GetQuestion(submission.after, questionLog.Item1);
+            //foreach (var questionLog in questionLogs)
+            //{
+            //    var cluster = new Dictionary<String, List<Mistake>>();
+            //    var submissions = JsonConvert.DeserializeObject<List<Mistake>>(File.ReadAllText(questionLog.Item2, Encoding.ASCII));
+            //    foreach (var submission in submissions)
+            //    {
+            //        submission.before = GetQuestion(submission.before, questionLog.Item1);
+            //        submission.after = GetQuestion(submission.after, questionLog.Item1);
 
-                    //Notice that some submissions have the same before and after
-                    //probabily some error during ok python. Let's igore them for now
-                    if (submission.before.Equals(submission.after))
-                        continue;
+            //        //Notice that some submissions have the same before and after
+            //        //probabily some error during ok python. Let's igore them for now
+            //        if (submission.before.Equals(submission.after))
+            //            continue;
 
-                    if (submission.failed != null)
-                    {
-                        var testCase = string.Join("\n", submission.failed);
-                        if (cluster.Keys.Contains(testCase))
-                        {
-                            cluster[testCase].Add(submission);
-                        }
-                        else
-                        {
-                            var mistakes = new List<Mistake> { submission };
-                            cluster.Add(testCase, mistakes);
-                        }
-                    }
-                }
-                Clusters.Add(questionLog.Item1, cluster);
-            }
+            //        if (submission.failed != null)
+            //        {
+            //            var testCase = string.Join("\n", submission.failed);
+            //            if (cluster.Keys.Contains(testCase))
+            //            {
+            //                cluster[testCase].Add(submission);
+            //            }
+            //            else
+            //            {
+            //                var mistakes = new List<Mistake> { submission };
+            //                cluster.Add(testCase, mistakes);
+            //            }
+            //        }
+            //    }
+            //    Clusters.Add(questionLog.Item1, cluster);
+            //}
         }
     }
 

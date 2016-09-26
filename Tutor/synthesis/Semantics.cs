@@ -68,9 +68,10 @@ namespace Tutor.Transformation
             return wrapped;
         }
 
-        public static PythonNode ReferenceNode(PythonNode ast, TreeTemplate template, int k)
+        public static PythonNode ReferenceNode(PythonNode ast, TreeTemplate template, MagicK magicK)
         {
             template.Target = true;
+            var k = magicK.GetK(template);
             var referenceNode = ReferenceNodeHelper(ast, template, ref k);
             return referenceNode;
         }
@@ -188,7 +189,17 @@ namespace Tutor.Transformation
             return result;
         }
 
-        public static TreeTemplate Skip(TreeTemplate template)
+        public static TreeTemplate StartsWithTarget(TreeTemplate template)
+        {
+            return TreeTemplate(template);
+        }
+
+        public static TreeTemplate StartsWithParent(TreeTemplate template)
+        {
+            return TreeTemplate(template);
+        }
+
+        private static TreeTemplate TreeTemplate(TreeTemplate template)
         {
             TreeTemplate result;
             if (template is Wildcard)
