@@ -199,7 +199,7 @@ namespace Tutor
             if (exp is UnaryExpression) return Wrap((UnaryExpression)exp, parent);
             if (exp is ListExpression) return Wrap((ListExpression)exp, parent);
             if(exp is ListComprehension) return Wrap((ListComprehension)exp, parent);
-            throw  new NotImplementedException();
+            throw  new NotImplementedException("Wrapper not implemened : " + exp.Type);
         }
 
         private static PythonNode Wrap(IndexExpression exp, PythonNode parent)

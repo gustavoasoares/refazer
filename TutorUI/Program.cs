@@ -248,7 +248,7 @@ namespace TutorUI
                         var newList = new List<Mistake>() { pair };
                         try
                         {
-                            var program = tempFixer.LearnProgram(newList);
+                            var program = SubmissionFixer.LearnProgram(newList);
                             classification.Enqueue(Tuple.Create(newList, program));
                         }
                         catch (SyntaxErrorException)
@@ -776,7 +776,7 @@ namespace TutorUI
                 foreach (var list in backupClass)
                 {
                     Source.TraceEvent(TraceEventType.Information, 6, "Learning cluster " + clusterCount + " with mistakes: " + list.Count);
-                    var learnProgram = tempFixer.LearnProgram(list);
+                    var learnProgram = SubmissionFixer.LearnProgram(list);
                     if (learnProgram != null)
                     {
                         classification.Enqueue(Tuple.Create(list, learnProgram));
@@ -844,7 +844,7 @@ namespace TutorUI
                         }
                         try
                         {
-                            var learnProgram = tempFixer.LearnProgram(list);
+                            var learnProgram = SubmissionFixer.LearnProgram(list);
                             if (learnProgram != null)
                             {
                                 classification.Enqueue(Tuple.Create(list, learnProgram));

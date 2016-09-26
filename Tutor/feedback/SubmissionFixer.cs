@@ -22,7 +22,7 @@ namespace Tutor
 {
     public class SubmissionFixer
     {
-        private readonly ConcurrentQueue<Tuple<List<Mistake>, ProgramNode>> _classification;
+        private ConcurrentQueue<Tuple<List<Mistake>, ProgramNode>> _classification;
         public List<IEnumerable<ProgramNode>> ProsePrograms { get; }
 
         public Dictionary<string, int> UsedPrograms { get; }
@@ -42,7 +42,7 @@ namespace Tutor
             UsedPrograms = new Dictionary<string, int>();
         }
 
-        public bool Fix(Mistake mistake, Dictionary<string, long> tests)
+        public bool Fix(Mistake mistake, Dictionary<string, long> tests, bool leaveOneOut = true)
         {
             PythonAst ast = null;
             ast = ASTHelper.ParseContent(mistake.before);
@@ -57,7 +57,7 @@ namespace Tutor
                     if (mistake.Equals(mistake1))
                         belongs = true;
                 }
-                if (belongs)
+                if (belongs && leaveOneOut)
                 {
                     var listWithoutCurrentMistake = tuple.Item1.Where(e => !e.Equals(mistake));
                     if (!listWithoutCurrentMistake.Any()) return false;
@@ -125,7 +125,7 @@ namespace Tutor
         }
 
         public static Result<Grammar> grammar =
-            DSLCompiler.LoadGrammarFromFile(@"C:\Users\Gustavo\git\Tutor\Tutor\synthesis\Transformation.grammar");
+            DSLCompiler.LoadGrammarFromFile(@"C:\Users\Gustavo\git\Tutor\Tutor\synthesis\Transformation.grammar", libraryPaths: new [] { @"C:\Users\Gustavo\git\Tutor\Tutor\bin\debug" });
 
         public ProgramNode LearnProgram(List<Mistake> list, Mistake next)
         {
@@ -140,7 +140,7 @@ namespace Tutor
             return null;
         }
 
-        public ProgramNode LearnProgram(List<Mistake> mistakes)
+        public static ProgramNode LearnProgram(List<Mistake> mistakes)
         {
             var examples = new Dictionary<State, object>();
             var unparser = new Unparser();
@@ -186,7 +186,7 @@ namespace Tutor
             if (output != null)
             {
                 var programSet = output as IEnumerable<PythonNode>;
-                var range = programSet.Count() < 100 ? programSet.ToList() : programSet.ToList().GetRange(0, 100); 
+                var range = programSet.Count() < 100 ? programSet.ToList() : programSet.ToList().GetRange(0, 10); 
                 foreach (var changedProgram in range)
                 {
                     if (staticTests != null && !CheckStaticTests(changedProgram, staticTests))
@@ -315,6 +315,19 @@ namespace Tutor
                 return true;
             }
             return false;
+        }
+
+        public static ConcurrentQueue<Tuple<List<Mistake>, ProgramNode>> CreateTransformation(Dictionary<string, string> example)
+        {
+            var result = new ConcurrentQueue<Tuple<List<Mistake>, ProgramNode>>();
+            var unparser = new Unparser();
+            var before = unparser.Unparse(NodeWrapper.Wrap(ASTHelper.ParseContent(example["before"])));
+            var after = unparser.Unparse(NodeWrapper.Wrap(ASTHelper.ParseContent(example["after"])));
+            var mistake = new Mistake() {before = before, after = after};
+            var list = new List<Mistake>() {mistake};
+            var transformation = LearnProgram(list);
+            result.Enqueue(Tuple.Create(list,transformation));
+            return result;
         }
     }
 

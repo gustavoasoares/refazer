@@ -6,17 +6,17 @@ using Tutor;
 namespace TutorUI
 {
     [Serializable]
-    internal class Problem
+    public class Problem
     {
-        internal string Id { get; }
-        internal IEnumerable<Mistake> Mistakes { get; set; }
+        public string Id { get; }
+        public IEnumerable<Mistake> Mistakes { get; set; }
 
-        internal IDictionary<int, List<Mistake>> AttemptsPerStudent { get; set; }
-        internal Dictionary<string, long> Tests { get; set; }
+        public IDictionary<int, List<Mistake>> AttemptsPerStudent { get; set; }
+        public Dictionary<string, long> Tests { get; set; }
 
-        internal Tuple<string, List<string>> StaticTests { get; set; } 
+        public Tuple<string, List<string>> StaticTests { get; set; }
 
-        internal Problem(string id, IEnumerable<Mistake> mistakes)
+        public Problem(string id, IEnumerable<Mistake> mistakes)
         {
             Id = id;
             Mistakes = mistakes;

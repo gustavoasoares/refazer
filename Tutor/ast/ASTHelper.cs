@@ -19,7 +19,6 @@ using Microsoft.Scripting;
 using Microsoft.Scripting.Hosting;
 using Microsoft.Scripting.Hosting.Providers;
 using Microsoft.Scripting.Runtime;
-using SubmissionGrader;
 
 namespace Tutor
 {
@@ -49,59 +48,13 @@ namespace Tutor
             return parser.ParseFile(true);
         }
 
-        public static dynamic Run(string s)
-        {
-            var p = Process.Start("", "");
-            try
-            {
-                StartCodeService();
-
-                var serviceResult = _serviceProxy.Execute(s);
-                if (serviceResult != null && serviceResult.Equals("aborted"))
-                    _timeout = true;
-                else
-                    _timeout = false;
-
-                return serviceResult;
-            }
-            catch (CommunicationException e)
-            {
-                _timeout = true;
-                throw new TestCaseException(e);
-            }
-            catch (Exception e)
-            {
-                _timeout = true;
-                throw new TestCaseException(e);
-                Console.Out.WriteLine(e.StackTrace);
-            }
-        }
-
         private static bool _timeout = false;
         private static readonly Uri ServiceUri = new Uri("net.pipe://localhost/Pipe");
         private const string PipeName = "TutorGradeService";
         private static readonly EndpointAddress ServiceAddress = 
             new EndpointAddress(string.Format(CultureInfo.InvariantCulture, 
                 "{0}/{1}", ServiceUri.OriginalString, PipeName));
-        private static ICommandService _serviceProxy;
 
-        private static void StartCodeService()
-        {
-            var service = new ServiceController("TutorGradeService");
-            if (service.Status != ServiceControllerStatus.Running || _timeout)
-            {
-                if (service.Status == ServiceControllerStatus.Running)
-                {
-                    if (service.CanStop)
-                        service.Stop();
-
-                    service.WaitForStatus(ServiceControllerStatus.Stopped);
-                }
-                service.Start();
-                service.WaitForStatus(ServiceControllerStatus.Running);
-            }
-            _serviceProxy = ChannelFactory<ICommandService>.CreateChannel(new NetNamedPipeBinding(), ServiceAddress);
-        }
     }
 
     

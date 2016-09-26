@@ -8,18 +8,18 @@ using Tutor;
 
 namespace TutorUI
 {
-    enum ProblemNames
+    public enum ProblemNames
     {
         Product = 1, Repeated =2, CountChange = 3, Accumulate = 4, FilteredAccumulate = 5, Summation = 6,
         G = 7, G_iter = 8, Pingpong = 9
     }
 
-    internal class ProblemManager
+    public class ProblemManager
     {
-        internal static ProblemManager Instance { get; } = new ProblemManager();
-        internal IList<Problem> Problems { get; } = new List<Problem>();
+        public static ProblemManager Instance { get; } = new ProblemManager();
+        public IList<Problem> Problems { get; } = new List<Problem>();
 
-        internal void CreateProblems()
+        public void CreateProblems()
         {
             var dir = new DirectoryInfo("../../benchmark/");
             foreach (var file in dir.GetFiles())
