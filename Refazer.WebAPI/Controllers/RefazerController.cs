@@ -76,7 +76,7 @@ def increment(x):
             fixer._classification = transformation;
             foreach (var submission in input.submissions)
             {
-                var isFixed = (bool)submission["is_fixed"];
+                var isFixed = (bool)submission["isFixed"];
                 if (!isFixed)
                 {
                     var mistake = new Mistake();
@@ -84,7 +84,7 @@ def increment(x):
                     mistake.after = submission["after"] as string;
                     var tests = new Dictionary<string, long>();
                     isFixed = fixer.Fix(mistake, GetTests(), false);
-                    submission["is_fixed"] = isFixed;
+                    submission["isFixed"] = isFixed;
                 }
             }
             //Parallel.ForEach(input.submissions, (submission) =>
