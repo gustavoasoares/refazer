@@ -76,34 +76,15 @@ def increment(x):
             fixer._classification = transformation;
             foreach (var submission in input.submissions)
             {
-                var isFixed = (bool)submission["isFixed"];
-                if (!isFixed)
-                {
-                    var mistake = new Mistake();
-                    mistake.before = submission["before"] as string;
-                    mistake.after = submission["after"] as string;
-                    var tests = new Dictionary<string, long>();
-                    isFixed = fixer.Fix(mistake, GetTests(), false);
-                    submission["isFixed"] = isFixed;
-                }
+                var mistake = new Mistake();
+                mistake.before = submission["before"] as string;
+                var tests = new Dictionary<string, long>();
+                var isFixed = fixer.Fix(mistake, GetTests(), false);
+                submission.Add("fixes_worked", isFixed);
+                if (isFixed)
+                    submission.Add("fixed_code", mistake.SynthesizedAfter);
             }
-            //Parallel.ForEach(input.submissions, (submission) =>
-            //{
-            //    var fixer = new SubmissionFixer(transformation);
-            //    var isFixed = (bool)submission["is_fixed"];
-            //    if (!isFixed)
-            //    {
-            //        var mistake = new Mistake();
-            //        mistake.before = submission["before"] as string;
-            //        mistake.after = submission["after"] as string;
-            //        var tests = new Dictionary<string, long>();
-            //        isFixed = fixer.Fix(mistake, GetTests(), false);
-            //        submission["is_fixed"] = isFixed;
-            //    }
-            //});
-            //try to fix the incorrect submissions
-            //return new submissions
-            return input;
+            return input.submissions;
         }
 
         // PUT: api/Refazer/5
