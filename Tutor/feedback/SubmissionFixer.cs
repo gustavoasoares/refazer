@@ -58,9 +58,9 @@ namespace Tutor
         {
             PythonAst ast = null;
             ast = ASTHelper.ParseContent(mistake.before);
-
             var input = State.Create(grammar.Value.InputSymbol, NodeWrapper.Wrap(ast));
             var unparser = new Unparser();
+
             foreach (var tuple in _classification)
             {
                 var belongs = false;

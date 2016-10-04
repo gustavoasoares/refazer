@@ -78,7 +78,6 @@ def increment(x):
             {
                 var mistake = new Mistake();
                 mistake.before = submission["before"] as string;
-                var tests = new Dictionary<string, long>();
                 var isFixed = fixer.Fix(mistake, GetTests(), false);
                 submission.Add("fixes_worked", isFixed);
                 if (isFixed)
