@@ -6,6 +6,7 @@ using System.Net;
 using System.Net.Http;
 using System.Threading.Tasks;
 using System.Web.Http;
+using System.Web.Mvc;
 using Newtonsoft.Json;
 using Refazer.WebAPI.Models;
 using Tutor;
@@ -68,22 +69,40 @@ def increment(x):
         // POST: api/Refazer
         public dynamic Post([FromBody]RefazerInput  input)
         {
-            if (input.Examples.Count() == 0)
-                throw new ArgumentException("Examples cannot be empty");
+            var exceptions = new List<string>();
 
-            var fixer = new SubmissionFixer(System.Web.Hosting.HostingEnvironment.MapPath(@"~/Content/"), System.Web.Hosting.HostingEnvironment.MapPath(@"~/bin"));
-            var transformation = fixer.CreateTransformation(input.Examples.First());
-            fixer._classification = transformation;
-            foreach (var submission in input.submissions)
+            try
             {
-                var mistake = new Mistake();
-                mistake.before = submission["before"] as string;
-                var isFixed = fixer.Fix(mistake, GetTests(), false);
-                submission.Add("fixes_worked", isFixed);
-                if (isFixed)
-                    submission.Add("fixed_code", mistake.SynthesizedAfter);
+                if (input.Examples.Count() == 0)
+                    throw new ArgumentException("Examples cannot be empty");
+
+                var fixer = new SubmissionFixer(System.Web.Hosting.HostingEnvironment.MapPath(@"~/Content/"), System.Web.Hosting.HostingEnvironment.MapPath(@"~/bin"));
+                var transformation = fixer.CreateTransformation(input.Examples.First());
+                fixer._classification = transformation;
+                foreach (var submission in input.submissions)
+                {
+                    try
+                    {
+                        var mistake = new Mistake();
+                        mistake.before = submission["before"] as string;
+                        var isFixed = fixer.Fix(mistake, GetTests(), false);
+                        submission.Add("fixes_worked", isFixed);
+                        if (isFixed)
+                            submission.Add("fixed_code", mistake.SynthesizedAfter);
+                    }
+                    catch (Exception e)
+                    {
+                        submission.Add("fixes_worked", false);
+                        submission.Add("exception", e.Message);
+                        exceptions.Add(e.Message);
+                    }
+                }
             }
-            return input.submissions;
+            catch (Exception e)
+            {
+                exceptions.Add(e.Message);
+            }
+            return Json(new {input.submissions, exceptions});
         }
 
         // PUT: api/Refazer/5

@@ -214,6 +214,7 @@
     <Compile Include="ast\BinaryExpressionNode.cs" />
     <Compile Include="ast\CallExpressionNode.cs" />
     <Compile Include="ast\ComprehensionIteratorNode.cs" />
+    <Compile Include="ast\ConditionalExpressionNode.cs" />
     <Compile Include="ast\ConstantExpressionNode.cs" />
     <Compile Include="ast\DottedNameNode.cs" />
     <Compile Include="ast\ExpressionStatementNode.cs" />

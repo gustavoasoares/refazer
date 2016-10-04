@@ -199,9 +199,22 @@ namespace Tutor
             if (exp is UnaryExpression) return Wrap((UnaryExpression)exp, parent);
             if (exp is ListExpression) return Wrap((ListExpression)exp, parent);
             if(exp is ListComprehension) return Wrap((ListComprehension)exp, parent);
+            if (exp is ConditionalExpression) return Wrap((ConditionalExpression)exp, parent);
             throw  new NotImplementedException("Wrapper not implemened : " + exp.Type);
         }
 
+
+        private static PythonNode Wrap(ConditionalExpression exp, PythonNode parent)
+        {
+            var result = new ConditionalExpressionNode(exp) { Parent = parent };
+            if (exp.Test != null)
+                result.AddChild(Wrap(exp.Test, result));
+            if (exp.FalseExpression != null)
+                result.AddChild(Wrap(exp.FalseExpression, result));
+            if (exp.TrueExpression != null)
+                result.AddChild(Wrap(exp.TrueExpression, result));
+            return result;
+        }
         private static PythonNode Wrap(IndexExpression exp, PythonNode parent)
         {
             var result = new IndexExpressionNode(exp) { Parent = parent };
