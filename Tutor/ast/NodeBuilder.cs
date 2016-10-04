@@ -106,6 +106,13 @@ namespace Tutor
                     IEnumerable<Expression> expressions = Children.Select(e => rewriter.VisitExpression((Expression)e.InnerNode));
                     var tupleExpression = new TupleExpression(info.NodeValue, expressions.ToArray());
                     return new TupleExpressionNode(tupleExpression) {Children = Children};
+                case "ConditionalExpressionNode":
+                    var condExpression = new ConditionalExpression(rewriter.VisitExpression((Expression)Children[0].InnerNode), rewriter.VisitExpression((Expression)Children[1].InnerNode), 
+                        rewriter.VisitExpression((Expression)Children[2].InnerNode));
+                    return new ConditionalExpressionNode(condExpression) { Children = Children };
+                //case "FunctionDefinitionNode":
+                //    var funDef = new FunctionDefinition(info.NodeValue, ,rewriter.VisitExpression((Expression)Children[0].InnerNode));
+                //    return new FunctionDefinitionNode(funDef) { Children = Children };
                 default:
                     throw new NotImplementedException(info.NodeType);
             }

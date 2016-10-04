@@ -444,6 +444,29 @@ def product(n, term):
             AssertCorrectTransformation(before, after);
         }
 
+        [TestMethod]
+        public void TestLearnAccumulateExample()
+        {
+            var before = @"
+def accumulate(combiner, base, n, term):
+    if n == 0:
+        return base
+    elif n == 1:
+        return term(n)
+    return combiner(base, combiner(term(n), accumulate(combiner, lambda base: 1 if base == mul else 0, n - 1, term)))
+from operator import add, mul";
+
+            var after = @"
+def accumulate(combiner, base, n, term):
+    if n <= 0:
+        return base
+    elif n == 1:
+        return term(n)
+    return combiner(base, combiner(term(n), accumulate(combiner, lambda base: 1 if base == mul else 0, n - 1, term)))
+from operator import add, mul";
+
+            AssertCorrectTransformation(before, after);
+        }
       
 
 

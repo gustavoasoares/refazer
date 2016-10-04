@@ -88,6 +88,7 @@ namespace Tutor
                 case "WhileStatementNode":
                 case "ParenthesisExpressionNode":
                 case "ForStatementNode":
+                case "ConditionalExpressionNode":
                     nodeValue = null;
                     break;
                 default: 
