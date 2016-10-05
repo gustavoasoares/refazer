@@ -18,9 +18,6 @@ namespace Refazer.WebAPI.Models
         [Key, DatabaseGenerated(DatabaseGeneratedOption.Identity)]
         public int ID { set; get; }
 
-        //The incorrect student submission
-        public string CodeBefore { set; get; }
-
         //The fixed student submission
         public string FixedCode { set; get; }
 
@@ -29,6 +26,8 @@ namespace Refazer.WebAPI.Models
 
         //the id of the experiment where the fix was generated
         public int ExperimentId { set; get; }
+
+        public IEnumerable<Transformation>  { set; get; }
     }
 
     public class FixDbContext : DbContext
