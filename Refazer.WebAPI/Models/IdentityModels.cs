@@ -29,5 +29,7 @@ namespace Refazer.WebAPI.Models
         {
             return new ApplicationDbContext();
         }
+
+        public System.Data.Entity.DbSet<Tutor.PythonNode> PythonNodes { get; set; }
     }
 }

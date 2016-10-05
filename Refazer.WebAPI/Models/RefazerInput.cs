@@ -11,9 +11,4 @@ namespace Refazer.WebAPI.Models
 
         public IEnumerable<Dictionary<string, string>> Examples { set; get; }
     }
-
-    public class Submission
-    {
-        
-    }
 }

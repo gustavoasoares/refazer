@@ -52,5 +52,55 @@ namespace Refazer.WebAPI.Tests
             }
             Assert.IsTrue(countExamples < 71);
         }
+
+        [TestMethod]
+        public void TestSart()
+        {
+            var startInput = CreateStartInput(); 
+            var controller = new RefazerController();
+            var id = controller.Start(startInput);
+
+            var db = new SubmissionDBContext();
+            var submissions = db.Submissions.Where(s => s.SessionId == id);
+            Assert.AreEqual(2, submissions.Count());
+        }
+
+        [TestMethod]
+        public void TestLearnFix()
+        {
+            var controller = new RefazerController();
+
+            //Start section
+            var startInput = CreateStartInput();
+            var id = controller.Start(startInput);
+
+            //create an example input 
+            var exampleInput = CreateExampleInput(id);
+
+            //call the controller 
+            controller.ApplyFixFromExample(exampleInput);
+
+            var fixes = controller.GetFixes(id, 0);
+            Assert.AreEqual(1, fixes.Count());
+        }
+
+        private ApplyFixFromExampleInput CreateExampleInput(int experiemntId)
+        {
+            return new ApplyFixFromExampleInput()
+            {
+                Before = "x = 0",
+                After = "x = 1",
+                ExperimentId = experiemntId,
+                QuestionId = 0
+            };
+        }
+
+        private StartInput CreateStartInput()
+        {
+            var sub1 = new Submission() {Code = "x = 0", ID = 1, QuestionId = 0};
+            var sub2 = new Submission() { Code = "y = 'oi'", ID = 1, QuestionId = 0};
+            return new StartInput() {QuestionId = 0, Submissions = new List<Submission>() {sub1,sub2} };
+        }
+
     }
 }
