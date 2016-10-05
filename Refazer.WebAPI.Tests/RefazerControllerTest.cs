@@ -60,7 +60,7 @@ namespace Refazer.WebAPI.Tests
             var controller = new RefazerController();
             var id = controller.Start(startInput);
 
-            var db = new SubmissionDBContext();
+            var db = new RefazerDbContext();
             var submissions = db.Submissions.Where(s => s.SessionId == id);
             Assert.AreEqual(2, submissions.Count());
         }

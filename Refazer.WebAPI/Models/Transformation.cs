@@ -23,8 +23,8 @@ namespace Refazer.WebAPI.Models
         public string Examples { set; get; }
     }
 
-    public class TransformationDBContext : DbContext
-    {
-        public DbSet<Transformation> Transformations { set; get; }
-    }
+    //public class TransformationDBContext : DbContext
+    //{
+    //    public DbSet<Transformation> Transformations { set; get; }
+    //}
 }

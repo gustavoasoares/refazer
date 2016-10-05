@@ -31,8 +31,8 @@ namespace Refazer.WebAPI.Models
         public Transformation Transformation { set; get; }
     }
 
-    public class FixDbContext : DbContext
-    {
-        public DbSet<Fix> Fixes { set; get; } 
-    }
+    //public class FixDbContext : DbContext
+    //{
+    //    public DbSet<Fix> Fixes { set; get; } 
+    //}
 }

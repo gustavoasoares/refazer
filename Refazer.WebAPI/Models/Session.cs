@@ -20,8 +20,17 @@ namespace Refazer.WebAPI.Models
         //TODO: add more information about the experiment? 
     }
 
-    public class SessionDbContext : DbContext
+    //public class SessionDbContext : DbContext
+    //{
+    //    public DbSet<Session> Sessions { set; get; }
+    //}
+
+    public class RefazerDbContext : DbContext
     {
         public DbSet<Session> Sessions { set; get; }
+        public DbSet<Submission> Submissions { get; set; }
+        public DbSet<Fix> Fixes { set; get; }
+
+        public DbSet<Transformation> Transformations { set; get; }
     }
 }

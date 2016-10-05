@@ -20,10 +20,7 @@ namespace Refazer.WebAPI.Controllers
     public class RefazerController : ApiController
     {
         //Entity framework context for accessing DB
-        private SubmissionDBContext subDb = new SubmissionDBContext();
-        private SessionDbContext sessionDb = new SessionDbContext();
-        private FixDbContext fixDb = new FixDbContext();
-        private TransformationDBContext transformationDb = new TransformationDBContext();
+        private static RefazerDbContext refazerDb = new RefazerDbContext();
 
         // POST: api/Refazer
         public dynamic Post([FromBody]RefazerInput  input)
@@ -70,16 +67,16 @@ namespace Refazer.WebAPI.Controllers
         {
             //First, create an experiment for this grading section
             var session = new Session();
-            sessionDb.Sessions.Add(session);
-            sessionDb.SaveChanges();
+            refazerDb.Sessions.Add(session);
+            refazerDb.SaveChanges();
 
             //associate the submissions to this experiment and save 
             startInput.Submissions.ForEach(s => s.SessionId = session.ID);
             foreach (var submission in startInput.Submissions)
             {
-                subDb.Submissions.Add(submission);
+                refazerDb.Submissions.Add(submission);
             }
-            subDb.SaveChanges();
+            refazerDb.SaveChanges();
             
             return session.ID;
         }
@@ -104,21 +101,22 @@ namespace Refazer.WebAPI.Controllers
                     +", 'code_before': "+ exampleInput.CodeBefore 
                     + ", 'fixed_code': " + exampleInput.CodeAfter + "}]"
                 };
-                transformationDb.Transformations.Add(transformation);
-                transformationDb.SaveChanges();
+                refazerDb.Transformations.Add(transformation);
+                refazerDb.SaveChanges();
                 transformationId = transformation.ID;
                 TryToFixAsync(fixer, exampleInput.SessionId, exampleInput.QuestionId, transformation);
+                refazerDb.SaveChanges();
             }
-            catch(Exception e)
+            catch (Exception e)
             {
                 exceptions.Add(e.Message);
             }
             return Json(new {transformationId , exceptions});
         }
 
-        async Task<int> TryToFixAsync(SubmissionFixer fixer, int experiementId, int questionId, Transformation transformation)
+        int TryToFixAsync(SubmissionFixer fixer, int experiementId, int questionId, Transformation transformation)
         {
-            var submissions = subDb.Submissions.Where(s => s.SessionId == experiementId);
+            var submissions = refazerDb.Submissions.Where(s => s.SessionId == experiementId);
             var manager = new TestManager();
             foreach (var submission in submissions)
             {
@@ -133,16 +131,15 @@ namespace Refazer.WebAPI.Controllers
                         {
                             FixedCode = mistake.SynthesizedAfter,
                             SessionId = experiementId,
-                            SubmissionId = submission.ID,
+                            SubmissionId = submission.SubmissionId,
                             Transformation = transformation
                         };
-                        fixDb.Fixes.Add(fix);
-                        fixDb.SaveChanges();
+                        refazerDb.Fixes.Add(fix);
                     }
                 }
                 catch (Exception e)
                 {
-                    //TODO: Log this exceptions somewhere
+                    Console.Out.WriteLine(e);
                 }
             }
             return 0;
@@ -157,7 +154,7 @@ namespace Refazer.WebAPI.Controllers
         [System.Web.Http.Route("GetFixes"), System.Web.Http.HttpGet]
         public IEnumerable<Fix> GetFixes(int experiement_id, int index)
         {
-            return fixDb.Fixes.Where(x => x.SessionId == experiement_id && x.ID >= index); 
+            return refazerDb.Fixes.Where(x => x.SessionId == experiement_id && x.ID >= index); 
         }
     }
 
