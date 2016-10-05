@@ -330,12 +330,12 @@ namespace Tutor
             return false;
         }
 
-        public ConcurrentQueue<Tuple<List<Mistake>, ProgramNode>> CreateTransformation(Dictionary<string, string> example)
+        public ConcurrentQueue<Tuple<List<Mistake>, ProgramNode>> CreateTransformation(string codeBefore, string codeAfter)
         {
             var result = new ConcurrentQueue<Tuple<List<Mistake>, ProgramNode>>();
             var unparser = new Unparser();
-            var before = unparser.Unparse(NodeWrapper.Wrap(ASTHelper.ParseContent(example["before"])));
-            var after = unparser.Unparse(NodeWrapper.Wrap(ASTHelper.ParseContent(example["after"])));
+            var before = unparser.Unparse(NodeWrapper.Wrap(ASTHelper.ParseContent(codeBefore)));
+            var after = unparser.Unparse(NodeWrapper.Wrap(ASTHelper.ParseContent(codeAfter)));
             var mistake = new Mistake() {before = before, after = after};
             var list = new List<Mistake>() {mistake};
             var transformation = LearnProgram(list);
