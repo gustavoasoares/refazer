@@ -329,12 +329,13 @@
     <Compile Include="Models\AccountBindingModels.cs" />
     <Compile Include="Models\AccountViewModels.cs" />
     <Compile Include="Models\ApplyFixFromExampleInput.cs" />
-    <Compile Include="Models\Experiment.cs" />
+    <Compile Include="Models\Session.cs" />
     <Compile Include="Models\Fix.cs" />
     <Compile Include="Models\IdentityModels.cs" />
     <Compile Include="Models\RefazerInput.cs" />
     <Compile Include="Models\StartInput.cs" />
     <Compile Include="Models\Submission.cs" />
+    <Compile Include="Models\Transformation.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Providers\ApplicationOAuthProvider.cs" />
     <Compile Include="Results\ChallengeResult.cs" />

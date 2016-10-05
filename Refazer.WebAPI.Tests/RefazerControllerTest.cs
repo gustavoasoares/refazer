@@ -88,9 +88,9 @@ namespace Refazer.WebAPI.Tests
         {
             return new ApplyFixFromExampleInput()
             {
-                Before = "x = 0",
-                After = "x = 1",
-                ExperimentId = experiemntId,
+                CodeBefore = "x = 0",
+                CodeAfter = "x = 1",
+                SessionId = experiemntId,
                 QuestionId = 0
             };
         }

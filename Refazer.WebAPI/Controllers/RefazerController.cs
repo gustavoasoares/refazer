@@ -21,8 +21,9 @@ namespace Refazer.WebAPI.Controllers
     {
         //Entity framework context for accessing DB
         private SubmissionDBContext subDb = new SubmissionDBContext();
-        private ExperiemntDbContext expDb = new ExperiemntDbContext();
+        private SessionDbContext sessionDb = new SessionDbContext();
         private FixDbContext fixDb = new FixDbContext();
+        private TransformationDBContext transformationDb = new TransformationDBContext();
 
         // POST: api/Refazer
         public dynamic Post([FromBody]RefazerInput  input)
@@ -64,52 +65,84 @@ namespace Refazer.WebAPI.Controllers
         }
 
         // POST: api/Refazer/Start
-        [Route("Start"), HttpPost]
+        [System.Web.Http.Route("Start"), System.Web.Http.HttpPost]
         public int Start(StartInput startInput)
         {
             //First, create an experiment for this grading section
-            var experiment = new Experiment();
-            expDb.Experiments.Add(experiment);
-            expDb.SaveChanges();
+            var session = new Session();
+            sessionDb.Sessions.Add(session);
+            sessionDb.SaveChanges();
 
             //associate the submissions to this experiment and save 
-            startInput.Submissions.ForEach(s => s.SessionId = experiment.ID);
+            startInput.Submissions.ForEach(s => s.SessionId = session.ID);
             foreach (var submission in startInput.Submissions)
             {
                 subDb.Submissions.Add(submission);
             }
             subDb.SaveChanges();
             
-            return experiment.ID;
+            return session.ID;
         }
 
         //POST: api/Refazer/ApplyFixFromExample
-        [Route("ApplyFixFromExample"), HttpPost]
-        public int ApplyFixFromExample(ApplyFixFromExampleInput exampleInput)
+        [Route("ApplyFixFromExample"), System.Web.Http.HttpPost]
+        public dynamic ApplyFixFromExample(ApplyFixFromExampleInput exampleInput)
         {
-            var fixer = new SubmissionFixer(System.Web.Hosting.HostingEnvironment.MapPath(@"~/Content/"),
+            var exceptions = new List<string>();
+            int transformationId = 0;
+            try
+            {
+                var fixer = new SubmissionFixer(System.Web.Hosting.HostingEnvironment.MapPath(@"~/Content/"),
                 System.Web.Hosting.HostingEnvironment.MapPath(@"~/bin"));
-            var transformation = fixer.CreateTransformation(exampleInput.Before, exampleInput.After);
-            fixer._classification = transformation;
-            TryToFixAsync(fixer, exampleInput.ExperimentId, exampleInput.QuestionId);
-            return 0;
+                var t = fixer.CreateTransformation(exampleInput.CodeBefore, exampleInput.CodeAfter);
+                fixer._classification = t;
+
+                var transformation = new Transformation()
+                {
+                    Program = t.First().Item2.ToString(),
+                    Examples = "[{'submission_id': " + exampleInput.QuestionId 
+                    +", 'code_before': "+ exampleInput.CodeBefore 
+                    + ", 'fixed_code': " + exampleInput.CodeAfter + "}]"
+                };
+                transformationDb.Transformations.Add(transformation);
+                transformationDb.SaveChanges();
+                transformationId = transformation.ID;
+                TryToFixAsync(fixer, exampleInput.SessionId, exampleInput.QuestionId, transformation);
+            }
+            catch(Exception e)
+            {
+                exceptions.Add(e.Message);
+            }
+            return Json(new {transformationId , exceptions});
         }
 
-        async Task<int> TryToFixAsync(SubmissionFixer fixer, int experiementId, int questionId)
+        async Task<int> TryToFixAsync(SubmissionFixer fixer, int experiementId, int questionId, Transformation transformation)
         {
             var submissions = subDb.Submissions.Where(s => s.SessionId == experiementId);
             var manager = new TestManager();
             foreach (var submission in submissions)
             {
-                var mistake = new Mistake();
-                mistake.before = submission.Code;
-                var isFixed = fixer.Fix(mistake, manager.GetTests(questionId), false);
-                if (isFixed)
+                try
                 {
-                    var fix = new Fix() {CodeBefore = mistake.before, FixedCode = mistake.SynthesizedAfter,
-                        ExperimentId = experiementId, SubmissionId = submission.ID};
-                    fixDb.Fixes.Add(fix);
-                    fixDb.SaveChanges();
+                    var mistake = new Mistake();
+                    mistake.before = submission.Code;
+                    var isFixed = fixer.Fix(mistake, manager.GetTests(questionId), false);
+                    if (isFixed)
+                    {
+                        var fix = new Fix()
+                        {
+                            FixedCode = mistake.SynthesizedAfter,
+                            SessionId = experiementId,
+                            SubmissionId = submission.ID,
+                            Transformation = transformation
+                        };
+                        fixDb.Fixes.Add(fix);
+                        fixDb.SaveChanges();
+                    }
+                }
+                catch (Exception e)
+                {
+                    //TODO: Log this exceptions somewhere
                 }
             }
             return 0;
@@ -121,10 +154,10 @@ namespace Refazer.WebAPI.Controllers
         /// <param name="experiement_id">Id of the current experiment</param>
         /// <param name="index">starting index for the fixes</param>
         /// <returns>List of fixes</returns>
-        [Route("GetFixes"), HttpGet]
+        [System.Web.Http.Route("GetFixes"), System.Web.Http.HttpGet]
         public IEnumerable<Fix> GetFixes(int experiement_id, int index)
         {
-            return fixDb.Fixes.Where(x => x.ExperimentId == experiement_id && x.ID >= index); 
+            return fixDb.Fixes.Where(x => x.SessionId == experiement_id && x.ID >= index); 
         }
     }
 

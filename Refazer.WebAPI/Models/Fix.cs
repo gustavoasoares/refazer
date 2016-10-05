@@ -25,9 +25,10 @@ namespace Refazer.WebAPI.Models
         public int SubmissionId { set; get; }
 
         //the id of the experiment where the fix was generated
-        public int ExperimentId { set; get; }
+        public int SessionId { set; get; }
 
-        public IEnumerable<Transformation>  { set; get; }
+        //Transformation that produced this fix
+        public Transformation Transformation { set; get; }
     }
 
     public class FixDbContext : DbContext
