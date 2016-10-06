@@ -62,7 +62,7 @@ namespace Refazer.WebAPI.Controllers
         }
 
         // POST: api/Refazer/Start
-        [System.Web.Http.Route("Start"), System.Web.Http.HttpPost]
+        [Route("Start"), HttpPost]
         public int Start(StartInput startInput)
         {
             //First, create an experiment for this grading section
@@ -82,7 +82,7 @@ namespace Refazer.WebAPI.Controllers
         }
 
         //POST: api/Refazer/ApplyFixFromExample
-        [Route("ApplyFixFromExample"), System.Web.Http.HttpPost]
+        [Route("ApplyFixFromExample"), HttpPost]
         public dynamic ApplyFixFromExample(ApplyFixFromExampleInput exampleInput)
         {
             var exceptions = new List<string>();
@@ -101,11 +101,11 @@ namespace Refazer.WebAPI.Controllers
                     +", 'code_before': "+ exampleInput.CodeBefore 
                     + ", 'fixed_code': " + exampleInput.CodeAfter + "}]"
                 };
+                var refazerDb = new RefazerDbContext();
                 refazerDb.Transformations.Add(transformation);
                 refazerDb.SaveChanges();
                 transformationId = transformation.ID;
                 TryToFixAsync(fixer, exampleInput.SessionId, exampleInput.QuestionId, transformation);
-                refazerDb.SaveChanges();
             }
             catch (Exception e)
             {
@@ -114,7 +114,7 @@ namespace Refazer.WebAPI.Controllers
             return Json(new {transformationId , exceptions});
         }
 
-        int TryToFixAsync(SubmissionFixer fixer, int experiementId, int questionId, Transformation transformation)
+        async Task<int> TryToFixAsync(SubmissionFixer fixer, int experiementId, int questionId, Transformation transformation)
         {
             var submissions = refazerDb.Submissions.Where(s => s.SessionId == experiementId);
             var manager = new TestManager();
@@ -134,7 +134,9 @@ namespace Refazer.WebAPI.Controllers
                             SubmissionId = submission.SubmissionId,
                             Transformation = transformation
                         };
-                        refazerDb.Fixes.Add(fix);
+                        var refazerDb2 = new RefazerDbContext();
+                        refazerDb2.Fixes.Add(fix);
+                        refazerDb2.SaveChanges();
                     }
                 }
                 catch (Exception e)
