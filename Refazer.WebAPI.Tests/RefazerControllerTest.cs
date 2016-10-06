@@ -15,6 +15,7 @@ namespace Refazer.WebAPI.Tests
     {
         private static TraceSource Source = new TraceSource("tests");
 
+        /*
         [TestMethod]
         public void TestPost()
         {
@@ -52,6 +53,7 @@ namespace Refazer.WebAPI.Tests
             }
             Assert.IsTrue(countExamples < 71);
         }
+        */
 
         [TestMethod]
         public void TestSart()

@@ -17,12 +17,14 @@ namespace Refazer.WebAPI.Controllers
     /// <summary>
     /// Refazer API for grading submissions in Refazer4Education
     /// </summary>
+    [RoutePrefix("api/refazer")]
     public class RefazerController : ApiController
     {
         //Entity framework context for accessing DB
         private static RefazerDbContext refazerDb = new RefazerDbContext();
 
         // POST: api/Refazer
+        /*
         public dynamic Post([FromBody]RefazerInput  input)
         {
             var exceptions = new List<string>();
@@ -60,9 +62,10 @@ namespace Refazer.WebAPI.Controllers
             //}
             return Json(new {input.submissions, exceptions});
         }
+        */
 
         // POST: api/Refazer/Start
-        [System.Web.Http.Route("Start"), System.Web.Http.HttpPost]
+        [Route("Start"), HttpPost]
         public int Start(StartInput startInput)
         {
             //First, create an experiment for this grading section
@@ -82,7 +85,7 @@ namespace Refazer.WebAPI.Controllers
         }
 
         //POST: api/Refazer/ApplyFixFromExample
-        [Route("ApplyFixFromExample"), System.Web.Http.HttpPost]
+        [Route("ApplyFixFromExample"), HttpPost]
         public dynamic ApplyFixFromExample(ApplyFixFromExampleInput exampleInput)
         {
             var exceptions = new List<string>();
@@ -97,7 +100,7 @@ namespace Refazer.WebAPI.Controllers
                 var transformation = new Transformation()
                 {
                     Program = t.First().Item2.ToString(),
-                    Examples = "[{'submission_id': " + exampleInput.QuestionId 
+                    Examples = "[{'submission_id': " + exampleInput.SubmissionId 
                     +", 'code_before': "+ exampleInput.CodeBefore 
                     + ", 'fixed_code': " + exampleInput.CodeAfter + "}]"
                 };
@@ -148,13 +151,13 @@ namespace Refazer.WebAPI.Controllers
         /// <summary>
         /// Get Fixes from the database
         /// </summary>
-        /// <param name="experiement_id">Id of the current experiment</param>
-        /// <param name="index">starting index for the fixes</param>
+        /// <param name="SessionId">Id of the current experiment</param>
+        /// <param name="FixId">starting index for the fixes</param>
         /// <returns>List of fixes</returns>
-        [System.Web.Http.Route("GetFixes"), System.Web.Http.HttpGet]
-        public IEnumerable<Fix> GetFixes(int experiement_id, int index)
+        [Route("GetFixes"), HttpGet]
+        public IEnumerable<Fix> GetFixes(int SessionId, int FixId)
         {
-            return refazerDb.Fixes.Where(x => x.SessionId == experiement_id && x.ID >= index); 
+            return refazerDb.Fixes.Where(x => x.SessionId == SessionId && x.ID >= FixId); 
         }
     }
 

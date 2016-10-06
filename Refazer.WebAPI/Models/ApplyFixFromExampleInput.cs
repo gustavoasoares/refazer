@@ -17,7 +17,7 @@ namespace Refazer.WebAPI.Models
         //code after the transformation
         public string CodeAfter { set; get; }
 
-        public string SubmissionId { set; get; }
+        public int SubmissionId { set; get; }
 
         //id of the current experiment session in the user study
         public int SessionId { set; get; }
