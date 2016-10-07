@@ -103,6 +103,5 @@ namespace Refazer.WebAPI.Tests
             var sub2 = new Submission() { Code = "y = 'oi'", ID = 1, QuestionId = 0};
             return new StartInput() {QuestionId = 0, Submissions = new List<Submission>() {sub1,sub2} };
         }
-
     }
 }

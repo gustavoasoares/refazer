@@ -108,7 +108,7 @@ namespace Refazer.WebAPI.Controllers
                 refazerDb.Transformations.Add(transformation);
                 refazerDb.SaveChanges();
                 transformationId = transformation.ID;
-                TryToFixAsync(fixer, exampleInput.SessionId, exampleInput.QuestionId, transformation);
+                var task = Task.Run(() => TryToFixAsync(fixer, exampleInput.SessionId, exampleInput.QuestionId, transformation));
             }
             catch (Exception e)
             {
@@ -117,7 +117,7 @@ namespace Refazer.WebAPI.Controllers
             return Json(new {transformationId , exceptions});
         }
 
-        async Task<int> TryToFixAsync(SubmissionFixer fixer, int experiementId, int questionId, Transformation transformation)
+        static void TryToFixAsync(SubmissionFixer fixer, int experiementId, int questionId, Transformation transformation)
         {
             var submissions = refazerDb.Submissions.Where(s => s.SessionId == experiementId);
             var manager = new TestManager();
@@ -147,7 +147,6 @@ namespace Refazer.WebAPI.Controllers
                     Console.Out.WriteLine(e);
                 }
             }
-            return 0;
         }
 
         /// <summary>
@@ -159,7 +158,8 @@ namespace Refazer.WebAPI.Controllers
         [Route("GetFixes"), HttpGet]
         public IEnumerable<Fix> GetFixes(int SessionId, int FixId)
         {
-            return refazerDb.Fixes.Where(x => x.SessionId == SessionId && x.ID >= FixId); 
+            var refazerDb2 = new RefazerDbContext();
+            return refazerDb2.Fixes.Where(x => x.SessionId == SessionId && x.ID >= FixId); 
         }
     }
 
