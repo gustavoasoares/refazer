@@ -220,7 +220,7 @@ def increment(x):
                         {"assert(g(4)==10)", 25},
                         {"assert(g(5)==22)", 72}
                     };
-                case 1:
+                case 0:
                     return new Dictionary<string, long>
                     {
                         {testSetup + "assert(accumulate(add, 0, 5, identity)==15)", 15},
@@ -229,7 +229,7 @@ def increment(x):
                         {"assert(accumulate(add, 11, 3, square)==25)", 25},
                         {"assert(accumulate(mul, 2, 3, square)==72)", 72}
                     };
-                case 0:
+                case -1:
                     return new Dictionary<string, long>
                     {
                        {"assert(x==1)", 255}
