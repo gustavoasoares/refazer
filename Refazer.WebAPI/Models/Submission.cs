@@ -32,9 +32,4 @@ namespace Refazer.WebAPI.Models
         //student's code for the submission
         public string Code { set; get; }
     }
-
-    //public class SubmissionDBContext : DbContext
-    //{
-    //    public DbSet<Submission> Submissions { get; set; }
-    //}
 }

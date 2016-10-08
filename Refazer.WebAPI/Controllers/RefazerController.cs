@@ -135,6 +135,7 @@ namespace Refazer.WebAPI.Controllers
                             FixedCode = mistake.SynthesizedAfter,
                             SessionId = experiementId,
                             SubmissionId = submission.SubmissionId,
+                            QuestionId = questionId,
                             Transformation = transformation
                         };
                         var refazerDb2 = new RefazerDbContext();

@@ -334,6 +334,10 @@
     <Compile Include="Migrations\201610052243196_Andrew.Designer.cs">
       <DependentUpon>201610052243196_Andrew.cs</DependentUpon>
     </Compile>
+    <Compile Include="Migrations\201610080028454_fix_question_id.cs" />
+    <Compile Include="Migrations\201610080028454_fix_question_id.Designer.cs">
+      <DependentUpon>201610080028454_fix_question_id.cs</DependentUpon>
+    </Compile>
     <Compile Include="Migrations\Configuration.cs" />
     <Compile Include="Models\AccountBindingModels.cs" />
     <Compile Include="Models\AccountViewModels.cs" />
@@ -445,6 +449,9 @@
     </EmbeddedResource>
     <EmbeddedResource Include="Migrations\201610052243196_Andrew.resx">
       <DependentUpon>201610052243196_Andrew.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Migrations\201610080028454_fix_question_id.resx">
+      <DependentUpon>201610080028454_fix_question_id.cs</DependentUpon>
     </EmbeddedResource>
   </ItemGroup>
   <PropertyGroup>
