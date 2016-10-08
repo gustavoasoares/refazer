@@ -159,7 +159,7 @@ namespace Refazer.WebAPI.Controllers
         public IEnumerable<Fix> GetFixes(int SessionId, int FixId)
         {
             var refazerDb2 = new RefazerDbContext();
-            return refazerDb2.Fixes.Where(x => x.SessionId == SessionId && x.ID >= FixId); 
+            return refazerDb2.Fixes.Include("Transformation").Where(x => x.SessionId == SessionId && x.ID >= FixId); 
         }
     }
 
