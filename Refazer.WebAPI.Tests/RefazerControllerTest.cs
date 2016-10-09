@@ -93,7 +93,7 @@ namespace Refazer.WebAPI.Tests
                 CodeBefore = "x = 0",
                 CodeAfter = "x = 1",
                 SessionId = experiemntId,
-                QuestionId = 0
+                QuestionId = -1
             };
         }
 
@@ -101,7 +101,7 @@ namespace Refazer.WebAPI.Tests
         {
             var sub1 = new Submission() {Code = "x = 0", ID = 1, QuestionId = 0};
             var sub2 = new Submission() { Code = "y = 'oi'", ID = 1, QuestionId = 0};
-            return new StartInput() {QuestionId = 0, Submissions = new List<Submission>() {sub1,sub2} };
+            return new StartInput() {QuestionId = -1, Submissions = new List<Submission>() {sub1,sub2} };
         }
     }
 }
