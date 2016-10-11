@@ -196,14 +196,16 @@
   </Choose>
   <ItemGroup>
     <Compile Include="EditsLearnerTest.cs" />
-    <Compile Include="ZssTest.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="ZssTest.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="app.config" />
     <None Include="packages.config" />
     <None Include="resources\after_1.py" />
     <None Include="resources\before_1.py" />
+    <None Include="resources\submissions_after.json" />
+    <None Include="resources\submissions_before.json" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\Tutor\Refazer.csproj">

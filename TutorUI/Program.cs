@@ -248,7 +248,7 @@ namespace TutorUI
                         var newList = new List<Mistake>() { pair };
                         try
                         {
-                            var program = SubmissionFixer.LearnProgram(newList);
+                            var program = fixer.LearnProgram(newList);
                             classification.Enqueue(Tuple.Create(newList, program));
                         }
                         catch (SyntaxErrorException)
@@ -359,7 +359,7 @@ namespace TutorUI
                                         //if (program == null) throw new Exception();
                                         PythonAst ast = null;
                                         ast = ASTHelper.ParseContent(mistake.before);
-                                        var input = State.Create(SubmissionFixer.grammar.Value.InputSymbol, NodeWrapper.Wrap(ast));
+                                        var input = State.Create(fixer.grammar.Value.InputSymbol, NodeWrapper.Wrap(ast));
                                         var unparser = new Unparser();
                                         //var fixedCode = fixer.TryFix(tests, program, input, unparser);
                                         //if (fixedCode == null)
@@ -776,7 +776,7 @@ namespace TutorUI
                 foreach (var list in backupClass)
                 {
                     Source.TraceEvent(TraceEventType.Information, 6, "Learning cluster " + clusterCount + " with mistakes: " + list.Count);
-                    var learnProgram = SubmissionFixer.LearnProgram(list);
+                    var learnProgram = tempFixer.LearnProgram(list);
                     if (learnProgram != null)
                     {
                         classification.Enqueue(Tuple.Create(list, learnProgram));
@@ -844,7 +844,7 @@ namespace TutorUI
                         }
                         try
                         {
-                            var learnProgram = SubmissionFixer.LearnProgram(list);
+                            var learnProgram = tempFixer.LearnProgram(list);
                             if (learnProgram != null)
                             {
                                 classification.Enqueue(Tuple.Create(list, learnProgram));
