@@ -199,7 +199,7 @@ namespace Tutor
             if (output != null)
             {
                 var programSet = output as IEnumerable<PythonNode>;
-                var range = programSet.Count() < 100 ? programSet.ToList() : programSet.ToList().GetRange(0, 10); 
+                var range = programSet.Count() < 100 ? programSet.ToList() : programSet.ToList().GetRange(0, 200); 
                 foreach (var changedProgram in range)
                 {
                     if (staticTests != null && !CheckStaticTests(changedProgram, staticTests))

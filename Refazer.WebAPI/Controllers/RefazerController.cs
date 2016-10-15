@@ -24,45 +24,45 @@ namespace Refazer.WebAPI.Controllers
         private static RefazerDbContext refazerDb = new RefazerDbContext();
 
         // POST: api/Refazer
-        /*
         public dynamic Post([FromBody]RefazerInput  input)
         {
             var exceptions = new List<string>();
 
-            //try
-            //{
-            //    if (input.Examples.Count() == 0)
-            //        throw new ArgumentException("Examples cannot be empty");
+            try
+            {
+                if (input.Examples.Count() == 0)
+                    throw new ArgumentException("Examples cannot be empty");
 
-            //    var fixer = new SubmissionFixer(System.Web.Hosting.HostingEnvironment.MapPath(@"~/Content/"), System.Web.Hosting.HostingEnvironment.MapPath(@"~/bin"));
-            //    var transformation = fixer.CreateTransformation(input.Examples.First());
-            //    fixer._classification = transformation;
-            //    foreach (var submission in input.submissions)
-            //    {
-            //        try
-            //        {
-            //            var mistake = new Mistake();
-            //            mistake.before = submission["before"] as string;
-            //            var isFixed = fixer.Fix(mistake, GetTests(), false);
-            //            submission.Add("fixes_worked", isFixed);
-            //            if (isFixed)
-            //                submission.Add("fixed_code", mistake.SynthesizedAfter);
-            //        }
-            //        catch (Exception e)
-            //        {
-            //            submission.Add("fixes_worked", false);
-            //            submission.Add("exception", e.Message);
-            //            exceptions.Add(e.Message);
-            //        }
-            //    }
-            //}
-            //catch (Exception e)
-            //{
-            //    exceptions.Add(e.Message);
-            //}
+                var fixer = new SubmissionFixer(System.Web.Hosting.HostingEnvironment.MapPath(@"~/Content/"), System.Web.Hosting.HostingEnvironment.MapPath(@"~/bin"));
+                var transformation = fixer.CreateTransformation(input.Examples.First()["before"], input.Examples.First()["after"]);
+                fixer._classification = transformation;
+                var tm = new TestManager();
+                foreach (var submission in input.submissions)
+                {
+                    try
+                    {
+                        var mistake = new Mistake();
+                        mistake.before = submission["before"] as string;
+                        var isFixed = fixer.Fix(mistake, tm.GetTests(0), false);
+                        submission.Add("fixes_worked", isFixed);
+                        if (isFixed)
+                            submission.Add("fixed_code", mistake.SynthesizedAfter);
+                    }
+                    catch (Exception e)
+                    {
+                        submission.Add("fixes_worked", false);
+                        submission.Add("exception", e.Message);
+                        exceptions.Add(e.Message);
+                    }
+                }
+            }
+            catch (Exception e)
+            {
+                exceptions.Add(e.Message);
+            }
             return Json(new {input.submissions, exceptions});
         }
-        */
+        
 
         // POST: api/Refazer/Start
         [Route("Start"), HttpPost]
