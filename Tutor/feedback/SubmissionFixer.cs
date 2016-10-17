@@ -17,6 +17,7 @@ using Microsoft.ProgramSynthesis.Diagnostics;
 using Microsoft.ProgramSynthesis.Learning;
 using Microsoft.ProgramSynthesis.Specifications;
 using Tutor.ast;
+using Tutor.Transformation;
 
 namespace Tutor
 {
@@ -155,6 +156,11 @@ namespace Tutor
 
         public ProgramNode LearnProgram(List<Mistake> mistakes)
         {
+            return LearnPrograms(mistakes,1).First();
+        }
+
+        private IEnumerable<ProgramNode> LearnPrograms(List<Mistake> mistakes, int k, string scoreFunction = "Score")
+        {
             var examples = new Dictionary<State, object>();
             var unparser = new Unparser();
             foreach (var mistake in mistakes)
@@ -166,8 +172,8 @@ namespace Tutor
             }
             var spec = new ExampleSpec(examples);
             var prose = new SynthesisEngine(grammar.Value);
-            var learned = prose.LearnGrammarTopK(spec, "Score", k: 1);
-            return learned.Any() ? learned.First() : null;
+            var learned = prose.LearnGrammarTopK(spec, scoreFunction, k: k);
+            return learned;
         }
 
         public ProgramNode LearnProgram(Mistake mistake, State input)
@@ -338,8 +344,18 @@ namespace Tutor
             var after = unparser.Unparse(NodeWrapper.Wrap(ASTHelper.ParseContent(codeAfter)));
             var mistake = new Mistake() {before = before, after = after};
             var list = new List<Mistake>() {mistake};
-            var transformation = LearnProgram(list);
+            RankingScore.ScoreForContext = 100;
+            var transformations = LearnPrograms(list, 5);
+            foreach (var transformation in transformations)
+            {
             result.Enqueue(Tuple.Create(list,transformation));
+            }
+            RankingScore.ScoreForContext = 0;
+            var transformationsAlt = LearnPrograms(list, 5);
+            foreach (var transformation in transformationsAlt)
+            {
+                result.Enqueue(Tuple.Create(list, transformation));
+            }
             return result;
         }
     }

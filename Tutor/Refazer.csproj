@@ -260,6 +260,7 @@
     <Compile Include="cluster\EditsLearner.cs" />
     <Compile Include="synthesis\Patch.cs" />
     <Compile Include="ast\PythonNode.cs" />
+    <Compile Include="synthesis\RankingScoreAlt.cs" />
     <Compile Include="synthesis\RankingScore.cs" />
     <Compile Include="synthesis\Semantics.cs" />
     <Compile Include="feedback\SubmissionFixer.cs" />

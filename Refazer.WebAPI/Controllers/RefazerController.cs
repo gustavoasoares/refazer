@@ -68,6 +68,7 @@ namespace Refazer.WebAPI.Controllers
         [Route("Start"), HttpPost]
         public int Start(StartInput startInput)
         {
+            var refazerDb = new RefazerDbContext();
             //First, create an experiment for this grading section
             var session = new Session();
             refazerDb.Sessions.Add(session);
@@ -108,7 +109,8 @@ namespace Refazer.WebAPI.Controllers
                 refazerDb.Transformations.Add(transformation);
                 refazerDb.SaveChanges();
                 transformationId = transformation.ID;
-                var task = Task.Run(() => TryToFixAsync(fixer, exampleInput.SessionId, exampleInput.QuestionId, transformation));
+                var submissions = refazerDb.Submissions.Where(s => s.SessionId == exampleInput.SessionId).ToList();
+                var task = Task.Run(() => TryToFixAsync(fixer, exampleInput.SessionId, exampleInput.QuestionId, transformation,submissions));
             }
             catch (Exception e)
             {
@@ -117,14 +119,13 @@ namespace Refazer.WebAPI.Controllers
             return Json(new {transformationId , exceptions});
         }
 
-        static void TryToFixAsync(SubmissionFixer fixer, int experiementId, int questionId, Transformation transformation)
+        static void TryToFixAsync(SubmissionFixer fixer, int experiementId, int questionId, Transformation transformation, IEnumerable<Submission> submissions)
         {
-            var submissions = refazerDb.Submissions.Where(s => s.SessionId == experiementId);
-            var manager = new TestManager();
-            foreach (var submission in submissions)
+            Parallel.ForEach(submissions, submission =>
             {
                 try
                 {
+                    var manager = new TestManager();
                     var mistake = new Mistake();
                     mistake.before = submission.Code;
                     var isFixed = fixer.Fix(mistake, manager.GetTests(questionId), false);
@@ -147,9 +148,9 @@ namespace Refazer.WebAPI.Controllers
                 {
                     Console.Out.WriteLine(e);
                 }
-            }
+            });
         }
-
+        
         /// <summary>
         /// Get Fixes from the database
         /// </summary>
@@ -159,6 +160,7 @@ namespace Refazer.WebAPI.Controllers
         [Route("GetFixes"), HttpGet]
         public IEnumerable<Fix> GetFixes(int SessionId, int FixId)
         {
+            Console.Out.WriteLine("Got here!!!!!!!!!!!!!!!!!!!!!!!!!!");
             var refazerDb2 = new RefazerDbContext();
             return refazerDb2.Fixes.Include("Transformation").Where(x => x.SessionId == SessionId && x.ID >= FixId); 
         }
