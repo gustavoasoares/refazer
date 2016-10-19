@@ -24,5 +24,9 @@ namespace Refazer.WebAPI.Models
 
         //id of the question for the submissions
         public int QuestionId { set; get; }
+
+        public string Ranking { set; get; }
+
+        public int SynthesizedTransformations { set; get; }
     }
 }

@@ -252,6 +252,8 @@
     <Compile Include="ast\WhileStatementNode.cs" />
     <Compile Include="feedback\BottomOutHintGen.cs" />
     <Compile Include="Logger.cs" />
+    <Compile Include="Refazer.cs" />
+    <Compile Include="Refazer4Python.cs" />
     <Compile Include="synthesis\InvalidTemplate.cs" />
     <Compile Include="synthesis\MagicK.cs" />
     <Compile Include="synthesis\NodeInfo.cs" />

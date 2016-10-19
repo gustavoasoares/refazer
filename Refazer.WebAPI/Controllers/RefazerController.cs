@@ -1,16 +1,22 @@
 ﻿using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Net;
 using System.Net.Http;
+using System.Threading;
 using System.Threading.Tasks;
 using System.Web.Http;
+using System.Web.WebSockets;
+using Microsoft.ProgramSynthesis;
 using Microsoft.ProgramSynthesis.AST;
 using Microsoft.ProgramSynthesis.Utils;
 using Newtonsoft.Json;
 using Refazer.WebAPI.Models;
 using Tutor;
+using Tutor.Transformation;
 
 namespace Refazer.WebAPI.Controllers
 {
@@ -23,46 +29,23 @@ namespace Refazer.WebAPI.Controllers
         //Entity framework context for accessing DB
         private static RefazerDbContext refazerDb = new RefazerDbContext();
 
-        // POST: api/Refazer
-        public dynamic Post([FromBody]RefazerInput  input)
+        private static Tutor.Refazer refazer = BuildRefazer();
+        private static object syncRoot = new Object();
+
+        /// <summary>
+        /// Creates a single refazer object for all requests
+        /// </summary>
+        /// <returns></returns>
+        private static Tutor.Refazer BuildRefazer()
         {
-            var exceptions = new List<string>();
-
-            try
+            if (refazer == null)
             {
-                if (input.Examples.Count() == 0)
-                    throw new ArgumentException("Examples cannot be empty");
-
-                var fixer = new SubmissionFixer(System.Web.Hosting.HostingEnvironment.MapPath(@"~/Content/"), System.Web.Hosting.HostingEnvironment.MapPath(@"~/bin"));
-                var transformation = fixer.CreateTransformation(input.Examples.First()["before"], input.Examples.First()["after"]);
-                fixer._classification = transformation;
-                var tm = new TestManager();
-                foreach (var submission in input.submissions)
-                {
-                    try
-                    {
-                        var mistake = new Mistake();
-                        mistake.before = submission["before"] as string;
-                        var isFixed = fixer.Fix(mistake, tm.GetTests(0), false);
-                        submission.Add("fixes_worked", isFixed);
-                        if (isFixed)
-                            submission.Add("fixed_code", mistake.SynthesizedAfter);
-                    }
-                    catch (Exception e)
-                    {
-                        submission.Add("fixes_worked", false);
-                        submission.Add("exception", e.Message);
-                        exceptions.Add(e.Message);
-                    }
-                }
+                    var pathToGrammar = System.Web.Hosting.HostingEnvironment.MapPath(@"~/Content/");
+                    var pathToDslLib = System.Web.Hosting.HostingEnvironment.MapPath(@"~/bin");
+                    refazer = new Refazer4Python(pathToGrammar,pathToDslLib);
             }
-            catch (Exception e)
-            {
-                exceptions.Add(e.Message);
-            }
-            return Json(new {input.submissions, exceptions});
+            return refazer;
         }
-        
 
         // POST: api/Refazer/Start
         [Route("Start"), HttpPost]
@@ -93,24 +76,30 @@ namespace Refazer.WebAPI.Controllers
             int transformationId = 0;
             try
             {
-                var fixer = new SubmissionFixer(System.Web.Hosting.HostingEnvironment.MapPath(@"~/Content/"),
-                System.Web.Hosting.HostingEnvironment.MapPath(@"~/bin"));
-                var t = fixer.CreateTransformation(exampleInput.CodeBefore, exampleInput.CodeAfter);
-                fixer._classification = t;
+                var example = Tuple.Create(exampleInput.CodeBefore, exampleInput.CodeAfter);
+                var transformations = refazer.LearnTransformations(new List<Tuple<string, string>>() {example},
+                    exampleInput.SynthesizedTransformations, exampleInput.Ranking);
 
-                var transformation = new Transformation()
-                {
-                    Program = t.First().Item2.ToString(),
-                    Examples = "[{'submission_id': " + exampleInput.SubmissionId 
-                    +", 'code_before': "+ exampleInput.CodeBefore 
-                    + ", 'fixed_code': " + exampleInput.CodeAfter + "}]"
-                };
                 var refazerDb = new RefazerDbContext();
-                refazerDb.Transformations.Add(transformation);
+                var transformationTuples = new List<Tuple<ProgramNode, Transformation>>();
+                foreach (var programNode in transformations)
+                {
+                    var transformation = new Transformation()
+                    {
+                        Program = programNode.ToString(),
+                        Examples = "[{'submission_id': " + exampleInput.SubmissionId
+                    + ", 'code_before': " + exampleInput.CodeBefore
+                    + ", 'fixed_code': " + exampleInput.CodeAfter + "}]"
+                    };
+                    refazerDb.Transformations.Add(transformation);
+                    transformationTuples.Add(Tuple.Create(programNode, transformation));
+                }
                 refazerDb.SaveChanges();
-                transformationId = transformation.ID;
+
                 var submissions = refazerDb.Submissions.Where(s => s.SessionId == exampleInput.SessionId).ToList();
-                var task = Task.Run(() => TryToFixAsync(fixer, exampleInput.SessionId, exampleInput.QuestionId, transformation,submissions));
+                var submissionTuples = submissions.Select(x => Tuple.Create(x, refazer.CreateInputState(x.Code)));
+                Task.Run(() => TryToFixAsync(transformationTuples, exampleInput.SessionId, 
+                    exampleInput.QuestionId,submissionTuples));
             }
             catch (Exception e)
             {
@@ -119,38 +108,50 @@ namespace Refazer.WebAPI.Controllers
             return Json(new {transformationId , exceptions});
         }
 
-        static void TryToFixAsync(SubmissionFixer fixer, int experiementId, int questionId, Transformation transformation, IEnumerable<Submission> submissions)
-        {
-            Parallel.ForEach(submissions, submission =>
-            {
-                try
-                {
-                    var manager = new TestManager();
-                    var mistake = new Mistake();
-                    mistake.before = submission.Code;
-                    var isFixed = fixer.Fix(mistake, manager.GetTests(questionId), false);
-                    if (isFixed)
-                    {
-                        var fix = new Fix()
-                        {
-                            FixedCode = mistake.SynthesizedAfter,
-                            SessionId = experiementId,
-                            SubmissionId = submission.SubmissionId,
-                            QuestionId = questionId,
-                            Transformation = transformation
-                        };
-                        var refazerDb2 = new RefazerDbContext();
-                        refazerDb2.Fixes.Add(fix);
-                        refazerDb2.SaveChanges();
-                    }
-                }
-                catch (Exception e)
-                {
-                    Console.Out.WriteLine(e);
-                }
-            });
-        }
         
+
+        static void TryToFixAsync(IEnumerable<Tuple<ProgramNode, Transformation>> transformationTuples, int experiementId, 
+            int questionId, IEnumerable<Tuple<Submission, State>> submissionTuples)
+        {
+            foreach (var transformation in transformationTuples)
+            {
+                submissionTuples.AsParallel().WithDegreeOfParallelism(2).ForAll(submission => FixSubmission(transformation,
+                    experiementId, questionId, submission));
+            }
+        }
+
+        private static void FixSubmission(Tuple<ProgramNode, Transformation> transformationTuple, int experiementId, int questionId,
+            Tuple<Submission, State> submission)
+        {
+            try
+            {
+                var manager = new TestManager();
+                var mistake = new Mistake();
+                mistake.before = submission.Item1.Code;
+                var fixer = new SubmissionFixer();
+                var unparser = new Unparser();
+                var fixedCode = fixer.TryFix(manager.GetTests(questionId), transformationTuple.Item1, submission.Item2, unparser);
+                if (fixedCode != null)
+                {
+                    var fix = new Fix()
+                    {
+                        FixedCode = fixedCode,
+                        SessionId = experiementId,
+                        SubmissionId = submission.Item1.SubmissionId,
+                        QuestionId = questionId,
+                        Transformation = transformationTuple.Item2
+                    };
+                    var refazerDb2 = new RefazerDbContext();
+                    refazerDb2.Fixes.Add(fix);
+                    refazerDb2.SaveChanges();
+                }
+            }
+            catch (Exception e)
+            {
+                Console.Out.WriteLine(e);
+            }
+        }
+
         /// <summary>
         /// Get Fixes from the database
         /// </summary>
@@ -196,7 +197,7 @@ def increment(x):
 
             switch (questionId)
             {
-                case 3:
+                case 1:
                     return new Dictionary<string, long>
                     {
                         {testSetup + "assert(product(3, identity)==6)", 6},

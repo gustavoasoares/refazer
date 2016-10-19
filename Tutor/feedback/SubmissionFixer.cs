@@ -50,77 +50,69 @@ namespace Tutor
             {
                 pathToGrammar = "../../../Tutor/synthesis/";
             }
-            grammar =
-                DSLCompiler.LoadGrammarFromFile(pathToGrammar + @"Transformation.grammar",
-                    libraryPaths: new[] { pathToDslLib });
+            //grammar =
+            //    DSLCompiler.LoadGrammarFromFile(pathToGrammar + @"Transformation.grammar",
+            //        libraryPaths: new[] { pathToDslLib });
         }
+
+        //public SubmissionFixer Create(Tuple<string, string> example, 
+        //    string ranking, int numberOftransformations, string pathToGrammar, string pathToLib)
+        //{
+        //    var unparser = new Unparser();
+        //    var before = unparser.Unparse(NodeWrapper.Wrap(ASTHelper.ParseContent(example.Item1)));
+        //    var after = unparser.Unparse(NodeWrapper.Wrap(ASTHelper.ParseContent(example.Item1)));
+        //    var mistake = new Mistake() { before = before, after = after };
+        //    var list = new List<Mistake>() { mistake };
+        //    var queue = new ConcurrentQueue<Tuple<List<Mistake>, ProgramNode>>();
+        //    //if ranking is specific, we add more weight for expressions that contains parent context
+        //    RankingScore.ScoreForContext = ranking.Equals("specific") ? 100 : -100;
+        //    var transformations = LearnPrograms(list, numberOftransformations);
+
+        //    return new SubmissionFixer(queue);
+        //}
 
         public bool Fix(Mistake mistake, Dictionary<string, long> tests, bool leaveOneOut = true)
         {
-            PythonAst ast = null;
-            ast = ASTHelper.ParseContent(mistake.before);
-            var input = State.Create(grammar.Value.InputSymbol, NodeWrapper.Wrap(ast));
-            var unparser = new Unparser();
+            //PythonAst ast = null;
+            //ast = ASTHelper.ParseContent(mistake.before);
+            //var input = State.Create(grammar.Value.InputSymbol, NodeWrapper.Wrap(ast));
+            //var unparser = new Unparser();
 
-            foreach (var tuple in _classification)
-            {
-                var belongs = false;
-                foreach (var mistake1 in tuple.Item1)
-                {
-                    if (mistake.Equals(mistake1))
-                        belongs = true;
-                }
-                if (belongs && leaveOneOut)
-                {
-                    var listWithoutCurrentMistake = tuple.Item1.Where(e => !e.Equals(mistake));
-                    if (!listWithoutCurrentMistake.Any()) return false;
-                    var program = LearnProgram(listWithoutCurrentMistake.ToList());
-                    if (program == null) return false;
+            //foreach (var tuple in _classification)
+            //{
+            //    var belongs = false;
+            //    foreach (var mistake1 in tuple.Item1)
+            //    {
+            //        if (mistake.Equals(mistake1))
+            //            belongs = true;
+            //    }
+            //    if (belongs && leaveOneOut)
+            //    {
+            //        var listWithoutCurrentMistake = tuple.Item1.Where(e => !e.Equals(mistake));
+            //        if (!listWithoutCurrentMistake.Any()) return false;
+            //        var program = LearnProgram(listWithoutCurrentMistake.ToList());
+            //        if (program == null) return false;
 
-                    var fixedCode = TryFix(tests, program, input, unparser);
-                    if (fixedCode != null)
-                    {
-                        mistake.UsedFix = program.ToString();
-                        mistake.SynthesizedAfter = fixedCode;
-                        return true;
-                    }
-                }
-                else
-                {
-                    var fixedCode = TryFix(tests, tuple.Item2, input, unparser);
-                    if (fixedCode != null)
-                    {
-                        mistake.UsedFix = tuple.Item2.ToString();
-                        mistake.SynthesizedAfter = fixedCode;
-                        return true;
-                    }
-                }
-            }
+            //        var fixedCode = TryFix(tests, program, input, unparser);
+            //        if (fixedCode != null)
+            //        {
+            //            mistake.UsedFix = program.ToString();
+            //            mistake.SynthesizedAfter = fixedCode;
+            //            return true;
+            //        }
+            //    }
+            //    else
+            //    {
+            //        var fixedCode = TryFix(tests, tuple.Item2, input, unparser);
+            //        if (fixedCode != null)
+            //        {
+            //            mistake.UsedFix = tuple.Item2.ToString();
+            //            mistake.SynthesizedAfter = fixedCode;
+            //            return true;
+            //        }
+            //    }
+            //}
             return false;
-        }
-
-        public bool ParallelFix(Mistake mistake, Dictionary<string, long> tests)
-        {
-            PythonAst ast = null;
-            try
-            {
-                ast = ASTHelper.ParseContent(mistake.before);
-            }
-            catch (Exception e)
-            {
-                Console.Error.WriteLine(e.Message);
-                return false;
-            }
-            var input = State.Create(grammar.Value.InputSymbol, NodeWrapper.Wrap(ast));
-            var unparser = new Unparser();
-            var isFixed = false;
-            foreach (var tuple in _classification)
-            {
-                if (isFixed)
-                    break;
-                isFixed = TryInParallel(mistake, tests, tuple.Item2, input);
-            }
-            return isFixed;
         }
 
         private bool TryInParallel(Mistake mistake, Dictionary<string, long> tests, ProgramNode program, State input)
@@ -139,7 +131,7 @@ namespace Tutor
 
         public  string pathToGrammar;
         public  string pathToDslLib;
-        public  Result<Grammar> grammar;
+        //public  Result<Grammar> grammar;
 
         public ProgramNode LearnProgram(List<Mistake> list, Mistake next)
         {
@@ -161,32 +153,34 @@ namespace Tutor
 
         private IEnumerable<ProgramNode> LearnPrograms(List<Mistake> mistakes, int k, string scoreFunction = "Score")
         {
-            var examples = new Dictionary<State, object>();
-            var unparser = new Unparser();
-            foreach (var mistake in mistakes)
-            {
-                var astBefore = NodeWrapper.Wrap(ASTHelper.ParseContent(mistake.before));
-                var input = State.Create(grammar.Value.InputSymbol, astBefore);
-                var astAfter = NodeWrapper.Wrap(ASTHelper.ParseContent(mistake.after));
-                examples.Add(input, astAfter);
-            }
-            var spec = new ExampleSpec(examples);
-            var prose = new SynthesisEngine(grammar.Value);
-            var learned = prose.LearnGrammarTopK(spec, scoreFunction, k: k);
-            return learned;
+            //var examples = new Dictionary<State, object>();
+            //var unparser = new Unparser();
+            //foreach (var mistake in mistakes)
+            //{
+            //    var astBefore = NodeWrapper.Wrap(ASTHelper.ParseContent(mistake.before));
+            //    var input = State.Create(grammar.Value.InputSymbol, astBefore);
+            //    var astAfter = NodeWrapper.Wrap(ASTHelper.ParseContent(mistake.after));
+            //    examples.Add(input, astAfter);
+            //}
+            //var spec = new ExampleSpec(examples);
+            //var prose = new SynthesisEngine(grammar.Value);
+            //var learned = prose.LearnGrammarTopK(spec, scoreFunction, k: k);
+            //return learned;
+            throw  new NotImplementedException();
         }
 
         public ProgramNode LearnProgram(Mistake mistake, State input)
         {
-            var examples = new Dictionary<State, object>();
+            //var examples = new Dictionary<State, object>();
 
-            var astAfter = NodeWrapper.Wrap(ASTHelper.ParseContent(mistake.after));
-            examples.Add(input, astAfter);
+            //var astAfter = NodeWrapper.Wrap(ASTHelper.ParseContent(mistake.after));
+            //examples.Add(input, astAfter);
 
-            var spec = new ExampleSpec(examples);
-            var prose = new SynthesisEngine(grammar.Value);
-            var learned = prose.LearnGrammarTopK(spec, "Score", k: 1);
-            return learned.Any() ? learned.First() : null;
+            //var spec = new ExampleSpec(examples);
+            //var prose = new SynthesisEngine(grammar.Value);
+            //var learned = prose.LearnGrammarTopK(spec, "Score", k: 1);
+            //return learned.Any() ? learned.First() : null;
+            throw new NotImplementedException();
         }
 
 
@@ -305,59 +299,37 @@ namespace Tutor
 
         public bool FixItSelf(Mistake mistake, Dictionary<string, long> tests)
         {
-            var unparser = new Unparser();
+            //var unparser = new Unparser();
 
-            PythonAst ast = null;
-            try
-            {
-                ast = ASTHelper.ParseContent(mistake.before);
-                var cleanCode = unparser.Unparse(NodeWrapper.Wrap(ast));
-                mistake.before = cleanCode;
-                ast = ASTHelper.ParseContent(cleanCode);
+            //PythonAst ast = null;
+            //try
+            //{
+            //    ast = ASTHelper.ParseContent(mistake.before);
+            //    var cleanCode = unparser.Unparse(NodeWrapper.Wrap(ast));
+            //    mistake.before = cleanCode;
+            //    ast = ASTHelper.ParseContent(cleanCode);
 
-                var astAfter = NodeWrapper.Wrap(ASTHelper.ParseContent(mistake.after));
-                var cleanedAfter = unparser.Unparse(astAfter);
-                mistake.after = cleanedAfter;
-            }
-            catch (Exception e)
-            {
-                Console.Error.WriteLine(e.Message);
-                return false;
-            }
-            var input = State.Create(grammar.Value.InputSymbol, NodeWrapper.Wrap(ast));
-            var program = LearnProgram(mistake, input);
-            if (program == null) return false;
+            //    var astAfter = NodeWrapper.Wrap(ASTHelper.ParseContent(mistake.after));
+            //    var cleanedAfter = unparser.Unparse(astAfter);
+            //    mistake.after = cleanedAfter;
+            //}
+            //catch (Exception e)
+            //{
+            //    Console.Error.WriteLine(e.Message);
+            //    return false;
+            //}
+            //var input = State.Create(grammar.Value.InputSymbol, NodeWrapper.Wrap(ast));
+            //var program = LearnProgram(mistake, input);
+            //if (program == null) return false;
 
-            var fixedCode = TryFix(tests, program, input, unparser);
-            if (fixedCode != null)
-            {
-                return true;
-            }
+            //var fixedCode = TryFix(tests, program, input, unparser);
+            //if (fixedCode != null)
+            //{
+            //    return true;
+            //}
             return false;
         }
-
-        public ConcurrentQueue<Tuple<List<Mistake>, ProgramNode>> CreateTransformation(string codeBefore, string codeAfter)
-        {
-            var result = new ConcurrentQueue<Tuple<List<Mistake>, ProgramNode>>();
-            var unparser = new Unparser();
-            var before = unparser.Unparse(NodeWrapper.Wrap(ASTHelper.ParseContent(codeBefore)));
-            var after = unparser.Unparse(NodeWrapper.Wrap(ASTHelper.ParseContent(codeAfter)));
-            var mistake = new Mistake() {before = before, after = after};
-            var list = new List<Mistake>() {mistake};
-            RankingScore.ScoreForContext = 100;
-            var transformations = LearnPrograms(list, 5);
-            foreach (var transformation in transformations)
-            {
-            result.Enqueue(Tuple.Create(list,transformation));
-            }
-            RankingScore.ScoreForContext = 0;
-            var transformationsAlt = LearnPrograms(list, 5);
-            foreach (var transformation in transformationsAlt)
-            {
-                result.Enqueue(Tuple.Create(list, transformation));
-            }
-            return result;
-        }
+        
     }
 
     public class StaticAnalysisTester : IVisitor
