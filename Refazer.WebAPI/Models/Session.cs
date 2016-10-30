@@ -18,7 +18,13 @@ namespace Refazer.WebAPI.Models
         public int ID { set; get; }
 
         //TODO: add more information about the experiment? 
+        [Required, DatabaseGenerated(DatabaseGeneratedOption.Computed)]
+        public DateTime Time { set; get; }
     }
+
+
+
+
 
     //public class SessionDbContext : DbContext
     //{
@@ -33,4 +39,5 @@ namespace Refazer.WebAPI.Models
 
         public DbSet<Transformation> Transformations { set; get; }
     }
+
 }

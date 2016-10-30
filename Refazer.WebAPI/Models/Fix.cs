@@ -31,6 +31,9 @@ namespace Refazer.WebAPI.Models
 
         //Transformation that produced this fix
         public Transformation Transformation { set; get; }
+
+        [Required, DatabaseGenerated(DatabaseGeneratedOption.Computed)]
+        public DateTime Time { set; get; }
     }
 
 }

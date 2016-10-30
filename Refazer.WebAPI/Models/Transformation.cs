@@ -21,6 +21,15 @@ namespace Refazer.WebAPI.Models
 
         [Required]
         public string Examples { set; get; }
+
+        [Required, DatabaseGenerated(DatabaseGeneratedOption.Computed)]
+        public DateTime Time { set; get; }
+
+        public int Rank { set; get; }
+
+        public int RankType { set; get; }
+        [Required]
+        public int SessionId { set; get; }
     }
 
     //public class TransformationDBContext : DbContext

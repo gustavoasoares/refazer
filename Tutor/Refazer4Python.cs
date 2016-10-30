@@ -48,9 +48,31 @@ namespace Tutor
             int numberOfPrograms = 1, string ranking = "specific")
         {
             var spec = CreateExampleSpec(examples);
+            //TODO: this is not thread safe. If multiple instances of Refazer are changing 
+            //the value of the ranking scores, we can have a problem.
             RankingScore.ScoreForContext = ranking.Equals("specific") ? 100 : -100;
             var learned = _prose.LearnGrammarTopK(spec, "Score", numberOfPrograms);
-            return learned;
+
+            var uniqueTransformations = new List<ProgramNode>();
+            //filter repetitive transformations 
+            foreach (var programNode in learned)
+            {
+                var exists = false; 
+                foreach (var uniqueTransformation in uniqueTransformations)
+                {
+                    if (programNode.ToString().Equals(uniqueTransformation.ToString()))
+                    {
+                        exists = true;
+                        break;
+                    }
+                }
+                if (!exists)
+                    uniqueTransformations.Add(programNode);
+            }
+            uniqueTransformations = uniqueTransformations.Count > numberOfPrograms
+                ? uniqueTransformations.GetRange(0, numberOfPrograms)
+                : uniqueTransformations;
+            return uniqueTransformations;
         }
 
         private ExampleSpec CreateExampleSpec(List<Tuple<string, string>> examples)

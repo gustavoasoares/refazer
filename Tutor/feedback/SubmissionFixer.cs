@@ -50,9 +50,9 @@ namespace Tutor
             {
                 pathToGrammar = "../../../Tutor/synthesis/";
             }
-            //grammar =
-            //    DSLCompiler.LoadGrammarFromFile(pathToGrammar + @"Transformation.grammar",
-            //        libraryPaths: new[] { pathToDslLib });
+            grammar =
+                DSLCompiler.LoadGrammarFromFile(pathToGrammar + @"Transformation.grammar",
+                    libraryPaths: new[] { pathToDslLib });
         }
 
         //public SubmissionFixer Create(Tuple<string, string> example, 
@@ -131,7 +131,7 @@ namespace Tutor
 
         public  string pathToGrammar;
         public  string pathToDslLib;
-        //public  Result<Grammar> grammar;
+        public  Result<Grammar> grammar;
 
         public ProgramNode LearnProgram(List<Mistake> list, Mistake next)
         {
@@ -223,9 +223,10 @@ namespace Tutor
                             return newCode;
                         }
                     }
-                    catch (Exception)
+                    catch (Exception e)
                     {
-                        //exception during the execution of the test case. Do nothing. 
+                        Trace.TraceError("Exception was thrown when trying to apply fix to submission");
+                        Trace.TraceError(e.Message);
                     }
                 }
             }
@@ -277,8 +278,10 @@ namespace Tutor
                         {
                             p.Kill();
                         }
-                        catch (Exception)
+                        catch (Exception e)
                         {
+                            Trace.TraceError("Exception was thrown when running python tests.");
+                            Trace.TraceError(e.Message);
                             Console.Out.WriteLine("Exception when trying to kill process");
                             //do nothing   
                         }
@@ -286,12 +289,17 @@ namespace Tutor
                     p.Close();
                 }
             }
-            catch (TestCaseException)
+            catch (TestCaseException e)
             {
+                Trace.TraceError("Exception was thrown when running python tests.");
+                Trace.TraceError("Exception was thrown.");
+                Trace.TraceError(e.Message);
                 isFixed = false;
             }
-            catch (RuntimeBinderException)
+            catch (RuntimeBinderException e)
             {
+                Trace.TraceError("Exception was thrown when running python tests.");
+                Trace.TraceError(e.Message);
                 isFixed = false;
             }
             return isFixed;

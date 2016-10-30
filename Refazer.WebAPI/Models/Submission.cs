@@ -31,5 +31,8 @@ namespace Refazer.WebAPI.Models
         [Required]
         //student's code for the submission
         public string Code { set; get; }
+
+        public bool IsFixed { set; get; }
+
     }
 }
