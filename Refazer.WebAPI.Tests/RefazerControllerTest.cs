@@ -15,43 +15,45 @@ namespace Refazer.WebAPI.Tests
     {
         private static TraceSource Source = new TraceSource("tests");
 
-        [TestMethod]
-        public void TestPost()
-        {
-            var input = JsonConvert.DeserializeObject<RefazerInput>(File.ReadAllText("../../data/testData.json"));
-            var controller = new RefazerController();
+        
+        //[TestMethod]
+        //public void TestPost()
+        //{
+        //    var input = JsonConvert.DeserializeObject<RefazerInput>(File.ReadAllText("../../data/testData.json"));
+        //    var controller = new RefazerController();
 
-            var countExamples = 0;
-            try
-            {
-                for (int submissionCount = 0; submissionCount < input.submissions.Count(); submissionCount++)
-                {
-                    var submission = input.submissions[submissionCount];
-                    var isFixed = (bool)submission["is_fixed"];
-                    if (!isFixed)
-                    {
-                        countExamples++;
-                        var before = submission["before"] as string;
-                        var after = submission["after"] as string;
-                        var example = new Dictionary<string,string>();
-                        example.Add("before", before);
-                        example.Add("after", after);
-                        input.Examples = new[] { example };
-                        input = controller.Post(input);
-                        submission = input.submissions[submissionCount];
-                        if (!(bool) submission["is_fixed"])
-                        {
-                            Source.TraceEvent(TraceEventType.Error, 0, "program was not fixed. Index: " + submissionCount);
-                        }
-                    }
-                }
-            }
-            catch (NotImplementedException e)
-            {
-                Source.TraceEvent(TraceEventType.Error, 0, "Exception: " + e.Message);
-            }
-            Assert.IsTrue(countExamples < 71);
-        }
+        //    var countExamples = 0;
+        //    try
+        //    {
+        //        for (int submissionCount = 0; submissionCount < input.submissions.Count(); submissionCount++)
+        //        {
+        //            var submission = input.submissions[submissionCount];
+        //            var isFixed = (bool)submission["is_fixed"];
+        //            if (!isFixed)
+        //            {
+        //                countExamples++;
+        //                var before = submission["before"] as string;
+        //                var after = submission["after"] as string;
+        //                var example = new Dictionary<string,string>();
+        //                example.Add("before", before);
+        //                example.Add("after", after);
+        //                input.Examples = new[] { example };
+        //                input = controller.Post(input);
+        //                submission = input.submissions[submissionCount];
+        //                if (!(bool) submission["is_fixed"])
+        //                {
+        //                    Source.TraceEvent(TraceEventType.Error, 0, "program was not fixed. Index: " + submissionCount);
+        //                }
+        //            }
+        //        }
+        //    }
+        //    catch (NotImplementedException e)
+        //    {
+        //        Source.TraceEvent(TraceEventType.Error, 0, "Exception: " + e.Message);
+        //    }
+        //    Assert.IsTrue(countExamples < 71);
+        //}
+        
 
         [TestMethod]
         public void TestSart()
@@ -60,7 +62,7 @@ namespace Refazer.WebAPI.Tests
             var controller = new RefazerController();
             var id = controller.Start(startInput);
 
-            var db = new SubmissionDBContext();
+            var db = new RefazerDbContext();
             var submissions = db.Submissions.Where(s => s.SessionId == id);
             Assert.AreEqual(2, submissions.Count());
         }
@@ -88,10 +90,10 @@ namespace Refazer.WebAPI.Tests
         {
             return new ApplyFixFromExampleInput()
             {
-                Before = "x = 0",
-                After = "x = 1",
-                ExperimentId = experiemntId,
-                QuestionId = 0
+                CodeBefore = "x = 0",
+                CodeAfter = "x = 1",
+                SessionId = experiemntId,
+                QuestionId = -1
             };
         }
 
@@ -99,8 +101,7 @@ namespace Refazer.WebAPI.Tests
         {
             var sub1 = new Submission() {Code = "x = 0", ID = 1, QuestionId = 0};
             var sub2 = new Submission() { Code = "y = 'oi'", ID = 1, QuestionId = 0};
-            return new StartInput() {QuestionId = 0, Submissions = new List<Submission>() {sub1,sub2} };
+            return new StartInput() {QuestionId = -1, Submissions = new List<Submission>() {sub1,sub2} };
         }
-
     }
 }

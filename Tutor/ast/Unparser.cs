@@ -25,7 +25,7 @@ namespace Tutor
             _code = new StringBuilder();
             try
             {
-                ast.Children.ForEach(e => Write(e));
+                Write(ast);
             }
             catch (ArgumentOutOfRangeException)
             {
@@ -35,12 +35,13 @@ namespace Tutor
             {
                 //Console.Out.WriteLine("Invalid output program");
             }
-            return _code.ToString();
+            return _code.ToString().TrimStart();
         }
 
         private void Write(PythonNode stmt, bool notlambda = true)
         {
-            if (stmt is SuiteStatementNode) Write(stmt as SuiteStatementNode);
+            if (stmt is PythonAstNode) Write(stmt as PythonAstNode);
+            else if (stmt is SuiteStatementNode) Write(stmt as SuiteStatementNode);
             else if (stmt is FunctionDefinitionNode) Write(stmt as FunctionDefinitionNode);
             else if (stmt is ReturnStatementNode) Write(stmt as ReturnStatementNode, notlambda);
             else if (stmt is IfStatementNode) Write(stmt as IfStatementNode);
@@ -67,12 +68,18 @@ namespace Tutor
             else if (stmt is PrintStatementNode) Write((PrintStatementNode)stmt);
             else if (stmt is FromImportStatementNode) Write((FromImportStatementNode)stmt);
             else
-                throw new NotImplementedException();
+                throw new NotImplementedException(stmt.GetType().ToString());
         }
+
+        private void Write(PythonAstNode stmt)
+        {
+            stmt.Children.ForEach(e => Write(e));
+        }
+
 
         private void Write(FromImportStatementNode stmt)
         {
-            
+
             if (stmt.Children.Any())
             {
                 Fill();
@@ -250,7 +257,7 @@ namespace Tutor
         private void Write(AssignmentStatementNode stmt)
         {
             Fill();
-            foreach (var expression in stmt.Children.GetRange(0,stmt.Children.Count-1))
+            foreach (var expression in stmt.Children.GetRange(0, stmt.Children.Count - 1))
             {
                 Write(expression);
                 _code.Append(" = ");
@@ -388,7 +395,7 @@ namespace Tutor
         private void Write(BinaryExpressionNode exp)
         {
             Write(exp.Children[0]);
-            Write((PythonOperator) exp.Value);
+            Write((PythonOperator)exp.Value);
             Write(exp.Children[1]);
         }
 
@@ -399,7 +406,8 @@ namespace Tutor
                 if (exp.Value is string)
                 {
                     _code.Append("'" + exp.Value.ToString() + "'");
-                } else
+                }
+                else
                 {
                     _code.Append(exp.Value.ToString());
                 }
@@ -474,5 +482,5 @@ namespace Tutor
             }
         }
     }
-   
+
 }

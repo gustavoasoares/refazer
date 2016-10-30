@@ -149,6 +149,14 @@
       <HintPath>..\packages\Microsoft.ProgramSynthesis.0.1.1-preview-1\lib\net45\Microsoft.ProgramSynthesis.Utils.dll</HintPath>
       <Private>True</Private>
     </Reference>
+    <Reference Include="Microsoft.WindowsAzure.Diagnostics, Version=2.8.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
+      <HintPath>..\packages\Microsoft.WindowsAzure.SDK.2.9.0\lib\Microsoft.WindowsAzure.Diagnostics.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
+    <Reference Include="Microsoft.WindowsAzure.ServiceRuntime, Version=2.7.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
+      <HintPath>..\packages\Microsoft.WindowsAzure.SDK.2.9.0\lib\Microsoft.WindowsAzure.ServiceRuntime.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
     <Reference Include="Newtonsoft.Json, Version=6.0.0.0, Culture=neutral, PublicKeyToken=30ad4fe6b2a6aeed, processorArchitecture=MSIL">
       <HintPath>..\packages\Newtonsoft.Json.6.0.4\lib\net45\Newtonsoft.Json.dll</HintPath>
     </Reference>
@@ -177,6 +185,10 @@
     <Reference Include="System.Web" />
     <Reference Include="System.Web.Abstractions" />
     <Reference Include="System.Web.Extensions" />
+    <Reference Include="System.Web.Http.Tracing, Version=5.2.3.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
+      <HintPath>..\packages\Microsoft.AspNet.WebApi.Tracing.5.2.3\lib\net45\System.Web.Http.Tracing.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
     <Reference Include="System.Web.Routing" />
     <Reference Include="System.Xml" />
     <Reference Include="System.Configuration" />
@@ -233,6 +245,14 @@
     <Reference Include="Antlr3.Runtime">
       <Private>True</Private>
       <HintPath>..\packages\Antlr.3.4.1.9004\lib\Antlr3.Runtime.dll</HintPath>
+    </Reference>
+    <Reference Include="WindowsAzureEventSource, Version=2.7.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
+      <HintPath>..\packages\Microsoft.WindowsAzure.SDK.2.9.0\lib\WindowsAzureEventSource.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
+    <Reference Include="WindowsAzureTelemetryEvents, Version=2.7.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
+      <HintPath>..\packages\Microsoft.WindowsAzure.SDK.2.9.0\lib\WindowsAzureTelemetryEvents.dll</HintPath>
+      <Private>True</Private>
     </Reference>
   </ItemGroup>
   <ItemGroup>
@@ -326,15 +346,69 @@
     <Compile Include="Global.asax.cs">
       <DependentUpon>Global.asax</DependentUpon>
     </Compile>
+    <Compile Include="Migrations\201610052148407_init.cs" />
+    <Compile Include="Migrations\201610052148407_init.Designer.cs">
+      <DependentUpon>201610052148407_init.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Migrations\201610052243196_Andrew.cs" />
+    <Compile Include="Migrations\201610052243196_Andrew.Designer.cs">
+      <DependentUpon>201610052243196_Andrew.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Migrations\201610080028454_fix_question_id.cs" />
+    <Compile Include="Migrations\201610080028454_fix_question_id.Designer.cs">
+      <DependentUpon>201610080028454_fix_question_id.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Migrations\201610191713396_add_time.cs" />
+    <Compile Include="Migrations\201610191713396_add_time.Designer.cs">
+      <DependentUpon>201610191713396_add_time.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Migrations\201610191738054_rename_time.cs" />
+    <Compile Include="Migrations\201610191738054_rename_time.Designer.cs">
+      <DependentUpon>201610191738054_rename_time.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Migrations\201610191746147_utc_to_pst.cs" />
+    <Compile Include="Migrations\201610191746147_utc_to_pst.Designer.cs">
+      <DependentUpon>201610191746147_utc_to_pst.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Migrations\201610191843075_sessionId-to-Transformation.cs" />
+    <Compile Include="Migrations\201610191843075_sessionId-to-Transformation.Designer.cs">
+      <DependentUpon>201610191843075_sessionId-to-Transformation.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Migrations\201610191859003_sessionId-not-required.cs" />
+    <Compile Include="Migrations\201610191859003_sessionId-not-required.Designer.cs">
+      <DependentUpon>201610191859003_sessionId-not-required.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Migrations\201610192045105_update-is-fixed.cs" />
+    <Compile Include="Migrations\201610192045105_update-is-fixed.Designer.cs">
+      <DependentUpon>201610192045105_update-is-fixed.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Migrations\201610192212596_time-not-required.cs" />
+    <Compile Include="Migrations\201610192212596_time-not-required.Designer.cs">
+      <DependentUpon>201610192212596_time-not-required.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Migrations\201610192215480_drop-submission-time.cs" />
+    <Compile Include="Migrations\201610192215480_drop-submission-time.Designer.cs">
+      <DependentUpon>201610192215480_drop-submission-time.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Migrations\201610222007281_adding-rank.cs" />
+    <Compile Include="Migrations\201610222007281_adding-rank.Designer.cs">
+      <DependentUpon>201610222007281_adding-rank.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Migrations\201610222142595_adding-rank~-type.cs" />
+    <Compile Include="Migrations\201610222142595_adding-rank~-type.Designer.cs">
+      <DependentUpon>201610222142595_adding-rank~-type.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Migrations\Configuration.cs" />
     <Compile Include="Models\AccountBindingModels.cs" />
     <Compile Include="Models\AccountViewModels.cs" />
     <Compile Include="Models\ApplyFixFromExampleInput.cs" />
-    <Compile Include="Models\Experiment.cs" />
+    <Compile Include="Models\Session.cs" />
     <Compile Include="Models\Fix.cs" />
     <Compile Include="Models\IdentityModels.cs" />
     <Compile Include="Models\RefazerInput.cs" />
     <Compile Include="Models\StartInput.cs" />
     <Compile Include="Models\Submission.cs" />
+    <Compile Include="Models\Transformation.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Providers\ApplicationOAuthProvider.cs" />
     <Compile Include="Results\ChallengeResult.cs" />
@@ -428,6 +502,47 @@
   <ItemGroup>
     <Analyzer Include="..\packages\Microsoft.CodeAnalysis.Analyzers.1.1.0\analyzers\dotnet\cs\Microsoft.CodeAnalysis.Analyzers.dll" />
     <Analyzer Include="..\packages\Microsoft.CodeAnalysis.Analyzers.1.1.0\analyzers\dotnet\cs\Microsoft.CodeAnalysis.CSharp.Analyzers.dll" />
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="Migrations\201610052148407_init.resx">
+      <DependentUpon>201610052148407_init.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Migrations\201610052243196_Andrew.resx">
+      <DependentUpon>201610052243196_Andrew.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Migrations\201610080028454_fix_question_id.resx">
+      <DependentUpon>201610080028454_fix_question_id.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Migrations\201610191713396_add_time.resx">
+      <DependentUpon>201610191713396_add_time.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Migrations\201610191738054_rename_time.resx">
+      <DependentUpon>201610191738054_rename_time.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Migrations\201610191746147_utc_to_pst.resx">
+      <DependentUpon>201610191746147_utc_to_pst.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Migrations\201610191843075_sessionId-to-Transformation.resx">
+      <DependentUpon>201610191843075_sessionId-to-Transformation.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Migrations\201610191859003_sessionId-not-required.resx">
+      <DependentUpon>201610191859003_sessionId-not-required.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Migrations\201610192045105_update-is-fixed.resx">
+      <DependentUpon>201610192045105_update-is-fixed.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Migrations\201610192212596_time-not-required.resx">
+      <DependentUpon>201610192212596_time-not-required.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Migrations\201610192215480_drop-submission-time.resx">
+      <DependentUpon>201610192215480_drop-submission-time.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Migrations\201610222007281_adding-rank.resx">
+      <DependentUpon>201610222007281_adding-rank.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Migrations\201610222142595_adding-rank~-type.resx">
+      <DependentUpon>201610222142595_adding-rank~-type.cs</DependentUpon>
+    </EmbeddedResource>
   </ItemGroup>
   <PropertyGroup>
     <VisualStudioVersion Condition="'$(VisualStudioVersion)' == ''">10.0</VisualStudioVersion>

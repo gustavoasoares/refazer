@@ -33,10 +33,6 @@ namespace Tutor.Transformation
                 var rootAndNonRootEdits = SplitEditsByRootsAndNonRoots(editDistance);
                 var edits = ExtractPrimaryEdits(rootAndNonRootEdits, editDistance);
 
-                //todo fix some big examples that are not working 
-                //if (edits.Count > 18)
-                //    return null;
-
                 var patch = new Patch();
                 edits.ForEach(e => patch.EditSets.Add(new List<Edit>() {e}));
                 examples[input] = patch;
@@ -44,7 +40,7 @@ namespace Tutor.Transformation
             return new ExampleSpec(examples);
         }
 
-        private static List<Edit> ExtractPrimaryEdits(Tuple<List<Edit>, List<Edit>> rootAndNonRootEdits, 
+        public static List<Edit> ExtractPrimaryEdits(Tuple<List<Edit>, List<Edit>> rootAndNonRootEdits, 
             EditDistance editDistance)
         {
             var edits = new List<Edit>();
@@ -146,7 +142,7 @@ namespace Tutor.Transformation
             return false;
         }
 
-        private static Tuple<List<Edit>, List<Edit>> SplitEditsByRootsAndNonRoots(EditDistance editDistance)
+        public static Tuple<List<Edit>, List<Edit>> SplitEditsByRootsAndNonRoots(EditDistance editDistance)
         {
 
             var roots = new List<Edit>();

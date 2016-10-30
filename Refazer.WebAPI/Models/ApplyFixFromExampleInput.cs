@@ -12,15 +12,21 @@ namespace Refazer.WebAPI.Models
     public class ApplyFixFromExampleInput
     {
         //code before the trasformation
-        public string Before { set; get; }
+        public string CodeBefore { set; get; }
 
         //code after the transformation
-        public string After { set; get; }
+        public string CodeAfter { set; get; }
+
+        public int SubmissionId { set; get; }
 
         //id of the current experiment session in the user study
-        public int ExperimentId { set; get; }
+        public int SessionId { set; get; }
 
         //id of the question for the submissions
         public int QuestionId { set; get; }
+
+        public string Ranking { set; get; }
+
+        public int SynthesizedTransformations { set; get; }
     }
 }

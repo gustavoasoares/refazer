@@ -8,10 +8,8 @@ using Tutor.synthesis;
 namespace Tutor.Transformation
 {
     [SuppressMessage("ReSharper", "UnusedMember.Global")]
-    public static class RankingScore
+    public static class RankingScoreAlt
     {
-        public static double ScoreForContext = 0; 
-
         public const double VariableScore = 0;
 
         [FeatureCalculator("Apply")]
@@ -57,7 +55,7 @@ namespace Tutor.Transformation
         public static double Score_Target(double template) => template;
 
         [FeatureCalculator("StartsWithParent")]
-        public static double Score_StartsWithParent(double template) => ScoreForContext + template ;
+        public static double Score_StartsWithParent(double template) => template ;
 
         [FeatureCalculator("StartsWithTarget")]
         public static double Score_StartsWithTarget(double template) => template;

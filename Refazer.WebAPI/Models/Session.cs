@@ -12,16 +12,32 @@ namespace Refazer.WebAPI.Models
     /// This class represents an experiement session in a user study for evaluation
     /// our grading ui
     /// </summary>
-    public class Experiment
+    public class Session
     {
         [Key,DatabaseGenerated(DatabaseGeneratedOption.Identity)]
         public int ID { set; get; }
 
         //TODO: add more information about the experiment? 
+        [Required, DatabaseGenerated(DatabaseGeneratedOption.Computed)]
+        public DateTime Time { set; get; }
     }
 
-    public class ExperiemntDbContext : DbContext
+
+
+
+
+    //public class SessionDbContext : DbContext
+    //{
+    //    public DbSet<Session> Sessions { set; get; }
+    //}
+
+    public class RefazerDbContext : DbContext
     {
-        public DbSet<Experiment> Experiments { set; get; }
+        public DbSet<Session> Sessions { set; get; }
+        public DbSet<Submission> Submissions { get; set; }
+        public DbSet<Fix> Fixes { set; get; }
+
+        public DbSet<Transformation> Transformations { set; get; }
     }
+
 }

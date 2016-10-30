@@ -11,6 +11,7 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 using System.Collections.Generic;
 using System.Linq;
 using Microsoft.ProgramSynthesis;
+using Microsoft.ProgramSynthesis.AST;
 using Microsoft.ProgramSynthesis.Compiler;
 using Microsoft.ProgramSynthesis.Diagnostics;
 using Microsoft.ProgramSynthesis.Learning;
@@ -735,6 +736,50 @@ def product(n, term):
             AssertCorrectTransformation(examples);
         }
 
+        [TestMethod]
+        public void TestRanking()
+        {
+            var before = @"
+def accumulate(combiner, base, n, term):
+    def rec_n(n, term):
+        if n==1:
+            return 1
+        else:
+            return combiner(term(n), rec_n((n-1), term))
+    return combiner(base, rec_n(n, term))";
+            var after = @"
+def accumulate(combiner, base, n, term):
+    if n==0:
+        return base
+    def rec_n(n, term):
+        if n==1:
+            return 1
+        else:
+            return combiner(term(n), rec_n((n-1), term))
+    return combiner(base, rec_n(n, term))";
+
+            var newBefore = @"
+def accumulate(combiner, base, n, term):
+    if n==1:
+        return combiner(base, term(1))
+    else:
+        return combiner(term(n), accumulate(combiner, base, n-1, term))";
+
+            var newAfter = @"
+def accumulate(combiner, base, n, term):
+    if n==0:
+        return base
+    if n==1:
+        return combiner(base, term(1))
+    else:
+        return combiner(term(n), accumulate(combiner, base, n-1, term))";
+
+
+            var program = LearnProgram(before, after);
+
+            AssertTransformationIsCorrect(newBefore, newAfter, program);
+        }
+
         private static void AssertCorrectTransformation(IEnumerable<Tuple<string,string>> mistakes) 
         {
             var examples = new Dictionary<State, object>();
@@ -774,7 +819,30 @@ def product(n, term):
 
         private static void AssertCorrectTransformation(string before, string after)
         {
+            var first = LearnProgram(before, after);
+            AssertTransformationIsCorrect(before, after, first);
+        }
 
+        private static void AssertTransformationIsCorrect(string before, string after, ProgramNode first)
+        {
+            var astBefore = NodeWrapper.Wrap(ASTHelper.ParseContent(before));
+            var input = State.Create(grammar.Value.InputSymbol, astBefore);
+            var output = first.Invoke(input) as IEnumerable<PythonNode>;
+
+            var isFixed = false;
+            foreach (var fixedProgram in output)
+            {
+                var unparser = new Unparser();
+                var newCode = unparser.Unparse(fixedProgram);
+                isFixed = after.Equals(newCode);
+                if (isFixed)
+                    break;
+            }
+            Assert.IsTrue(isFixed);
+        }
+
+        private static ProgramNode LearnProgram(string before, string after)
+        {
             var astBefore = NodeWrapper.Wrap(ASTHelper.ParseContent(before));
 
             var input = State.Create(grammar.Value.InputSymbol, astBefore);
@@ -783,22 +851,10 @@ def product(n, term):
             var examples = new Dictionary<State, object> {{input, astAfter}};
             var spec = new ExampleSpec(examples);
 
-            
-            var learned = prose.LearnGrammarTopK(spec, "Score");
-            prose.Configuration.LogListener.SaveLogToXML("log.xml");
-            var first = learned.First();
-            var output = first.Invoke(input) as IEnumerable<PythonNode>;
 
-            var isFixed = false;
-            foreach (var fixedProgram in output)
-            {
-                var unparser = new Unparser();
-                var newCode = unparser.Unparse(fixedProgram);
-                 isFixed = after.Equals(newCode);
-                if (isFixed)
-                    break; 
-            }
-            Assert.IsTrue(isFixed);
+            var learned = prose.LearnGrammarTopK(spec, "Score", k:10);
+            var first = learned.First();
+            return first;
         }
 
 

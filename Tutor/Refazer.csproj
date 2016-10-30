@@ -250,7 +250,10 @@
     <Compile Include="ast\TupleExpressionNode.cs" />
     <Compile Include="ast\UnaryExpressionNode.cs" />
     <Compile Include="ast\WhileStatementNode.cs" />
+    <Compile Include="feedback\BottomOutHintGen.cs" />
     <Compile Include="Logger.cs" />
+    <Compile Include="Refazer.cs" />
+    <Compile Include="Refazer4Python.cs" />
     <Compile Include="synthesis\InvalidTemplate.cs" />
     <Compile Include="synthesis\MagicK.cs" />
     <Compile Include="synthesis\NodeInfo.cs" />
@@ -259,6 +262,7 @@
     <Compile Include="cluster\EditsLearner.cs" />
     <Compile Include="synthesis\Patch.cs" />
     <Compile Include="ast\PythonNode.cs" />
+    <Compile Include="synthesis\RankingScoreAlt.cs" />
     <Compile Include="synthesis\RankingScore.cs" />
     <Compile Include="synthesis\Semantics.cs" />
     <Compile Include="feedback\SubmissionFixer.cs" />
