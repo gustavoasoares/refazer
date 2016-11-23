@@ -7,6 +7,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Refazer", "Tutor\Refazer.cs
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Refazer.WebAPI", "Refazer.WebAPI\Refazer.WebAPI.csproj", "{EB1AEAF6-FD38-4824-8A3D-428BCF10E92D}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Refazer.Test", "Refazer.Test\Refazer.Test.csproj", "{B46BE8FD-E056-4DE2-8C78-17E49ED4CDFE}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -21,6 +23,10 @@ Global
 		{EB1AEAF6-FD38-4824-8A3D-428BCF10E92D}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{EB1AEAF6-FD38-4824-8A3D-428BCF10E92D}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{EB1AEAF6-FD38-4824-8A3D-428BCF10E92D}.Release|Any CPU.Build.0 = Release|Any CPU
+		{B46BE8FD-E056-4DE2-8C78-17E49ED4CDFE}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{B46BE8FD-E056-4DE2-8C78-17E49ED4CDFE}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{B46BE8FD-E056-4DE2-8C78-17E49ED4CDFE}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{B46BE8FD-E056-4DE2-8C78-17E49ED4CDFE}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
