@@ -8,9 +8,10 @@ using Microsoft.ProgramSynthesis.Diagnostics;
 using Microsoft.ProgramSynthesis.Learning;
 using Microsoft.ProgramSynthesis.Learning.Logging;
 using Microsoft.ProgramSynthesis.Specifications;
+using Tutor;
 using Tutor.Transformation;
 
-namespace Tutor
+namespace Refazer.Core
 {
     /// <summary>
     /// Python Instantiation of refazer
@@ -34,17 +35,17 @@ namespace Tutor
         /// </summary>  
         public Result<Grammar> Grammar { get; }
 
-        public Refazer4Python(string pathToGrammar = @"..\..\..\Tutor\synthesis\", string pathToDslLib = @"..\..\Tutor\bin\debug")
+        public Refazer4Python(string pathToGrammar = @"..\..\..\Tutor\synthesis\", string pathToDslLib = @"..\..\..\Tutor\bin\debug")
         {
             _pathToGrammar = pathToGrammar;
             _pathToDslLib = pathToDslLib;
             Grammar = DSLCompiler.LoadGrammarFromFile(pathToGrammar + @"Transformation.grammar",
                     libraryPaths: new[] { pathToDslLib });
-            _prose = new SynthesisEngine(Grammar.Value, new SynthesisEngine.Config { LogListener = new LogListener() });
-
+            _prose = new SynthesisEngine(Grammar.Value,
+                new SynthesisEngine.Config { LogListener = new LogListener() });
         }
 
-        public IEnumerable<ProgramNode> LearnTransformations(List<Tuple<string, string>> examples,
+        public IEnumerable<Transformation> LearnTransformations(List<Tuple<string, string>> examples,
             int numberOfPrograms = 1, string ranking = "specific")
         {
             var spec = CreateExampleSpec(examples);
@@ -72,7 +73,7 @@ namespace Tutor
             uniqueTransformations = uniqueTransformations.Count > numberOfPrograms
                 ? uniqueTransformations.GetRange(0, numberOfPrograms)
                 : uniqueTransformations;
-            return uniqueTransformations;
+            return uniqueTransformations.Select(e => new PythonTransformation(e));
         }
 
         private ExampleSpec CreateExampleSpec(List<Tuple<string, string>> examples)
@@ -95,10 +96,10 @@ namespace Tutor
             return input;
         }
 
-        public IEnumerable<string> Apply(ProgramNode transformation, string program)
+        public IEnumerable<string> Apply(Transformation transformation, string program)
         {
             var unparser = new Unparser();
-            var result = transformation.Invoke(CreateInputState(program)) as IEnumerable<PythonNode>;
+            var result = transformation.GetSynthesizedProgram().Invoke(CreateInputState(program)) as IEnumerable<PythonNode>;
             return result == null ?  new List<string>() : result.Select(x => unparser.Unparse(x)); 
         }
     }

@@ -18,6 +18,7 @@ using Microsoft.ProgramSynthesis.AST;
 using Microsoft.ProgramSynthesis.Utils;
 using Microsoft.WindowsAzure.ServiceRuntime;
 using Newtonsoft.Json;
+using Refazer.Core;
 using Refazer.WebAPI.Models;
 using Tutor;
 using Tutor.Transformation;
@@ -36,7 +37,7 @@ namespace Refazer.WebAPI.Controllers
         /// Creates refazer
         /// </summary>
         /// <returns></returns>
-        private Tutor.Refazer BuildRefazer()
+        private Core.Refazer BuildRefazer()
         {
             var pathToGrammar = System.Web.Hosting.HostingEnvironment.MapPath(@"~/Content/");
             var pathToDslLib = System.Web.Hosting.HostingEnvironment.MapPath(@"~/bin");
@@ -81,14 +82,15 @@ namespace Refazer.WebAPI.Controllers
                     exampleInput.SynthesizedTransformations, exampleInput.Ranking);
 
                 var refazerDb = new RefazerDbContext();
-                var newTransformations = FilterExistingTransformations(transformations,
+                var newTransformations = FilterExistingTransformations(
+                    transformations.Select(e => e.GetSynthesizedProgram()),
                     refazerDb.Transformations.Where(x => x.SessionId == exampleInput.SessionId));
-                var transformationTuples = new List<Tuple<ProgramNode, Transformation>>();
+                var transformationTuples = new List<Tuple<ProgramNode, Models.Transformation>>();
 
                 var rank = 1;
                 foreach (var programNode in newTransformations)
                 {
-                    var transformation = new Transformation()
+                    var transformation = new Models.Transformation()
                     {
                         SessionId = exampleInput.SessionId,
                         Program = programNode.ToString(),
@@ -138,7 +140,7 @@ namespace Refazer.WebAPI.Controllers
         }
 
         private IEnumerable<ProgramNode> FilterExistingTransformations(IEnumerable<ProgramNode> newTransformations,
-            IQueryable<Transformation> existingTransformations)
+            IQueryable<Models.Transformation> existingTransformations)
         {
             var result = new List<ProgramNode>();
             foreach (var newTransformation in newTransformations)
@@ -159,7 +161,7 @@ namespace Refazer.WebAPI.Controllers
         }
 
 
-        static void TryToFixAsync(IEnumerable<Tuple<ProgramNode, Transformation>> transformationTuples, int experiementId, 
+        static void TryToFixAsync(IEnumerable<Tuple<ProgramNode, Models.Transformation>> transformationTuples, int experiementId, 
             int questionId, IEnumerable<Tuple<Submission, State>> submissionTuples)
         {
             Trace.TraceWarning(string.Format("Starting TryFix for Session: {0}, Instance: {1}", experiementId, ""));
@@ -187,7 +189,7 @@ namespace Refazer.WebAPI.Controllers
             Trace.TraceWarning(string.Format("Finishing TryFix for session: {0}, Instance: {1}", experiementId, ""));
         }
 
-        private static void FixSubmission(Tuple<ProgramNode, Transformation> transformationTuple, int experiementId, int questionId,
+        private static void FixSubmission(Tuple<ProgramNode, Models.Transformation> transformationTuple, int experiementId, int questionId,
             Tuple<Submission, State> submission)
         {
             try

@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using Microsoft.ProgramSynthesis;
 using Microsoft.ProgramSynthesis.AST;
 
-namespace Tutor
+namespace Refazer.Core
 {
     /// <summary>
     /// Refazer API learns program transformations from examples
@@ -17,7 +17,7 @@ namespace Tutor
         /// <param name="numberOfPrograms">Max number of learned programs</param>
         /// <param name="ranking">Ranking strategic. So far: "general" or "specific"</param>
         /// <returns>List of learned transformations</returns>
-        IEnumerable<ProgramNode> LearnTransformations(List<Tuple<string, string>> examples, int numberOfPrograms,
+        IEnumerable<Transformation> LearnTransformations(List<Tuple<string, string>> examples, int numberOfPrograms,
             string ranking);
 
         /// <summary>
@@ -33,6 +33,6 @@ namespace Tutor
         /// <param name="transformation"></param>
         /// <param name="program"></param>
         /// <returns>List of output programs</returns>
-        IEnumerable<string> Apply(ProgramNode transformation, string program);
+        IEnumerable<string> Apply(Transformation transformation, string program);
     }
 }
