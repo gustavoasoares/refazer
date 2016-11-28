@@ -16,10 +16,59 @@ namespace Refazer.Test
         }
 
         [TestMethod]
+        public void TestLearn2()
+        {
+            var before = @"def product(n, term):
+    total, k = 0, 1
+    while k <= n:
+        total, k = total * term(k), k + 1
+    return total";
+
+            var after = @"def product(n, term):
+    total, k = 1, 1
+    while k<=n:
+        total, k = total*term(k), k+1
+    return total";
+            TestUtils.AssertCorrectTransformation(before, after);
+        }
+
+        [TestMethod]
+        public void TestLearn3()
+        {
+            var before = @"def product(n, term):
+    def counter(i, total = 0):
+        return total * term(i)";
+
+            var after = @"def product(n, term):
+    def counter(i, total = 1):
+        return total*term(i)";
+            TestUtils.AssertCorrectTransformation(before, after);
+        }
+
+
+        [TestMethod]
         public void TestLearn4()
         {
             var before = @"total = total * term(i)";
             var after = @"total = term(i)*total";
+            TestUtils.AssertCorrectTransformation(before, after);
+        }
+
+        [TestMethod]
+        public void TestLearn5()
+        {
+            var before = @"def product(n, term):
+    item, Total = 0, 1
+    while item<=n:
+        item, Total = item + 1, Total * term(item)
+        return Total";
+
+            var after = @"def product(n, term):
+    i, Total = 0, 1
+    while i<=n:
+        i, Total = i+1, Total*term(i)
+    return Total";
+
             TestUtils.AssertCorrectTransformation(before, after);
         }
 

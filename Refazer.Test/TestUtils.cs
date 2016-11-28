@@ -21,7 +21,7 @@ namespace Refazer.Test
             foreach (var mistake in examples)
             {
                 var output = refazer.Apply(transformation, mistake.Item1);
-
+                Console.Out.WriteLine("");
                 var isFixed = false;
                 foreach (var newCode in output)
                 {
