@@ -11,9 +11,9 @@
             _target = target;
         }
 
-        public int GetK(TreeTemplate template)
+        public int GetK(Pattern pattern)
         {
-            var matches = template.Matches(_input);
+            var matches = pattern.Matches(_input);
             var witness = -1;
             for (var i = 0; i < matches.Count; i++)
             {
@@ -31,7 +31,8 @@
         protected bool Equals(MagicK other)
         {
             var wildCard = new Wildcard(_target.InnerNode.GetType().Name);
-            return Equals(GetK(wildCard), other.GetK(wildCard));
+            var pattern = new Pattern(wildCard, 0, new AbsolutePath(0));
+            return Equals(GetK(pattern), other.GetK(pattern));
         }
 
         public override bool Equals(object obj)
@@ -39,7 +40,7 @@
             if (ReferenceEquals(null, obj)) return false;
             if (ReferenceEquals(this, obj)) return true;
             if (obj.GetType() != this.GetType()) return false;
-            return Equals((MagicK) obj);
+            return Equals((MagicK)obj);
         }
 
         public override int GetHashCode()

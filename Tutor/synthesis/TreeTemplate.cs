@@ -8,12 +8,15 @@ namespace Tutor.synthesis
 {
     public class TreeTemplate
     {
+        public PythonNode PythonNode { set; get; }
+
+        public PythonNode TmpNode { get; set; }
         public bool Target { get; set; }
 
         public string Type { get; set; }
 
 
-        public IList<TreeTemplate> Children { get; set;  } = new List<TreeTemplate>();
+        public List<TreeTemplate> Children { get; set; } = new List<TreeTemplate>();
         public dynamic Value { get; set; }
 
         public TreeTemplate(string type)
@@ -21,9 +24,19 @@ namespace Tutor.synthesis
             Type = type;
         }
 
+        public TreeTemplate()
+        {
+        }
+
+        public TreeTemplate(PythonNode pythonNode, PythonNode tmpNode)
+        {
+            this.PythonNode = pythonNode;
+            this.TmpNode = tmpNode;
+        }
+
         protected bool Equals(TreeTemplate other)
         {
-            return Target == other.Target && string.Equals(Type, other.Type) && Equals(Children, other.Children) && Equals(Value, other.Value);
+            return string.Equals(Type, other.Type) && Equals(Children, other.Children) && Equals(Value, other.Value) && Equals(TmpNode, other.TmpNode);
         }
 
         public override bool Equals(object obj)
@@ -31,7 +44,7 @@ namespace Tutor.synthesis
             if (ReferenceEquals(null, obj)) return false;
             if (ReferenceEquals(this, obj)) return true;
             if (obj.GetType() != this.GetType()) return false;
-            return Equals((TreeTemplate) obj);
+            return Equals((TreeTemplate)obj);
         }
 
         public override int GetHashCode()
@@ -39,9 +52,9 @@ namespace Tutor.synthesis
             unchecked
             {
                 var hashCode = Target.GetHashCode();
-                hashCode = (hashCode*397) ^ (Type != null ? Type.GetHashCode() : 0);
-                hashCode = (hashCode*397) ^ (Children != null ? Children.GetHashCode() : 0);
-                hashCode = (hashCode*397) ^ (Value != null ? Value.GetHashCode() : 0);
+                hashCode = (hashCode * 397) ^ (Type != null ? Type.GetHashCode() : 0);
+                hashCode = (hashCode * 397) ^ (Children != null ? Children.GetHashCode() : 0);
+                hashCode = (hashCode * 397) ^ (Value != null ? Value.GetHashCode() : 0);
                 return hashCode;
             }
         }
@@ -90,66 +103,41 @@ namespace Tutor.synthesis
                 return false;
             return Equals(Value, root.Value);
         }
-
-        public IList<PythonNode> Matches(PythonNode inp)
-        {
-            var visitor = new MatchVisitor(this);
-            inp.Walk(visitor);
-            return visitor.Matches;
-        }
-
     }
 
     public class MatchVisitor : IVisitor
     {
-        private readonly TreeTemplate _template;
+        private readonly Pattern _pattern;
 
         public List<PythonNode> Matches { set; get; }
 
-        public MatchVisitor(TreeTemplate template)
+        public MatchVisitor(Pattern pattern)
         {
-            _template = template;
+            _pattern = pattern;
             Matches = new List<PythonNode>();
         }
 
         public bool Visit(PythonNode pythonNode)
         {
             PythonNode target = null;
-            if (TryMatch(pythonNode, _template, ref target) && target != null)
+            if (TryMatch(pythonNode, _pattern, ref target) && target != null)
             {
                 Matches.Add(target);
             }
             return true;
         }
 
-        private bool TryMatch(PythonNode node, TreeTemplate template, ref PythonNode target)
+        private bool TryMatch(PythonNode node, Pattern template, ref PythonNode target)
         {
             if (template.Match(node))
             {
-                if (template.Target)
-                    target = node;
-
-                for (var i = 0; i < template.Children.Count; i++)
-                {
-                    var child = template.Children[i];
-                    if (i < node.Children.Count)
-                    {
-                        var compared = node.Children[i];
-                        var result = TryMatch(compared, child, ref target);
-                        if (!result)
-                            return false;
-                    }
-                    else
-                    {
-                        return false;
-                    }
-                }
+                target = node;
             }
             else
             {
                 return false;
             }
-            return true; 
+            return true;
         }
     }
 }

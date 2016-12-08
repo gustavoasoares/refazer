@@ -258,6 +258,7 @@
     <Compile Include="PythonTransformation.cs" />
     <Compile Include="Refazer.cs" />
     <Compile Include="Refazer4Python.cs" />
+    <Compile Include="synthesis\AbsolutePath.cs" />
     <Compile Include="synthesis\InvalidTemplate.cs" />
     <Compile Include="synthesis\MagicK.cs" />
     <Compile Include="synthesis\NodeInfo.cs" />
@@ -266,6 +267,8 @@
     <Compile Include="cluster\EditsLearner.cs" />
     <Compile Include="synthesis\Patch.cs" />
     <Compile Include="ast\PythonNode.cs" />
+    <Compile Include="synthesis\Path.cs" />
+    <Compile Include="synthesis\Pattern.cs" />
     <Compile Include="synthesis\RankingScoreAlt.cs" />
     <Compile Include="synthesis\RankingScore.cs" />
     <Compile Include="synthesis\Semantics.cs" />

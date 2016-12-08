@@ -13,7 +13,7 @@ namespace Tutor.Transformation
 
         public static IEnumerable<PythonNode> Apply(PythonNode ast, Patch patch)
         {
-            var inputs = new List<PythonNode>() {ast};
+            var inputs = new List<PythonNode>() { ast };
             var asts = patch.Run(ast);
             return asts;
         }
@@ -26,7 +26,7 @@ namespace Tutor.Transformation
 
         public static Patch CPatch(IEnumerable<Edit> edits, Patch patch)
         {
-            patch.EditSets.Insert(0,edits.Where(e => e != null).ToList());
+            patch.EditSets.Insert(0, edits.Where(e => e != null).ToList());
             return patch;
         }
 
@@ -38,7 +38,7 @@ namespace Tutor.Transformation
 
         public static Edit Update(PythonNode before, PythonNode after)
         {
-            var update = new Update(after, before);            
+            var update = new Update(after, before);
             return update;
         }
 
@@ -68,15 +68,14 @@ namespace Tutor.Transformation
             return wrapped;
         }
 
-        public static PythonNode ReferenceNode(PythonNode ast, TreeTemplate template, MagicK magicK)
+        public static PythonNode ReferenceNode(PythonNode ast, Pattern template, MagicK magicK)
         {
-            template.Target = true;
             var k = magicK.GetK(template);
             var referenceNode = ReferenceNodeHelper(ast, template, ref k);
             return referenceNode;
         }
 
-        private static PythonNode ReferenceNodeHelper(PythonNode ast, TreeTemplate template, ref int k)
+        private static PythonNode ReferenceNodeHelper(PythonNode ast, Pattern template, ref int k)
         {
             PythonNode match = null;
             if (FindReferenceNode(template, ast, ref match))
@@ -93,26 +92,18 @@ namespace Tutor.Transformation
             return null;
         }
 
-        private static bool FindReferenceNode(TreeTemplate template, PythonNode node, ref PythonNode  match)
+
+        private static Path Path(int k)
         {
+            return new AbsolutePath(k);
+        }
+
+        private static bool FindReferenceNode(Pattern template, PythonNode node, ref PythonNode match)
+        {
+
             if (template.Match(node))
             {
-                if (template.Target)
-                    match = node;
-
-                if (template.Children.Any())
-                {
-                    if (template.Children.Count != node.Children.Count)
-                        return false;
-                    for (var i = 0; i < template.Children.Count; i++)
-                    {
-                        var child = template.Children[i];
-                        var childNode = node.Children[i];
-                        var result = FindReferenceNode(child, childNode, ref match);
-                        if (result == false)
-                            return false;
-                    }
-                }
+                match = node;
                 return true;
             }
             return false;
@@ -120,7 +111,7 @@ namespace Tutor.Transformation
 
         public static IEnumerable<PythonNode> SingleChild(PythonNode node)
         {
-            return (node != null) ? new List<PythonNode>() {node} : null;
+            return (node != null) ? new List<PythonNode>() { node } : null;
         }
 
         public static IEnumerable<PythonNode> Children(PythonNode node, IEnumerable<PythonNode> children)
@@ -128,39 +119,34 @@ namespace Tutor.Transformation
             if (node == null || children == null)
                 return null;
 
-            var result = new List<PythonNode> {node};
+            var result = new List<PythonNode> { node };
             result.AddRange(children);
             return result;
         }
 
-        public static bool Match(PythonNode ast, TreeTemplate template)
+        public static bool Match(PythonNode ast, Pattern template)
         {
-            int templateHeight = template.FindHeightTarget(0).Item2;
             var root = ast;
-            while (templateHeight > 0)
-            {
-                if (ast.Parent == null)
-                    return false;
-                root = ast.Parent;
-                templateHeight--;
-            }
-
             PythonNode match = null;
-            if (FindReferenceNode(template, root, ref match) && match != null && ast.Equals(match))
+            if (FindReferenceNode(template, root, ref match))
             {
                 return true;
             }
             return false;
         }
 
-        public static TreeTemplate Node(NodeInfo info, IEnumerable<TreeTemplate> children)
+        public static Pattern Context(int d, TreeTemplate pattern, Path path)
         {
-            var treeTemplate = new TreeTemplate(info.NodeType);
-            if (info.NodeValue != null) treeTemplate.Value = info.NodeValue;
-            treeTemplate.Children = children.ToList(); 
-            return treeTemplate; 
+            var treeTemplate = new Pattern(pattern, d, path);
+            return treeTemplate;
         }
-        public static TreeTemplate LeafNode(NodeInfo info)
+
+        public static Path Relative(TreeTemplate token, int k)
+        {
+            return new Path(token, k);
+        }
+
+        public static TreeTemplate Node(NodeInfo info)
         {
             var wrapped = NodeBuilder.Create(info);
             var treeTemplate = new TreeTemplate(wrapped.GetType().Name + "Node");
@@ -168,74 +154,81 @@ namespace Tutor.Transformation
             return treeTemplate;
         }
 
-
-
-        public static TreeTemplate Target(TreeTemplate template)
+        public static TreeTemplate Type(string type)
         {
-            TreeTemplate result; 
-            if (template is Wildcard)
-            {
-                result = new Wildcard(template.Type);
-            }
-            else
-            {
-                result = new TreeTemplate(template.Type);
-                if (template.Value != null)
-                    result.Value = template.Value;
-            }
-            if (template.Children != null && template.Children.Any())
-                result.Children = template.Children;
-            result.Target = true;
-            return result;
+            return new Wildcard(type);
         }
 
-        public static TreeTemplate StartsWithTarget(TreeTemplate template)
+
+
+        //public static TreeTemplate Target(TreeTemplate template)
+        //{
+        //    TreeTemplate result;
+        //    if (template is Wildcard)
+        //    {
+        //        result = new Wildcard(template.Type);
+        //    }
+        //    else
+        //    {
+        //        result = new TreeTemplate(template.Type);
+        //        if (template.Value != null)
+        //            result.Value = template.Value;
+        //    }
+        //    if (template.Children != null && template.Children.Any())
+        //        result.Children = template.Children;
+        //    result.Target = true;
+        //    return result;
+        //}
+
+
+        //private static TreeTemplate TreeTemplate(TreeTemplate template)
+        //{
+        //    TreeTemplate result;
+        //    if (template is Wildcard)
+        //    {
+        //        result = new Wildcard(template.Type);
+        //    }
+        //    else
+        //    {
+        //        result = new TreeTemplate(template.Type);
+        //        if (template.Value != null)
+        //            result.Value = template.Value;
+        //    }
+        //    if (template.Children != null && template.Children.Any())
+        //        result.Children = template.Children;
+        //    result.Target = template.Target;
+        //    return result;
+        //}
+
+        public static TreeTemplate LeafPattern(TreeTemplate pattern)
         {
-            return TreeTemplate(template);
+            return pattern;
         }
 
-        public static TreeTemplate StartsWithParent(TreeTemplate template)
-        {
-            return TreeTemplate(template);
-        }
-
-        private static TreeTemplate TreeTemplate(TreeTemplate template)
+        public static TreeTemplate Pattern(TreeTemplate token, IEnumerable<TreeTemplate> children)
         {
             TreeTemplate result;
-            if (template is Wildcard)
+            if (token is Wildcard)
             {
-                result = new Wildcard(template.Type);
+                result = new Wildcard(token.Type, token.Children);
             }
             else
             {
-                result = new TreeTemplate(template.Type);
-                if (template.Value != null)
-                    result.Value = template.Value;
+                result = new TreeTemplate(token.Type);
+                if (token.Value != null) result.Value = token.Value;
             }
-            if (template.Children != null && template.Children.Any())
-                result.Children = template.Children;
-            result.Target = template.Target;
+            result.Children = children.ToList();
             return result;
-        }
-
-        public static TreeTemplate LeafWildcard(string type)
-        {
-            return new Wildcard(type, true);
-        }
-
-        public static TreeTemplate Wildcard(string type, IEnumerable<TreeTemplate> children)
-        {
-            return new Wildcard(type, children);
         }
 
         public static IEnumerable<TreeTemplate> TChild(TreeTemplate template)
         {
-            return new List<TreeTemplate>() {template}; 
+            return new List<TreeTemplate>() { template };
         }
 
         public static IEnumerable<TreeTemplate> TChildren(TreeTemplate template, IEnumerable<TreeTemplate> templateChildren)
         {
-            var result = new List<TreeTemplate>() {template};
+            var result = new List<TreeTemplate>() { template };
             result.AddRange(templateChildren);
             return result;
         }
@@ -251,7 +244,7 @@ namespace Tutor.Transformation
     public class PythonNodeVisitor : IVisitor
     {
         public List<PythonNode> SortedNodes = new List<PythonNode>();
-         
+
         public bool Visit(PythonNode pythonNode)
         {
             SortedNodes.Add(pythonNode);

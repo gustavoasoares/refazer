@@ -10,63 +10,64 @@ namespace Tutor.Transformation
     [SuppressMessage("ReSharper", "UnusedMember.Global")]
     public static class RankingScore
     {
-        public static double ScoreForContext = 0; 
+        public static double ScoreForContext = 0;
 
         public const double VariableScore = 0;
 
         [FeatureCalculator("Apply")]
-        public static double Score_Apply(double x, double patch) => Math.Log(patch);
+        public static double Score_Apply(double x, double patch) => patch;
 
         [FeatureCalculator("InOrderSort")]
         public static double Score_InOrderSort(double document) => document;
 
         [FeatureCalculator("SingleChild")]
-        public static double Score_SingleChild(double n) => -1 + n;
+        public static double Score_SingleChild(double n) => n;
 
         [FeatureCalculator("Children", Method = CalculationMethod.FromChildrenFeatureValues)]
-        public static double Score_Children(double n, double children) => -1 + n + children;
+        public static double Score_Children(double n, double children) => n + children;
 
         [FeatureCalculator("Update")]
-        public static double Score_Update(double n, double node) => n + node;
+        public static double Score_Update(double n, double node) => (n + node);
 
         [FeatureCalculator("Insert")]
-        public static double Score_Insert(double n, double node, double k) => n +  node + k;
+        public static double Score_Insert(double n, double node, double k) => (n + node + k);
 
         [FeatureCalculator("Move")]
-        public static double Score_Move(double n, double node, double k) => n + node + k;
+        public static double Score_Move(double n, double node, double k) => (n + node + k);
 
         [FeatureCalculator("Delete")]
-        public static double Score_Delete(double n, double r) => n +  r;
+        public static double Score_Delete(double n, double r) => (n + r);
 
         [FeatureCalculator("Match")]
-        public static double Score_Match(double x, double template) => x + template;
+        public static double Score_Match(double x, double template) => template;
+
+        [FeatureCalculator("Pattern")]
+        public static double Score_Pattern(double treetemplate, double templateChildren) => treetemplate + templateChildren;
+
+        [FeatureCalculator("LeafPattern")]
+        public static double Score_LeafPattern(double treetemplate) => treetemplate;
 
         [FeatureCalculator("Node")]
-        public static double Score_Tree(double info, double templateChildren) => -1 + templateChildren;
+        public static double Score_Node(double info) => 1;
 
-        [FeatureCalculator("LeafNode")]
-        public static double Score_Node(double info) => -2;
+        [FeatureCalculator("Type")]
+        public static double Score_Type(double type) => 2;
 
-        [FeatureCalculator("LeafWildcard")]
-        public static double Score_Wildcard(double type) => (100 * type) / 10000;
+        [FeatureCalculator("Relative")]
+        public static double Score_Relative(double token, double k) => 7 * token;
 
-        [FeatureCalculator("Wildcard")]
-        public static double Score_Wildcard(double type, double children ) => (50 * type)/1000000 + children;
+        [FeatureCalculator("Path")]
+        public static double Score_Path(double k) => 1 + k;
 
-        [FeatureCalculator("Target")]
-        public static double Score_Target(double template) => template;
+        [FeatureCalculator("Context")]
+        public static double Score_Context(double k, double template, double path) => k == 0 ? (template + path) : 2 * template + path;
 
-        [FeatureCalculator("StartsWithParent")]
-        public static double Score_StartsWithParent(double template) => ScoreForContext + template ;
-
-        [FeatureCalculator("StartsWithTarget")]
-        public static double Score_StartsWithTarget(double template) => template;
 
         [FeatureCalculator("TChild")]
-        public static double Score_TemplateChild(double template) => -1 + template;
+        public static double Score_TemplateChild(double template) => template;
 
         [FeatureCalculator("TChildren")]
-        public static double Score_TemplateChildren(double template, double templateChildren) => -1 + template + templateChildren;
+        public static double Score_TemplateChildren(double template, double templateChildren) => template + templateChildren;
 
         [FeatureCalculator("Selected")]
         public static double Score_Selected(double match, double nodes) => match + nodes;
@@ -81,22 +82,22 @@ namespace Tutor.Transformation
         public static double Score_ConcatPatch(double editSet, double patch) => editSet + patch;
 
         [FeatureCalculator("ReferenceNode")]
-        public static double Score_ReferenceNode(double node, double template, double k) => template;
+        public static double Score_ReferenceNode(double node, double template, double magick) => template;
 
         [FeatureCalculator("LeafConstNode")]
         public static double Score_LeafConstNode(double info)
         {
-            return -5; 
+            return 0.5;
         }
 
         [FeatureCalculator("ConstNode")]
         public static double Score_ConstNode(double info, double children)
         {
-            return -10 + children;
+            return children;
         }
 
         [FeatureCalculator(Method = CalculationMethod.FromLiteral)]
-        public static double KScore(int k) => k < 0 ? 1 : 2;
+        public static double KScore(int k) => k;
 
         [FeatureCalculator(Method = CalculationMethod.FromLiteral)]
         public static double MagicKScore(MagicK k) => 1;
@@ -109,5 +110,6 @@ namespace Tutor.Transformation
 
         [FeatureCalculator(Method = CalculationMethod.FromLiteral)]
         public static double InfoScore(NodeInfo info) => 1;
+
     }
 }
