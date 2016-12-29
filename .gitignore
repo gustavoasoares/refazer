@@ -3,6 +3,7 @@
 
 # User-specific files
 Refazer.Experiments/benchmark/
+Refazer.Experiments/benchmark_incorrect/
 *.suo
 *.user
 *.userosscache

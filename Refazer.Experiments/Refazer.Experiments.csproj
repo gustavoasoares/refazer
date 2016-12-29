@@ -136,6 +136,20 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="App.config" />
+    <None Include="benchmark\Accumulate.json" />
+    <None Include="benchmark\CountChange.json" />
+    <None Include="benchmark\FilteredAccumulate.json" />
+    <None Include="benchmark\G.json" />
+    <None Include="benchmark\G_iter.json" />
+    <None Include="benchmark\Pingpong.json" />
+    <None Include="benchmark\Product.json" />
+    <None Include="benchmark\Repeated.json" />
+    <None Include="benchmark\Summation.json" />
+    <None Include="benchmark_incorrect\Accumulate.json" />
+    <None Include="benchmark_incorrect\G.json" />
+    <None Include="benchmark_incorrect\G_iter.json" />
+    <None Include="benchmark_incorrect\Product.json" />
+    <None Include="benchmark_incorrect\Repeated.json" />
     <None Include="packages.config" />
   </ItemGroup>
   <ItemGroup>
