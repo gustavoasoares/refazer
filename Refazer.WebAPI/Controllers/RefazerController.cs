@@ -169,7 +169,7 @@ namespace Refazer.WebAPI.Controllers
                 try
                 {
                     submissionTuples.AsParallel()
-                        .WithDegreeOfParallelism(4)
+                        .WithDegreeOfParallelism(1)
                         .ForAll(submission => FixSubmission(transformation,
                             experiementId, questionId, submission));
                 }
@@ -197,7 +197,9 @@ namespace Refazer.WebAPI.Controllers
                     var manager = new TestManager();
                     var mistake = new Mistake();
                     mistake.before = submission.Item1.Code;
-                    var fixer = new SubmissionFixer();
+                    var pathToGrammar = System.Web.Hosting.HostingEnvironment.MapPath(@"~/Content/");
+                    var pathToDslLib = System.Web.Hosting.HostingEnvironment.MapPath(@"~/bin");
+                    var fixer = new SubmissionFixer(pathToGrammar: pathToGrammar, pathToDslLib: pathToDslLib);
                     var unparser = new Unparser();
                     var fixedCode = fixer.TryFix(manager.GetTests(questionId), transformationTuple.Item1, submission.Item2, unparser);
                     if (fixedCode != null)
