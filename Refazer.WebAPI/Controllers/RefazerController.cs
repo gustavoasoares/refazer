@@ -169,7 +169,7 @@ namespace Refazer.WebAPI.Controllers
                 try
                 {
                     submissionTuples.AsParallel()
-                        .WithDegreeOfParallelism(2)
+                        .WithDegreeOfParallelism(4)
                         .ForAll(submission => FixSubmission(transformation,
                             experiementId, questionId, submission));
                 }
@@ -194,12 +194,12 @@ namespace Refazer.WebAPI.Controllers
             {
                 if (!submission.Item1.IsFixed)
                 {
+                    //Trace.TraceWarning(string.Format("Testing submission {0}", submission.Item1.SubmissionId));
                     var manager = new TestManager();
                     var mistake = new Mistake();
                     mistake.before = submission.Item1.Code;
-                    var pathToGrammar = System.Web.Hosting.HostingEnvironment.MapPath(@"~/Content/");
-                    var pathToDslLib = System.Web.Hosting.HostingEnvironment.MapPath(@"~/bin");
-                    var fixer = new SubmissionFixer(pathToGrammar: pathToGrammar, pathToDslLib: pathToDslLib);
+                   
+                    var fixer = new SubmissionFixer();
                     var unparser = new Unparser();
                     var fixedCode = fixer.TryFix(manager.GetTests(questionId), transformationTuple.Item1, submission.Item2, unparser);
                     if (fixedCode != null)
@@ -223,6 +223,7 @@ namespace Refazer.WebAPI.Controllers
                         Trace.TraceWarning(string.Format("Submission fixed: {0}, Session: {1}, Transformation: {2}, Time: {3}", 
                             submission.Item1.SubmissionId, transformationTuple.Item2.SessionId, transformationTuple.Item2.ID, DateTime.Now));
                     }
+                    //Trace.TraceWarning(string.Format("Finishing Testing submission {0}", submission.Item1.SubmissionId));
                 }
             }
             catch (Exception e)

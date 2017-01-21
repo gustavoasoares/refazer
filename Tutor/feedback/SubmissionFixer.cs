@@ -50,9 +50,9 @@ namespace Tutor
             {
                 pathToGrammar = "../../../Tutor/synthesis/";
             }
-            grammar =
-                DSLCompiler.LoadGrammarFromFile(pathToGrammar + @"Transformation.grammar",
-                    libraryPaths: new[] { pathToDslLib });
+            //grammar =
+            //    DSLCompiler.LoadGrammarFromFile(pathToGrammar + @"Transformation.grammar",
+            //        libraryPaths: new[] { pathToDslLib });
         }
 
         //public SubmissionFixer Create(Tuple<string, string> example, 
@@ -131,7 +131,7 @@ namespace Tutor
 
         public  string pathToGrammar;
         public  string pathToDslLib;
-        public  Result<Grammar> grammar;
+        //public  Result<Grammar> grammar;
 
         public ProgramNode LearnProgram(List<Mistake> list, Mistake next)
         {
