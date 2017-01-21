@@ -169,7 +169,7 @@ namespace Refazer.WebAPI.Controllers
                 try
                 {
                     submissionTuples.AsParallel()
-                        .WithDegreeOfParallelism(1)
+                        .WithDegreeOfParallelism(2)
                         .ForAll(submission => FixSubmission(transformation,
                             experiementId, questionId, submission));
                 }
@@ -177,8 +177,8 @@ namespace Refazer.WebAPI.Controllers
                 {
                     foreach (var ex in ae.InnerExceptions)
                     {
-                        Trace.TraceError(string.Format("AggregateException"));
-                        Trace.TraceError(ex.Message);
+                        Trace.TraceWarning(string.Format("AggregateException"));
+                        Trace.TraceWarning(ex.Message);
                     }
                 }
                     Trace.TraceWarning(string.Format("Finising transformation: {0}, Session: {1}, Instance {2} ", transformation.Item2.ID, transformation.Item2.SessionId, ""));
@@ -227,8 +227,8 @@ namespace Refazer.WebAPI.Controllers
             }
             catch (Exception e)
             {
-                Trace.TraceError("Exception was thrown when applying fixes.");
-                Trace.TraceError(e.Message);
+                Trace.TraceWarning("Exception was thrown when applying fixes.");
+                Trace.TraceWarning(e.Message);
             }
         }
 

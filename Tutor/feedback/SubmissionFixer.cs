@@ -225,8 +225,8 @@ namespace Tutor
                     }
                     catch (Exception e)
                     {
-                        Trace.TraceError("Exception was thrown when trying to apply fix to submission");
-                        Trace.TraceError(e.Message);
+                        Trace.TraceWarning("Exception was thrown when trying to apply fix to submission");
+                        Trace.TraceWarning(e.Message);
                     }
                 }
             }
@@ -280,8 +280,8 @@ namespace Tutor
                         }
                         catch (Exception e)
                         {
-                            Trace.TraceError("Exception was thrown when running python tests.");
-                            Trace.TraceError(e.Message);
+                            Trace.TraceWarning("Exception was thrown when running python tests.");
+                            Trace.TraceWarning(e.Message);
                             Console.Out.WriteLine("Exception when trying to kill process");
                             //do nothing   
                         }
@@ -291,15 +291,15 @@ namespace Tutor
             }
             catch (TestCaseException e)
             {
-                Trace.TraceError("Exception was thrown when running python tests.");
-                Trace.TraceError("Exception was thrown.");
-                Trace.TraceError(e.Message);
+                Trace.TraceWarning("Exception was thrown when running python tests.");
+                Trace.TraceWarning("Exception was thrown.");
+                Trace.TraceWarning(e.Message);
                 isFixed = false;
             }
             catch (RuntimeBinderException e)
             {
-                Trace.TraceError("Exception was thrown when running python tests.");
-                Trace.TraceError(e.Message);
+                Trace.TraceWarning("Exception was thrown when running python tests.");
+                Trace.TraceWarning(e.Message);
                 isFixed = false;
             }
             return isFixed;
