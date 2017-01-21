@@ -94,7 +94,6 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="app.config" />
-    <None Include="data\testData.json" />
     <None Include="packages.config" />
   </ItemGroup>
   <ItemGroup>

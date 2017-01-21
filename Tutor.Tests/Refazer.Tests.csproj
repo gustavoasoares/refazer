@@ -209,8 +209,6 @@
     <None Include="packages.config" />
     <None Include="resources\after_1.py" />
     <None Include="resources\before_1.py" />
-    <None Include="resources\submissions_after.json" />
-    <None Include="resources\submissions_before.json" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\Tutor\Refazer.csproj">
