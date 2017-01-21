@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Data;
@@ -12,6 +13,7 @@ using IronPython.Compiler.Ast;
 using Microsoft.ProgramSynthesis;
 using Microsoft.ProgramSynthesis.AST;
 using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
 using Tutor;
 
 namespace Refazer.Experiments
@@ -28,7 +30,8 @@ namespace Refazer.Experiments
             PrintIncorretAttempts = 6,
             PrintNotFixed = 7,
             GetTimeTable =8,
-            GetBootstrapTable=9
+            GetBootstrapTable=9,
+            EditDistance=10
         }
 
         
@@ -162,8 +165,15 @@ namespace Refazer.Experiments
                     problem = ProblemManager.Instance.GetProblemByName(problemName);
                     ExtractBootsrapTable(problem);
                     break;
+                case (int)Options.EditDistance:
+                    PrintProblemsMenu();
+                    choice = int.Parse(Console.ReadLine());
+                    problemName = (ProblemNames)choice;
+                    CalculateEditDistance(problemName);
+                    break;
                 default:
                     Console.Out.WriteLine("Invalid option.");
+
                     break;
             }
             Console.ReadKey();
@@ -956,6 +966,45 @@ namespace Refazer.Experiments
                 var submissionsToJson = JsonConvert.SerializeObject(submissions);
                 File.WriteAllText("submissionsResults.json", submissionsToJson);
             }
+        }
+
+        private static void CalculateEditDistance(ProblemNames problem)
+        {
+            var fileName = "../../results/" + problem + ".json";
+            var listOfFixes = (IEnumerable) JsonConvert.DeserializeObject(File.ReadAllText(fileName));
+            var distances = new List<int>();
+            foreach (var fix in listOfFixes)
+            {
+                var fixDic = (JObject) fix;
+                var before = (string) fixDic["before"];
+                var after = (string) fixDic["SynthesizedAfter"];
+                if (before != null && after != null)
+                {
+                    var beforeAst = ASTHelper.ParseContent(before);
+                    var afterAst = ASTHelper.ParseContent(after);
+                    var zss = new PythonZss(NodeWrapper.Wrap(beforeAst), NodeWrapper.Wrap(afterAst));
+                    var editDistance = zss.Compute();
+                    distances.Add(editDistance.Distance);
+                }
+            }
+            PrintDistanceMetrics(distances, problem.ToString());
+        }
+
+        private static void PrintDistanceMetrics(List<int> distances, string problem)
+        {
+            
+            Console.Out.WriteLine("Summary of distances between before and after solutions");
+            Console.Out.WriteLine("Average distance: " + distances.Average());
+            distances.Sort();
+            StringBuilder sb = new StringBuilder();
+            sb.Append(problem);
+            sb.Append(Environment.NewLine); 
+            foreach (var distance in distances)
+            {
+                sb.Append(distance);
+                sb.Append(Environment.NewLine);
+            }
+            File.WriteAllText(problem + "_distance.csv", sb.ToString());
         }
 
         private static void ExtractBootsrapTable(Problem problem)

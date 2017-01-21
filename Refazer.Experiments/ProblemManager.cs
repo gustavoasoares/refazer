@@ -280,7 +280,7 @@ def increment(x):
         }
 
         public static void Save(Problem problem)
-        {
+        {   
             var dir = new DirectoryInfo("../../benchmark/");
             var submissionsToJson = JsonConvert.SerializeObject(problem.Mistakes);
             File.WriteAllText(dir + problem.Id + ".json", submissionsToJson);

@@ -151,6 +151,10 @@
     <None Include="benchmark_incorrect\Product.json" />
     <None Include="benchmark_incorrect\Repeated.json" />
     <None Include="packages.config" />
+    <None Include="results\Accumulate.json" />
+    <None Include="results\G.json" />
+    <None Include="results\Product.json" />
+    <None Include="results\Repeated.json" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\Tutor\Refazer.csproj">
@@ -158,6 +162,7 @@
       <Name>Refazer</Name>
     </ProjectReference>
   </ItemGroup>
+  <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.
