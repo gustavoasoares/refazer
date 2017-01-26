@@ -853,36 +853,29 @@ namespace Tutor.Transformation
             return new DisjunctiveExamplesSpec(templateExamples);
         }
 
-        [WitnessFunction("ReferenceNode", 2)]
-        public static ExampleSpec WitnessK(GrammarRule rule, int parameter, ExampleSpec spec)
+        [WitnessFunction("ReferenceNode", 2, DependsOnParameters = new []{1})]
+        public static ExampleSpec WitnessK(GrammarRule rule, int parameter, ExampleSpec spec, ExampleSpec patternSpec)
         {
             var result = new Dictionary<State, object>();
 
             foreach (var input in spec.ProvidedInputs)
             {
                 var inp = (PythonNode)input[rule.Body[0]];
+                var pattern = patternSpec.Examples[input] as Pattern;
                 var node = spec.Examples[input] as PythonNode;
-
-                result[input] = new MagicK(inp, node);
+                if (pattern != null && node != null)
+                {
+                    var magicK = new MagicK(inp, node);
+                    var k = magicK.GetK(pattern);
+                    result[input] = k;
+                }
+                else
+                {
+                    return null;
+                }
             }
             return new ExampleSpec(result);
         }
-
-        //[WitnessFunction("ReferenceNode", 2, DependsOnParameters = new []{0})]
-        //public static ExampleSpec WitnessK(GrammarRule rule, int parameter, ExampleSpec spec, 
-        //    ExampleSpec siblingSpec)
-        //{
-        //    var result = new Dictionary<State, object>();
-
-        //    foreach (var input in spec.ProvidedInputs)
-        //    {
-        //        var inp = (PythonNode)input[rule.Body[0]];
-        //        var outerSpec = spec.Examples[input] as PythonNode;
-        //        var innerSpec =  new MagicK(inp, outerSpec);
-        //        result[input] = innerSpec;
-        //    }
-        //    return new ExampleSpec(result);
-        //}
 
         [WitnessFunction("SingleChild", 0)]
         public static ExampleSpec WitnessSingleChild(GrammarRule rule, int parameter, ExampleSpec spec)
