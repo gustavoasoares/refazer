@@ -9,14 +9,14 @@ Let's say that we want to learn a transformation that adds a missing call to a f
 ```c#
 var input = 
 @"def product(n, term):
-  return term(n)*product(n-1)"
+  return term(n)*product(n-1)";
 var output = 
 @"def product(n, term):
   if n == 1: 
     return term(1)
-  return term(n)*product(n-1)"
+  return term(n)*product(n-1)";
         
-var examples = {Tuple.Create(input,output)};
+var examples = new List<Tuple<string, string>>() { Tuple.Create(input, output) };
 var refazer = new Refazer4Python();
 var transformations = refazer.LearnTransformations(examples);
 ```
@@ -24,9 +24,10 @@ var transformations = refazer.LearnTransformations(examples);
 After learning the transformations, we can get the top learned transformation and applied it to a program to add the base case.  
 
 ```
-if (transformations.Count > 0) {
+if (!transformations.IsNullOrEmpty()) {
   var result = refazer.Apply(transformations.First(), input);
   if (!result.IsNullOrEmpty()) {
+    //print the transformed program
     Console.Out.WriteLine(result.First());    
   } 
 }
