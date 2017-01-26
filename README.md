@@ -16,16 +16,19 @@ var output =
     return term(1)
   return term(n)*product(n-1)"
         
-var examples = {Tuple.Create(input,output)};; sss
+var examples = {Tuple.Create(input,output)};
 var refazer = new Refazer4Python();
 var transformations = refazer.LearnTransformations(examples);
 ```
 
-Next we apply the transformation to a different input program. 
+After learning the transformations, we can get the top learned transformation and applied it to a program to add the base case.  
 
 ```
-var input = "" 
-var output = refazer.Apply(transformation, input);
-Console.Out.WriteLine("");
+if (transformations.Count > 0) {
+  var result = refazer.Apply(transformations.First(), input);
+  if (!result.IsNullOrEmpty()) {
+    Console.Out.WriteLine(result.First());    
+  } 
+}
 ```
 
