@@ -39,6 +39,12 @@ namespace Tutor
             return Parse(src, py);
         }
 
+        public static PythonAst ParseJsContent(string content)
+        {
+            //todo: parse JS to an AST. 
+            return null;
+        }
+
         private static PythonAst Parse(SourceUnit src, ScriptEngine py)
         {
             var pylc = HostingHelpers.GetLanguageContext(py);

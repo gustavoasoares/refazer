@@ -102,5 +102,15 @@ namespace Refazer.Core
             var result = transformation.GetSynthesizedProgram().Invoke(CreateInputState(program)) as IEnumerable<PythonNode>;
             return result == null ?  new List<string>() : result.Select(x => unparser.Unparse(x)); 
         }
+
+        public IEnumerable<ExtractorProgram> LearnExtractors(List<Tuple<string, string>> extamples)
+        {
+            throw new NotImplementedException();
+        }
+
+        public IEnumerable<string> Extract(ExtractorProgram extractor, string program)
+        {
+            throw new NotImplementedException();
+        }
     }
 }

@@ -34,5 +34,10 @@ namespace Refazer.Core
         /// <param name="program"></param>
         /// <returns>List of output programs</returns>
         IEnumerable<string> Apply(Transformation transformation, string program);
+
+        IEnumerable<string> Extract(ExtractorProgram extractor, string program);
+        
+        IEnumerable<ExtractorProgram> LearnExtractors(List<Tuple<string, string>> extamples);
+
     }
 }
