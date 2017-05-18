@@ -8,27 +8,28 @@ namespace Refazer.Test
     public class RefazerPublicDataTest
     {
         [TestMethod]
-        public void TestLearn1()
+        public void TestLearn1_JS()
         {
-            var before = "x = 0";
-            var after = @"x = 1";
+            var before = "x = 0;";
+            var after = @"x = 1;";
             TestUtils.AssertCorrectTransformation(before, after);
         }
 
         [TestMethod]
-        public void TestLearn2()
+        public void TestLearn2_JS()
         {
-            var before = @"def product(n, term):
-    total, k = 0, 1
-    while k <= n:
-        total, k = total * term(k), k + 1
-    return total";
+            var before = @"function product(n, term) {
+    total = 0;
+    k = 1;
+    return total;
+}";
 
-            var after = @"def product(n, term):
-    total, k = 1, 1
-    while k<=n:
-        total, k = total*term(k), k+1
-    return total";
+
+            var after = @"function product(n, term) {
+    total = 1;
+    k = 1;
+    return total;
+}";
             TestUtils.AssertCorrectTransformation(before, after);
         }
 
