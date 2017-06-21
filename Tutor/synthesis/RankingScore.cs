@@ -2,17 +2,22 @@
 using System.Diagnostics.CodeAnalysis;
 using System.Text.RegularExpressions;
 using Microsoft.ProgramSynthesis;
+using Microsoft.ProgramSynthesis.AST;
 using Microsoft.ProgramSynthesis.Extraction.Text.Semantics;
 using Tutor.synthesis;
 
-namespace Tutor.Transformation
+namespace Tutor
 {
     [SuppressMessage("ReSharper", "UnusedMember.Global")]
-    public static class RankingScore
+    public class RankingScore : Feature<double>
     {
+        public RankingScore(Grammar grammar) : base(grammar, "Score", isComplete: true) { }
+
         public static double ScoreForContext = 0;
 
         public const double VariableScore = 0;
+
+        protected override double GetFeatureValueForVariable(VariableNode variable) => 0;
 
         [FeatureCalculator("Apply")]
         public static double Score_Apply(double x, double patch) => patch;
@@ -52,9 +57,6 @@ namespace Tutor.Transformation
 
         [FeatureCalculator("Type")]
         public static double Score_Type(double type) => 2;
-
-        [FeatureCalculator("Relative")]
-        public static double Score_Relative(double token, double k) => 7 * token;
 
         [FeatureCalculator("Path")]
         public static double Score_Path(double k) => 1 + k;
@@ -96,19 +98,16 @@ namespace Tutor.Transformation
             return children;
         }
 
-        [FeatureCalculator(Method = CalculationMethod.FromLiteral)]
+        [FeatureCalculator("k", Method = CalculationMethod.FromLiteral)]
         public static double KScore(int k) => k;
 
-        [FeatureCalculator(Method = CalculationMethod.FromLiteral)]
-        public static double MagicKScore(MagicK k) => 1;
-
-        [FeatureCalculator(Method = CalculationMethod.FromLiteral)]
+        [FeatureCalculator("type", Method = CalculationMethod.FromLiteral)]
         public static double TypeScore(string type) => (type.Equals("any")) ? 1 : 2;
 
-        [FeatureCalculator(Method = CalculationMethod.FromLiteral)]
+        [FeatureCalculator("value", Method = CalculationMethod.FromLiteral)]
         public static double ValueScore(dynamic value) => 0;
 
-        [FeatureCalculator(Method = CalculationMethod.FromLiteral)]
+        [FeatureCalculator("info", Method = CalculationMethod.FromLiteral)]
         public static double InfoScore(NodeInfo info) => 1;
 
     }

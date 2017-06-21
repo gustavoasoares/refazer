@@ -4,9 +4,11 @@ using System.Linq;
 using Microsoft.ProgramSynthesis;
 using Microsoft.ProgramSynthesis.AST;
 using Microsoft.ProgramSynthesis.Compiler;
+using Microsoft.ProgramSynthesis.Compound.Extraction.Field;
 using Microsoft.ProgramSynthesis.Diagnostics;
 using Microsoft.ProgramSynthesis.Learning;
 using Microsoft.ProgramSynthesis.Learning.Logging;
+using Microsoft.ProgramSynthesis.Learning.Strategies;
 using Microsoft.ProgramSynthesis.Specifications;
 using Tutor;
 using Tutor.Transformation;
@@ -37,12 +39,12 @@ namespace Refazer.Core
 
         public Refazer4Python(string pathToGrammar = @"..\..\..\Tutor\synthesis\", string pathToDslLib = @"..\..\..\Tutor\bin\debug")
         {
+            
             _pathToGrammar = pathToGrammar;
             _pathToDslLib = pathToDslLib;
-            Grammar = DSLCompiler.LoadGrammarFromFile(pathToGrammar + @"Transformation.grammar",
+            Grammar = DSLCompiler.ParseGrammarFromFile(pathToGrammar + @"Transformation.grammar",
                     libraryPaths: new[] { pathToDslLib });
-            _prose = new SynthesisEngine(Grammar.Value,
-                new SynthesisEngine.Config { LogListener = new LogListener() });
+           
         }
 
         public IEnumerable<Transformation> LearnTransformations(List<Tuple<string, string>> examples,
@@ -52,7 +54,19 @@ namespace Refazer.Core
             //TODO: this is not thread safe. If multiple instances of Refazer are changing 
             //the value of the ranking scores, we can have a problem.
             RankingScore.ScoreForContext = ranking.Equals("specific") ? 100 : -100;
-            var learned = _prose.LearnGrammarTopK(spec, "Score", numberOfPrograms);
+            var scoreFeature = new RankingScore(Grammar.Value);
+            DomainLearningLogic learningLogic = new WitnessFunctions(Grammar.Value);
+
+            _prose = new SynthesisEngine(Grammar.Value,
+               new SynthesisEngine.Config
+               {
+                   LogListener = new LogListener(),
+                   Strategies = new[] { new DeductiveSynthesis(learningLogic) },
+                   UseThreads = false,
+                   CacheSize = int.MaxValue
+               });
+
+            var learned = _prose.LearnGrammarTopK(spec, scoreFeature, 1);
 
             var uniqueTransformations = new List<ProgramNode>();
             //filter repetitive transformations 

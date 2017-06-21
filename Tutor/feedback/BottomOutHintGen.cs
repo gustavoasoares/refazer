@@ -24,20 +24,20 @@ namespace Tutor.feedback
             var editDistance = zss.Compute();
 
             //get primary edits
-            var rootAndNonRootEdits = WitnessFunctions.SplitEditsByRootsAndNonRoots(editDistance);
-            //replace insert and delete by update
-            var unparser = new Unparser();
-            foreach (var edit in rootAndNonRootEdits.Item1)
-            {
-                if (edit is Update)
-                {
-                    result.Add("Update " + unparser.Unparse(edit.TargetNode)  + " to " + unparser.Unparse(edit.ModifiedNode));
-                } else if (edit is Insert)
-                {
-                    result.Add("Insert " + unparser.Unparse(edit.ModifiedNode));
-                }
+            //var rootAndNonRootEdits = WitnessFunctions.SplitEditsByRootsAndNonRoots(editDistance);
+            ////replace insert and delete by update
+            //var unparser = new Unparser();
+            //foreach (var edit in rootAndNonRootEdits.Item1)
+            //{
+            //    if (edit is Update)
+            //    {
+            //        result.Add("Update " + unparser.Unparse(edit.TargetNode)  + " to " + unparser.Unparse(edit.ModifiedNode));
+            //    } else if (edit is Insert)
+            //    {
+            //        result.Add("Insert " + unparser.Unparse(edit.ModifiedNode));
+            //    }
                
-            }
+            //}
             //for each edit, create a hint
             return result;
         }
