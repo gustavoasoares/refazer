@@ -32,12 +32,12 @@ namespace Tutor
             return Parse(src, py);
         }
 
-        public static JSAst ParseFileJS(string path)
-        {
-            var js = //Python.CreateEngine();
-            var src = HostingHelpers.GetSourceUnit(js.CreateScriptSourceFromFile(path));
-            return Parse(src, js);
-        }
+        //public static JSAst ParseFileJS(string path)
+        //{
+        //    var js = //Python.CreateEngine();
+        //    var src = HostingHelpers.GetSourceUnit(js.CreateScriptSourceFromFile(path));
+        //    return Parse(src, js);
+        //}
 
         public static PythonAst ParseContent(string content)
         {
@@ -46,12 +46,12 @@ namespace Tutor
             return Parse(src, py);
         }
 
-        public static JSAst ParseContentJS(string content)
-        {
-            var hs = //Python.CreateEngine();
-            var src = HostingHelpers.GetSourceUnit(js.CreateScriptSourceFromString(content));
-            return Parse(src, js);
-        }
+        //public static JSAst ParseContentJS(string content)
+        //{
+        //    var hs = //Python.CreateEngine();
+        //    var src = HostingHelpers.GetSourceUnit(js.CreateScriptSourceFromString(content));
+        //    return Parse(src, js);
+        //}
 
         private static PythonAst Parse(SourceUnit src, ScriptEngine py)
         {
@@ -62,10 +62,10 @@ namespace Tutor
             return parser.ParseFile(true);
         }
 
-        private static JSAst ParseJS(SourceUnit src, ScriptEngine js)
-        {
+        //private static JSAst ParseJS(SourceUnit src, ScriptEngine js)
+        //{
             
-        }
+        //}
 
         private static bool _timeout = false;
         private static readonly Uri ServiceUri = new Uri("net.pipe://localhost/Pipe");

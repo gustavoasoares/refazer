@@ -37,43 +37,44 @@ namespace Refazer.Core
 
         public Refazer4JS(string pathToGrammar = @"..\..\..\Tutor\synthesis\", string pathToDslLib = @"..\..\..\Tutor\bin\debug")
         {
-            _pathToGrammar = pathToGrammar;
-            _pathToDslLib = pathToDslLib;
-            Grammar = DSLCompiler.LoadGrammarFromFile(pathToGrammar + @"Transformation.grammar",
-                    libraryPaths: new[] { pathToDslLib });
-            _prose = new SynthesisEngine(Grammar.Value,
-                new SynthesisEngine.Config { LogListener = new LogListener() });
+            //_pathToGrammar = pathToGrammar;
+            //_pathToDslLib = pathToDslLib;
+            //Grammar = DSLCompiler.LoadGrammarFromFile(pathToGrammar + @"Transformation.grammar",
+            //        libraryPaths: new[] { pathToDslLib });
+            //_prose = new SynthesisEngine(Grammar.Value,
+            //    new SynthesisEngine.Config { LogListener = new LogListener() });
         }
 
         public IEnumerable<Transformation> LearnTransformations(List<Tuple<string, string>> examples,
             int numberOfPrograms = 1, string ranking = "specific")
         {
-            var spec = CreateExampleSpec(examples);
-            //TODO: this is not thread safe. If multiple instances of Refazer are changing 
-            //the value of the ranking scores, we can have a problem.
-            RankingScore.ScoreForContext = ranking.Equals("specific") ? 100 : -100;
-            var learned = _prose.LearnGrammarTopK(spec, "Score", numberOfPrograms);
+            //var spec = CreateExampleSpec(examples);
+            ////TODO: this is not thread safe. If multiple instances of Refazer are changing 
+            ////the value of the ranking scores, we can have a problem.
+            //RankingScore.ScoreForContext = ranking.Equals("specific") ? 100 : -100;
+            //var learned = _prose.LearnGrammarTopK(spec, "Score", numberOfPrograms);
 
-            var uniqueTransformations = new List<ProgramNode>();
-            //filter repetitive transformations 
-            foreach (var programNode in learned)
-            {
-                var exists = false; 
-                foreach (var uniqueTransformation in uniqueTransformations)
-                {
-                    if (programNode.ToString().Equals(uniqueTransformation.ToString()))
-                    {
-                        exists = true;
-                        break;
-                    }
-                }
-                if (!exists)
-                    uniqueTransformations.Add(programNode);
-            }
-            uniqueTransformations = uniqueTransformations.Count > numberOfPrograms
-                ? uniqueTransformations.GetRange(0, numberOfPrograms)
-                : uniqueTransformations;
-            return uniqueTransformations.Select(e => new JSTransformation(e));
+            //var uniqueTransformations = new List<ProgramNode>();
+            ////filter repetitive transformations 
+            //foreach (var programNode in learned)
+            //{
+            //    var exists = false; 
+            //    foreach (var uniqueTransformation in uniqueTransformations)
+            //    {
+            //        if (programNode.ToString().Equals(uniqueTransformation.ToString()))
+            //        {
+            //            exists = true;
+            //            break;
+            //        }
+            //    }
+            //    if (!exists)
+            //        uniqueTransformations.Add(programNode);
+            //}
+            //uniqueTransformations = uniqueTransformations.Count > numberOfPrograms
+            //    ? uniqueTransformations.GetRange(0, numberOfPrograms)
+            //    : uniqueTransformations;
+            //return uniqueTransformations.Select(e => new JSTransformation(e));
+            return null;
         }
 
         private ExampleSpec CreateExampleSpec(List<Tuple<string, string>> examples)
@@ -98,9 +99,10 @@ namespace Refazer.Core
 
         public IEnumerable<string> Apply(Transformation transformation, string program)
         {
-            var unparser = new Unparser();
-            var result = transformation.GetSynthesizedProgram().Invoke(CreateInputState(program)) as IEnumerable<JSNode>;
-            return result == null ?  new List<string>() : result.Select(x => unparser.Unparse(x)); 
+            //var unparser = new Unparser();
+            //var result = transformation.GetSynthesizedProgram().Invoke(CreateInputState(program)) as IEnumerable<JSNode>;
+            //return result == null ?  new List<string>() : result.Select(x => unparser.Unparse(x)); 
+            return null;
         }
     }
 }
