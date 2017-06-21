@@ -148,8 +148,7 @@ namespace Tutor.Transformation
 
         public static TreeTemplate Node(NodeInfo info)
         {
-            var wrapped = NodeBuilder.Create(info);
-            var treeTemplate = new TreeTemplate(wrapped.GetType().Name + "Node");
+            var treeTemplate = new TreeTemplate(info.NodeType);
             if (info.NodeValue != null) treeTemplate.Value = info.NodeValue;
             return treeTemplate;
         }

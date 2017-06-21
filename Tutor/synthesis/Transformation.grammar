@@ -20,7 +20,7 @@ IEnumerable<PythonNode> selectednodes := Selected(match, nodes) = Filter(\x : Py
 bool match := Match(x, pattern);
 Pattern pattern := Context(k, patternExp, path);
 TreeTemplate patternExp := Pattern(token, tchildren) | LeafPattern(token); 
-TreeTemplate token := Type(type);
+TreeTemplate token := Type(type) | Node(info); 
 Path path := Path(k);
 IEnumerable<TreeTemplate> tchildren := TChild(patternExp) | TChildren(patternExp, tchildren);
 Edit edit := Update(node, c) | Insert(node, n, k) | Delete(node, r) | Move(node, r, k);

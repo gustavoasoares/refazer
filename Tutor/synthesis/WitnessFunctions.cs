@@ -737,22 +737,22 @@ namespace Tutor.Transformation
             return new ExampleSpec(result);
         }
 
-        [WitnessFunction("Node", 0)]
-        public ExampleSpec WitnessNodeInfo(GrammarRule rule,  ExampleSpec spec)
-        {
-            var result = new Dictionary<State, object>();
-            foreach (State input in spec.ProvidedInputs)
-            {
-                var outerSpec = spec.Examples[input] as PythonNode;
-                if (outerSpec == null)
-                    return null;
-                var nodeInfo = new NodeInfo(outerSpec.GetType().Name);
-                if (outerSpec.Value != null) nodeInfo.NodeValue = outerSpec.Value;
-                result[input] = nodeInfo;
+        //[WitnessFunction("Node", 0)]
+        //public ExampleSpec WitnessNodeInfo(GrammarRule rule,  ExampleSpec spec)
+        //{
+        //    var result = new Dictionary<State, object>();
+        //    foreach (State input in spec.ProvidedInputs)
+        //    {
+        //        var outerSpec = spec.Examples[input] as PythonNode;
+        //        if (outerSpec == null)
+        //            return null;
+        //        var nodeInfo = new NodeInfo(outerSpec.GetType().Name);
+        //        if (outerSpec.Value != null) nodeInfo.NodeValue = outerSpec.Value;
+        //        result[input] = nodeInfo;
 
-            }
-            return new ExampleSpec(result);
-        }
+        //    }
+        //    return new ExampleSpec(result);
+        //}
 
         [WitnessFunction("Type", 0)]
         public ExampleSpec WitnessType(GrammarRule rule,  ExampleSpec spec)
@@ -768,21 +768,21 @@ namespace Tutor.Transformation
             return new ExampleSpec(result);
         }
 
-        //[WitnessFunction("LeafNode", 0)]
-        //public ExampleSpec WitnessLeafNodeType(GrammarRule rule,  ExampleSpec spec)
-        //{
-        //    var result = new Dictionary<State, object>();
-        //    foreach (State input in spec.ProvidedInputs)
-        //    {
-        //        var node = spec.Examples[input] as PythonNode;
-        //        if (node != null && node.Children.Any())
-        //            return null;
-        //        var info = new NodeInfo(node.GetType().Name);
-        //        if (node.Value != null) info.NodeValue = node.Value;
-        //        result[input] = info;
-        //    }
-        //    return new ExampleSpec(result);
-        //}
+        [WitnessFunction("Node", 0)]
+        public ExampleSpec WitnessLeafNodeType(GrammarRule rule, ExampleSpec spec)
+        {
+            var result = new Dictionary<State, object>();
+            foreach (State input in spec.ProvidedInputs)
+            {
+                var outerSpec = spec.Examples[input] as PythonNode;
+                if (outerSpec == null)
+                    return null;
+                var info = new NodeInfo(outerSpec.GetType().Name);
+                if (outerSpec.Value != null) info.NodeValue = outerSpec.Value;
+                result[input] = info;
+            }
+            return new ExampleSpec(result);
+        }
 
         [WitnessFunction("TChild", 0)]
         public ExampleSpec WitnessTemplateChild(GrammarRule rule,  ExampleSpec spec)

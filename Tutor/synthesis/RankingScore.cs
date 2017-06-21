@@ -58,9 +58,6 @@ namespace Tutor
         [FeatureCalculator("Type")]
         public static double Score_Type(double type) => 2;
 
-        [FeatureCalculator("Relative")]
-        public static double Score_Relative(double token, double k) => 7 * token;
-
         [FeatureCalculator("Path")]
         public static double Score_Path(double k) => 1 + k;
 
@@ -103,9 +100,6 @@ namespace Tutor
 
         [FeatureCalculator("k", Method = CalculationMethod.FromLiteral)]
         public static double KScore(int k) => k;
-
-        [FeatureCalculator("magicK", Method = CalculationMethod.FromLiteral)]
-        public static double MagicKScore(MagicK k) => 1;
 
         [FeatureCalculator("type", Method = CalculationMethod.FromLiteral)]
         public static double TypeScore(string type) => (type.Equals("any")) ? 1 : 2;
