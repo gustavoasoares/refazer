@@ -424,6 +424,10 @@ namespace Refazer.Experiments
             Console.Out.WriteLine("Student, Fixed, Total");
             foreach (var student in students)
             {
+                if (student.Value.Count > 40)
+                {
+                    Console.Out.WriteLine("");
+                }
                 var id = student.Key;
                 var total = student.Value.Count;
                 var fixedIndex = 0;

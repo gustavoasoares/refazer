@@ -1,17 +1,17 @@
-﻿reference 'Tutor.dll';
-reference 'IronPython.dll';
+﻿#reference 'file:Tutor.dll';
+#reference 'file:IronPython.dll';
 
 using Tutor;
 using Tutor.synthesis;
 using Tutor.Transformation;
 using IronPython.Compiler.Ast;
+
 using semantics Tutor.Transformation.Semantics;
 using learners Tutor.Transformation.WitnessFunctions;
 
 language Transformation;	
 
-@vardefault[VariableScore]
-feature double Score = RankingScore;
+@complete feature double Score = RankingScore;
 
 @start IEnumerable<PythonNode> transformation := Apply(ast, patch);
 Patch patch := Patch(edits) | CPatch(edits, patch);
@@ -31,10 +31,9 @@ IEnumerable<PythonNode> children := SingleChild(n) | Children(n, children);
 IEnumerable<PythonNode> nodes := InOrderSort(ast);
 
 @input PythonNode ast;
-@feature[Score=InfoScore] NodeInfo info; 
-@feature[Score=KScore] int k;
-@feature[Score=MagicKScore] MagicK magick;
-@feature[Score=TypeScore] string type;
-@feature[Score=ValueScore] dynamic value;
+NodeInfo info; 
+int k;
+string type;
+dynamic value;
 
 

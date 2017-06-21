@@ -51,7 +51,7 @@ namespace Tutor
                 pathToGrammar = "../../../Tutor/synthesis/";
             }
             grammar =
-                DSLCompiler.LoadGrammarFromFile(pathToGrammar + @"Transformation.grammar",
+                DSLCompiler.ParseGrammarFromFile(pathToGrammar + @"Transformation.grammar",
                     libraryPaths: new[] { pathToDslLib });
         }
 
