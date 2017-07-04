@@ -14,10 +14,16 @@ namespace Refazer.Test
             AssertCorrectTransformation(new List<Tuple<string, string>>() { Tuple.Create(before, after) });
         }
 
+        public static void AssertCorrectExtraction(string before, int id)
+        {
+            AssertCorrectTransformation(new List<Tuple<string, string>>() { Tuple.Create(before, after) });
+        }
+
         public static void AssertCorrectTransformation(IEnumerable<Tuple<string, string>> examples)
         {
             var refazer = new Refazer4Python();
-            var transformation = refazer.LearnTransformations(examples.ToList()).First();
+            var learnTransformations = refazer.LearnTransformations(examples.ToList(), numberOfPrograms: 1000);
+            var transformation = learnTransformations.First();
             foreach (var mistake in examples)
             {
                 var output = refazer.Apply(transformation, mistake.Item1);

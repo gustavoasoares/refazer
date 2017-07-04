@@ -10,6 +10,14 @@ namespace Refazer.Test
         [TestMethod]
         public void TestLearn1_JS()
         {
+            var before = "x = 0";
+            var after = @"x = 1";
+            TestUtils.AssertCorrectTransformation(before, after);
+        }
+
+        [TestMethod]
+        public void TestLearn1()
+        {
             var before = "x = 0;";
             var after = @"x = 1;";
             TestUtils.AssertCorrectTransformation(before, after);
