@@ -16,7 +16,7 @@ namespace Refazer.Test
 
         public static void AssertCorrectExtraction(string before, int id)
         {
-            AssertCorrectTransformation(new List<Tuple<string, string>>() { Tuple.Create(before, after) });
+            AssertCorrectExtraction(new List<Tuple<string, int>>() { Tuple.Create(before, id) });
         }
 
         public static void AssertCorrectTransformation(IEnumerable<Tuple<string, string>> examples)
