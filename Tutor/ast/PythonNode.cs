@@ -32,6 +32,21 @@ namespace Tutor
             Reference = false;
         }
 
+        public object Find(int nodeId)
+        {
+            foreach (var child in Children)
+            {
+                if (child.Id == nodeId)
+                {
+                    return child;
+                } else
+                {
+                    child.Find(nodeId);
+                }
+            }
+            return null;
+        }
+
         public void AddChild(PythonNode node)
         {
             Children.Add(node);
