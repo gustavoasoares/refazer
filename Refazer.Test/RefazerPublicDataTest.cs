@@ -8,11 +8,11 @@ namespace Refazer.Test
     public class RefazerPublicDataTest
     {
         [TestMethod]
-        public void TestLearn1_JS()
+        public void TestLearn1_Extraction()
         {
-            var before = "x = 0";
-            var after = @"x = 1";
-            TestUtils.AssertCorrectTransformation(before, after);
+            var before = "x = 0;";
+            var after = 1;
+            TestUtils.AssertCorrectExtraction(before, after);
         }
 
         [TestMethod]

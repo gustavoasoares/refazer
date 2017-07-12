@@ -32,7 +32,7 @@ namespace Tutor
             Reference = false;
         }
 
-        public object Find(int nodeId)
+        public PythonNode Find(int nodeId)
         {
             foreach (var child in Children)
             {

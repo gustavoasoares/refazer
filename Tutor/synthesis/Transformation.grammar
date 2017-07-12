@@ -26,6 +26,6 @@ IEnumerable<PythonNode> nodes := InOrderSort(ast);
 NodeInfo info; 
 int k;
 string type;
-dynamic value;
+
 
 

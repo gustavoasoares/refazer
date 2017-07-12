@@ -17,7 +17,7 @@ namespace Refazer.Core
             _programNode = pythonNode;
         }
 
-        public ProgramNode GetExtractedNode()
+        public ProgramNode GetSynthesizedProgram()
         {
             return _programNode;
         }

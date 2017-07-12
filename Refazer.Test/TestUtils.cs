@@ -18,16 +18,16 @@ namespace Refazer.Test
         {
             //AssertCorrectExtraction(new List<Tuple<string, int>>() { Tuple.Create(before, id) });
             var rootNode = NodeWrapper.Wrap(ASTHelper.ParseContent(code));
-            var extractedNode = new PythonNode() rootNode.Find(nodeId);
+            var extractedNode = rootNode.Find(nodeId);
             var examples = new List<Tuple<PythonNode, PythonNode>>() { Tuple.Create(rootNode, extractedNode) };
 
             var farbindn = new Farbindn();
-            var learnExtractions = farbindn.LearnExtractions(examples, numberOfPrograms: 1000);
+            var learnExtractions = farbindn.LearnExtractions(examples, 1000, "specific");
             var extraction = learnExtractions.First();
             foreach (var extractionExample in examples)
             {
-                PythonNode output = farbindn.Apply(extraction, extractionExample.Item1);
-                Assert.Equals(nodeId, output.Id);
+                IEnumerable<PythonNode> output = farbindn.Apply(extraction, extractionExample.Item1);
+                Assert.Equals(nodeId, output.First().Id);
             }
         }
 

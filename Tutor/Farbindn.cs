@@ -105,11 +105,11 @@ namespace Refazer.Core
             return input;
         }
 
-        public IEnumerable<string> Apply(Transformation transformation, PythonNode program)
+        public IEnumerable<PythonNode> Apply(Extraction extraction, PythonNode program)
         {
             var unparser = new Unparser();
-            var result = transformation.GetSynthesizedProgram().Invoke(CreateInputState(program)) as IEnumerable<PythonNode>;
-            return result == null ? new List<string>() : result.Select(x => unparser.Unparse(x));
+            var result = extraction.GetSynthesizedProgram().Invoke(CreateInputState(program)) as IEnumerable<PythonNode>;
+            return result; //== null ? new List<string>() : result.Select(x => unparser.Unparse(x));
         }
     }
 }
