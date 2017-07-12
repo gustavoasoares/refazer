@@ -14,6 +14,6 @@ namespace Refazer.Core
     /// </summary>
     public interface Extraction
     {
-        PythonNode GetExtractedNode(); 
+        ProgramNode GetExtractedNode(); 
     }
 }

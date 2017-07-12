@@ -21,8 +21,13 @@ namespace Refazer.Core
 {
     public class Farbindn
     {
-        public Farbindn()
+        public Farbindn(string pathToGrammar = @"..\..\..\Tutor\synthesis\", string pathToDslLib = @"..\..\..\Tutor\bin\debug")
         {
+            
+            _pathToGrammar = pathToGrammar;
+            _pathToDslLib = pathToDslLib;
+            Grammar = DSLCompiler.ParseGrammarFromFile(pathToGrammar + @"Transformation.grammar",
+                    libraryPaths: new[] { pathToDslLib});
         }
 
         /// <summary>
@@ -49,7 +54,7 @@ namespace Refazer.Core
         /// <param name="numberOfPrograms">Max number of learned programs</param>
         /// <param name="ranking">Ranking strategic. So far: "general" or "specific"</param>
         /// <returns>List of learned transformations</returns>
-        public List<PythonNode> LearnExtractions(List<Tuple<PythonNode, PythonNode>> examples, int numberOfPrograms,
+        public List<PythonExtraction> LearnExtractions(List<Tuple<PythonNode, PythonNode>> examples, int numberOfPrograms,
             string ranking)
         {
             var spec = CreateExampleSpec(examples);
@@ -66,7 +71,7 @@ namespace Refazer.Core
                    CacheSize = int.MaxValue
                });
 
-            var learned = _prose.LearnGrammarTopK(spec, scoreFeature, 1);
+            var learned = _prose.LearnGrammarTopK(spec, scoreFeature, numberOfPrograms);
 
             var extractions = new List<ProgramNode>();
 
@@ -77,7 +82,7 @@ namespace Refazer.Core
             extractions = extractions.Count > numberOfPrograms
                 ? extractions.GetRange(0, numberOfPrograms)
                 : extractions;
-            return extractions.Select(e => new PythonExtraction(e)); //what is this?
+            return extractions.Select(e => new PythonExtraction(e)).ToList(); //what is this?
         }
 
         private ExampleSpec CreateExampleSpec(List<Tuple<PythonNode, PythonNode>> examples)

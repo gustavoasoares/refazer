@@ -10,16 +10,16 @@ namespace Refazer.Core
 {
     public class PythonExtraction : Extraction
     {
-        private readonly PythonNode _programNode;
+        private readonly ProgramNode _programNode;
 
-        public PythonExtraction(PythonNode pythonNode)
+        public PythonExtraction(ProgramNode pythonNode)
         {
-            _pythonNode = pythonNode;
+            _programNode = pythonNode;
         }
 
-        public PythonNode GetExtractedNode()
+        public ProgramNode GetExtractedNode()
         {
-            return _pythonNode;
+            return _programNode;
         }
     }
 }
