@@ -18,7 +18,7 @@ namespace Refazer.Test
         {
             //AssertCorrectExtraction(new List<Tuple<string, int>>() { Tuple.Create(before, id) });
             var rootNode = NodeWrapper.Wrap(ASTHelper.ParseContent(code));
-            var extractedNode = rootNode.Find(nodeId);
+            var extractedNode = new PythonNode() rootNode.Find(nodeId);
             var examples = new List<Tuple<PythonNode, PythonNode>>() { Tuple.Create(rootNode, extractedNode) };
 
             var farbindn = new Farbindn();
