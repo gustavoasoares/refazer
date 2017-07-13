@@ -13,7 +13,8 @@ language Transformation;
 
 @complete feature double Score = RankingScore;
 
-@start IEnumerable<PythonNode> transformation:= Selected(match, nodes) = Filter(\x : PythonNode => match,nodes); 
+@start IEnumerable<PythonNode> transformation:= Apply(ast, selectednodes);
+IEnumerable<PythonNode> selectednodes := Selected(match, nodes) = Filter(\x : PythonNode => match,nodes);
 bool match := Match(x, pattern);
 Pattern pattern := Context(k, patternExp, path);
 TreeTemplate patternExp := Pattern(token, tchildren) | LeafPattern(token); 

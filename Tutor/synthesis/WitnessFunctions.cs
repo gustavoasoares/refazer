@@ -20,29 +20,19 @@ namespace Tutor.Transformation
         public WitnessFunctions(Grammar grammar) : base(grammar) { }
 
         [WitnessFunction("Apply",1)]
-        public ExampleSpec WitnessPatch(GrammarRule rule, ExampleSpec spec)
+        public SubsequenceSpec WitnessPatch(GrammarRule rule, ExampleSpec spec)
         {
-            var examples = new Dictionary<State, object>();
+            var examples = new Dictionary<State, IEnumerable<object>>();
             foreach (State input in spec.ProvidedInputs)
             {
                 var before = (PythonNode)input[rule.Body[0]];
                 var after = (PythonNode)spec.Examples[input];
 
-                var zss = new PythonZss(before, after);
-                var editDistance = zss.Compute();
-
-                var rootAndNonRootEdits = SplitEditsByRootsAndNonRoots(editDistance);
-                var edits = ExtractPrimaryEdits(rootAndNonRootEdits, editDistance);
-
-                //todo fix some big examples that are not working 
-                //if (edits.Count > 18)
-                //    return null;
-
-                var patch = new Patch();
-                edits.ForEach(e => patch.EditSets.Add(new List<Edit>() { e }));
-                examples[input] = patch;
+                var newExamples = new List<PythonNode>() { after };
+                
+                examples[input] = newExamples;
             }
-            return new ExampleSpec(examples);
+            return new SubsequenceSpec(examples);
         }
 
         private static List<Edit> ExtractPrimaryEdits(Tuple<List<Edit>, List<Edit>> rootAndNonRootEdits,
@@ -272,6 +262,7 @@ namespace Tutor.Transformation
             }
             return new ExampleSpec(examples);
         }
+
 
 
         [WitnessFunction("EditMap", 1)]
@@ -706,11 +697,7 @@ namespace Tutor.Transformation
                     return null;
                 var innerSpec = new List<PythonNode>();
                 var pnode = outerSpec.PythonNode;
-                if (pnode.Children.Any())
-                {
-                    innerSpec.Add(pnode);
-                }
-                result[input] = innerSpec;
+                result[input] = pnode;
 
             }
             return new ExampleSpec(result);

@@ -11,11 +11,9 @@ namespace Tutor.Transformation
     public static class Semantics
     {
 
-        public static IEnumerable<PythonNode> Apply(PythonNode ast, Patch patch)
+        public static IEnumerable<PythonNode> Apply(PythonNode ast, IEnumerable<PythonNode> selectedNodes)
         {
-            var inputs = new List<PythonNode>() { ast };
-            var asts = patch.Run(ast);
-            return asts;
+            return selectedNodes;
         }
 
         public static Patch Patch(IEnumerable<Edit> edits)

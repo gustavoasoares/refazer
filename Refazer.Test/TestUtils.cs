@@ -27,7 +27,7 @@ namespace Refazer.Test
             foreach (var extractionExample in examples)
             {
                 IEnumerable<PythonNode> output = farbindn.Apply(extraction, extractionExample.Item1);
-                Assert.Equals(nodeId, output.First().Id);
+                Assert.AreEqual(nodeId, output.First().Id);
             }
         }
 
