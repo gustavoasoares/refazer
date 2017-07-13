@@ -706,11 +706,7 @@ namespace Tutor.Transformation
                     return null;
                 var innerSpec = new List<PythonNode>();
                 var pnode = outerSpec.PythonNode;
-                if (pnode.Children.Any())
-                {
-                    innerSpec.Add(pnode);
-                }
-                result[input] = innerSpec;
+                result[input] = pnode;
 
             }
             return new ExampleSpec(result);
