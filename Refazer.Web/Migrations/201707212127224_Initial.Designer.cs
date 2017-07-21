@@ -13,7 +13,7 @@ namespace Refazer.Web.Migrations
         
         string IMigrationMetadata.Id
         {
-            get { return "201707212021270_Initial"; }
+            get { return "201707212127224_Initial"; }
         }
         
         string IMigrationMetadata.Source

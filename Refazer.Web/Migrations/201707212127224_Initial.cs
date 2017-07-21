@@ -8,6 +8,30 @@ namespace Refazer.Web.Migrations
         public override void Up()
         {
             CreateTable(
+                "dbo.Assignments",
+                c => new
+                    {
+                        Id = c.Int(nullable: false, identity: true),
+                        EndPoint = c.String(nullable: false),
+                        Name = c.String(),
+                        Description = c.String(),
+                        TestCase = c.String(),
+                    })
+                .PrimaryKey(t => t.Id);
+            
+            CreateTable(
+                "dbo.Examples",
+                c => new
+                    {
+                        Id = c.Int(nullable: false, identity: true),
+                        EndPoint = c.String(nullable: false),
+                        Question = c.String(),
+                        IncorrectCode = c.String(),
+                        CorrectCode = c.String(),
+                    })
+                .PrimaryKey(t => t.Id);
+            
+            CreateTable(
                 "dbo.Fixes",
                 c => new
                     {
@@ -69,6 +93,8 @@ namespace Refazer.Web.Migrations
             DropTable("dbo.Sessions");
             DropTable("dbo.Transformations");
             DropTable("dbo.Fixes");
+            DropTable("dbo.Examples");
+            DropTable("dbo.Assignments");
         }
     }
 }
