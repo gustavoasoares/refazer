@@ -187,6 +187,11 @@
     <Compile Include="Global.asax.cs">
       <DependentUpon>Global.asax</DependentUpon>
     </Compile>
+    <Compile Include="Migrations\201707212021270_Initial.cs" />
+    <Compile Include="Migrations\201707212021270_Initial.Designer.cs">
+      <DependentUpon>201707212021270_Initial.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Migrations\Configuration.cs" />
     <Compile Include="Models\ApplyFixFromExampleInput.cs" />
     <Compile Include="Models\Fix.cs" />
     <Compile Include="Models\RefazerInput.cs" />
@@ -302,6 +307,11 @@
       <Project>{a56c13e4-5c55-4372-813f-af5611425ec6}</Project>
       <Name>Refazer</Name>
     </ProjectReference>
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="Migrations\201707212021270_Initial.resx">
+      <DependentUpon>201707212021270_Initial.cs</DependentUpon>
+    </EmbeddedResource>
   </ItemGroup>
   <PropertyGroup>
     <VisualStudioVersion Condition="'$(VisualStudioVersion)' == ''">10.0</VisualStudioVersion>
