@@ -29,7 +29,7 @@ namespace Refazer.WebAPI.Controllers
         [ResponseType(typeof(Assignment))]
         public IHttpActionResult GetAssignment(int id)
         {
-            Assignment assignment = db.Assignments.Find(id);
+            Assignment assignment = FindById(id);
             if (assignment == null)
             {
                 return NotFound();
@@ -95,7 +95,7 @@ namespace Refazer.WebAPI.Controllers
         [ResponseType(typeof(Assignment))]
         public IHttpActionResult DeleteAssignment(int id)
         {
-            Assignment assignment = db.Assignments.Find(id);
+            Assignment assignment = FindById(id);
             if (assignment == null)
             {
                 return NotFound();
@@ -119,6 +119,12 @@ namespace Refazer.WebAPI.Controllers
         private bool AssignmentExists(int id)
         {
             return db.Assignments.Count(e => e.Id == id) > 0;
+        }
+
+        private Assignment FindById(int id)
+        {
+            return db.Assignments.Where(a => a.Id == id)
+                .FirstOrDefault();
         }
     }
 }
