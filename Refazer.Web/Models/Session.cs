@@ -36,8 +36,9 @@ namespace Refazer.WebAPI.Models
         public DbSet<Session> Sessions { set; get; }
         public DbSet<Submission> Submissions { get; set; }
         public DbSet<Fix> Fixes { set; get; }
-
         public DbSet<Transformation> Transformations { set; get; }
+        public DbSet<Assignment> Assignments { set; get; }
+        public DbSet<Example> Examples { set; get; }
     }
 
 }
