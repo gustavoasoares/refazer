@@ -64,6 +64,13 @@ namespace Refazer.WebAPI.Controllers
             return session.ID;
         }
 
+        [Route("Sessions"), HttpGet]
+        public IEnumerable<Session> Get()
+        {
+            var refazerDb = new RefazerDbContext();
+            return refazerDb.Sessions;
+        }
+
         //POST: api/Refazer/ApplyFixFromExample
         [Route("ApplyFixFromExample"), HttpPost]
         public dynamic ApplyFixFromExample(ApplyFixFromExampleInput exampleInput)
