@@ -9,10 +9,10 @@ namespace Refazer.WebAPI.Models
 {
     public class Assignment
     {
-        [Key, DatabaseGenerated(DatabaseGeneratedOption.Identity)]
+        [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
         public int Id { get; set; }
 
-        [Required]
+        [Key]
         public String EndPoint { get; set; }
 
         public string Name { get; set; }
