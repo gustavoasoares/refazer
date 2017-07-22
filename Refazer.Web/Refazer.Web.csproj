@@ -208,6 +208,10 @@
     <Compile Include="Migrations\201707220008310_assignment-key.Designer.cs">
       <DependentUpon>201707220008310_assignment-key.cs</DependentUpon>
     </Compile>
+    <Compile Include="Migrations\201707220025489_example-foreign-key.cs" />
+    <Compile Include="Migrations\201707220025489_example-foreign-key.Designer.cs">
+      <DependentUpon>201707220025489_example-foreign-key.cs</DependentUpon>
+    </Compile>
     <Compile Include="Migrations\Configuration.cs" />
     <Compile Include="Models\ApplyFixFromExampleInput.cs" />
     <Compile Include="Models\Assignment.cs" />
@@ -336,6 +340,9 @@
     </EmbeddedResource>
     <EmbeddedResource Include="Migrations\201707220008310_assignment-key.resx">
       <DependentUpon>201707220008310_assignment-key.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Migrations\201707220025489_example-foreign-key.resx">
+      <DependentUpon>201707220025489_example-foreign-key.cs</DependentUpon>
     </EmbeddedResource>
   </ItemGroup>
   <PropertyGroup>
