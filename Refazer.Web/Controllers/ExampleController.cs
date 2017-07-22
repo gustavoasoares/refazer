@@ -11,49 +11,48 @@ using System.Web.Http.Description;
 
 namespace Refazer.WebAPI.Controllers
 {
-    [RoutePrefix("api/assignment")]
-    public class AssignmentController : ApiController
+    [RoutePrefix("api/examples")]
+    public class ExampleController : ApiController
     {
-
         private RefazerDbContext db = new RefazerDbContext();
 
-        // GET: api/Assignments
+        // GET: api/Examples
         [Route("")]
-        public IQueryable<Assignment> GetAssignments()
+        public IQueryable<Example> GetExamples()
         {
-            return db.Assignments;
+            return db.Examples;
         }
 
-        // GET: api/Assignments/5
+        // GET: api/Examples/5
         [Route("{id:int}")]
-        [ResponseType(typeof(Assignment))]
-        public IHttpActionResult GetAssignment(int id)
+        [ResponseType(typeof(Example))]
+        public IHttpActionResult GetExample(int id)
         {
-            Assignment assignment = FindById(id);
-            if (assignment == null)
+            Example example = db.Examples.Find(id);
+            if (example == null)
             {
                 return NotFound();
             }
 
-            return Ok(assignment);
+            return Ok(example);
         }
 
-        // PUT: api/Assignments/5
+        // PUT: api/Examples/5
         [Route("{id:int}"), HttpPut]
         [ResponseType(typeof(void))]
-        public IHttpActionResult PutAssignment(int id, Assignment assignment)
+        public IHttpActionResult PutExample(int id, Example example)
         {
             if (!ModelState.IsValid)
             {
                 return BadRequest(ModelState);
             }
 
-            if (id != assignment.Id)
+            if (id != example.Id)
             {
                 return BadRequest();
             }
 
-            db.Entry(assignment).State = EntityState.Modified;
+            db.Entry(example).State = EntityState.Modified;
 
             try
             {
@@ -61,7 +60,7 @@ namespace Refazer.WebAPI.Controllers
             }
             catch (DbUpdateConcurrencyException)
             {
-                if (!AssignmentExists(id))
+                if (!ExampleExists(id))
                 {
                     return NotFound();
                 }
@@ -74,37 +73,37 @@ namespace Refazer.WebAPI.Controllers
             return StatusCode(HttpStatusCode.NoContent);
         }
 
-        // POST: api/Assignments
+        // POST: api/Examples
         [Route(""), HttpPost]
-        [ResponseType(typeof(Assignment))]
-        public IHttpActionResult PostAssignment(Assignment assignment)
+        [ResponseType(typeof(Example))]
+        public IHttpActionResult PostExample(Example example)
         {
             if (!ModelState.IsValid)
             {
                 return BadRequest(ModelState);
             }
 
-            db.Assignments.Add(assignment);
+            db.Examples.Add(example);
             db.SaveChanges();
 
-            return CreatedAtRoute("", new { id = assignment.Id }, assignment);
+            return CreatedAtRoute("", new { id = example.Id }, example);
         }
 
-        // DELETE: api/Assignments/5
+        // DELETE: api/Examples/5
         [Route("{id:int}"), HttpDelete]
-        [ResponseType(typeof(Assignment))]
-        public IHttpActionResult DeleteAssignment(int id)
+        [ResponseType(typeof(Example))]
+        public IHttpActionResult DeleteExample(int id)
         {
-            Assignment assignment = FindById(id);
-            if (assignment == null)
+            Example example = db.Examples.Find(id);
+            if (example == null)
             {
                 return NotFound();
             }
 
-            db.Assignments.Remove(assignment);
+            db.Examples.Remove(example);
             db.SaveChanges();
 
-            return Ok(assignment);
+            return Ok(example);
         }
 
         protected override void Dispose(bool disposing)
@@ -116,15 +115,9 @@ namespace Refazer.WebAPI.Controllers
             base.Dispose(disposing);
         }
 
-        private bool AssignmentExists(int id)
+        private bool ExampleExists(int id)
         {
-            return db.Assignments.Count(e => e.Id == id) > 0;
-        }
-
-        private Assignment FindById(int id)
-        {
-            return db.Assignments.Where(a => a.Id == id)
-                .FirstOrDefault();
+            return db.Examples.Count(e => e.Id == id) > 0;
         }
     }
 }
