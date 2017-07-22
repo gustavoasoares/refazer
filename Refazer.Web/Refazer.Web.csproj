@@ -200,6 +200,14 @@
     <Compile Include="Migrations\201707212127224_Initial.Designer.cs">
       <DependentUpon>201707212127224_Initial.cs</DependentUpon>
     </Compile>
+    <Compile Include="Migrations\201707220005162_Initial1.cs" />
+    <Compile Include="Migrations\201707220005162_Initial1.Designer.cs">
+      <DependentUpon>201707220005162_Initial1.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Migrations\201707220008310_assignment-key.cs" />
+    <Compile Include="Migrations\201707220008310_assignment-key.Designer.cs">
+      <DependentUpon>201707220008310_assignment-key.cs</DependentUpon>
+    </Compile>
     <Compile Include="Migrations\Configuration.cs" />
     <Compile Include="Models\ApplyFixFromExampleInput.cs" />
     <Compile Include="Models\Assignment.cs" />
@@ -322,6 +330,12 @@
   <ItemGroup>
     <EmbeddedResource Include="Migrations\201707212127224_Initial.resx">
       <DependentUpon>201707212127224_Initial.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Migrations\201707220005162_Initial1.resx">
+      <DependentUpon>201707220005162_Initial1.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Migrations\201707220008310_assignment-key.resx">
+      <DependentUpon>201707220008310_assignment-key.cs</DependentUpon>
     </EmbeddedResource>
   </ItemGroup>
   <PropertyGroup>
