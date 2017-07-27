@@ -41,7 +41,7 @@ namespace Tutor
                     return child;
                 } else
                 {
-                    child.Find(nodeId);
+                    return child.Find(nodeId);
                 }
             }
             return null;
