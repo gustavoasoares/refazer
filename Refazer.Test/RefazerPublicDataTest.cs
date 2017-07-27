@@ -79,6 +79,23 @@ namespace Refazer.Test
         }
 
         [TestMethod]
+        public void TestGeneralizationMultipleExamples3_Extraction()
+        {
+            var examples = new List<Tuple<string, int>>();
+            var heldout = new List<Tuple<string, int>>();
+            var before = @"i = 0";
+            var after = 3;
+            examples.Add(Tuple.Create(before, after));
+            before = @"j = 1";
+            after = 8;
+            examples.Add(Tuple.Create(before, after));
+            before = @"k = 2";
+            after = 13;
+            heldout.Add(Tuple.Create(before, after));
+            TestUtils.AssertCorrectExtractionGeneralization(examples, heldout);
+        }
+
+        [TestMethod]
         public void TestLearn1()
         {
             var before = "x = 0;";
