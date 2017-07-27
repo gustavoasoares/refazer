@@ -47,6 +47,17 @@ namespace Tutor
             return null;
         }
 
+        public PythonNode PrintTree()
+        {
+            foreach (var child in Children)
+            {
+                System.Diagnostics.Debug.WriteLine(child.Id);
+                System.Diagnostics.Debug.WriteLine(child.ToString());
+                child.PrintTree();
+            }
+            return null;
+        }
+
         public void AddChild(PythonNode node)
         {
             Children.Add(node);

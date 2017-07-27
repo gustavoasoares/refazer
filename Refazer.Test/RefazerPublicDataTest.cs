@@ -49,6 +49,19 @@ namespace Refazer.Test
         }
 
         [TestMethod]
+        public void TestLearnMultipleExamples2_Extraction()
+        {
+            var examples = new List<Tuple<string, int>>();
+            var before = @"i = 0";
+            var after = 2;
+            examples.Add(Tuple.Create(before, after));
+            before = @"j = 1";
+            after = 2;
+            examples.Add(Tuple.Create(before, after));
+            TestUtils.AssertCorrectExtraction(examples);
+        }
+
+        [TestMethod]
         public void TestLearn1()
         {
             var before = "x = 0;";

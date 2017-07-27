@@ -63,6 +63,7 @@ namespace Refazer.Test
             foreach (var string_int_tuple in examples_strings_and_ints)
             {
                 var rootNode = NodeWrapper.Wrap(ASTHelper.ParseContent(string_int_tuple.Item1));
+                rootNode.PrintTree();
                 var extractedNode = rootNode.Find(string_int_tuple.Item2);
                 examples.Add(Tuple.Create(rootNode, extractedNode));
             }
