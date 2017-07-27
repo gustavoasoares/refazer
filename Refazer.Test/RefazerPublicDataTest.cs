@@ -56,7 +56,7 @@ namespace Refazer.Test
             var after = 2;
             examples.Add(Tuple.Create(before, after));
             before = @"j = 1";
-            after = 2;
+            after = 7;
             examples.Add(Tuple.Create(before, after));
             TestUtils.AssertCorrectExtraction(examples);
         }
