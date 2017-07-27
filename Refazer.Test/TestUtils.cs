@@ -51,5 +51,31 @@ namespace Refazer.Test
                 Assert.IsTrue(isFixed);
             }
         }
+
+        public static void AssertCorrectExtraction(List<Tuple<string, int>> examples_strings_and_ints)
+        {
+            //AssertCorrectExtraction(new List<Tuple<string, int>>() { Tuple.Create(before, id) });
+
+            Console.Out.WriteLine(examples_strings_and_ints);
+            //initialize list
+            var examples = new List<Tuple<PythonNode, PythonNode>>();
+            // iterate over strings and ints examples, construct new set of examples filled with Python nodes
+            foreach (var string_int_tuple in examples_strings_and_ints)
+            {
+                var rootNode = NodeWrapper.Wrap(ASTHelper.ParseContent(string_int_tuple.Item1));
+                var extractedNode = rootNode.Find(string_int_tuple.Item2);
+                examples.Add(Tuple.Create(rootNode, extractedNode));
+            }
+            Console.Out.WriteLine(examples);
+
+            var farbindn = new Farbindn();
+            var learnExtractions = farbindn.LearnExtractions(examples, 1000, "specific");
+            var extraction = learnExtractions.First();
+            foreach (var extractionExample in examples)
+            {
+                IEnumerable<PythonNode> output = farbindn.Apply(extraction, extractionExample.Item1);
+                Assert.AreEqual(extractionExample.Item1, output.First().Id);
+            }
+        }
     }
 }
