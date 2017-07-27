@@ -78,5 +78,45 @@ namespace Refazer.Test
                 Assert.AreEqual(extractionExample.Item2, output.First());
             }
         }
+
+        internal static void AssertCorrectExtractionGeneralization(List<Tuple<string, int>> examples_strings_and_ints, List<Tuple<string, int>> heldout_strings_and_ints)
+        {
+            Console.Out.WriteLine(examples_strings_and_ints);
+            //initialize list
+            var examples = new List<Tuple<PythonNode, PythonNode>>();
+            var heldout = new List<Tuple<PythonNode, PythonNode>>();
+            // iterate over strings and ints examples, construct new set of examples filled with Python nodes
+            foreach (var string_int_tuple in examples_strings_and_ints)
+            {
+                var rootNode = NodeWrapper.Wrap(ASTHelper.ParseContent(string_int_tuple.Item1));
+                rootNode.PrintTree();
+                var extractedNode = rootNode.Find(string_int_tuple.Item2);
+                examples.Add(Tuple.Create(rootNode, extractedNode));
+            }
+            //Console.Out.WriteLine(examples);
+
+            foreach (var string_int_tuple in heldout_strings_and_ints)
+            {
+                var rootNode = NodeWrapper.Wrap(ASTHelper.ParseContent(string_int_tuple.Item1));
+                rootNode.PrintTree();
+                var extractedNode = rootNode.Find(string_int_tuple.Item2);
+                heldout.Add(Tuple.Create(rootNode, extractedNode));
+            }
+            //Console.Out.WriteLine(heldout);
+
+            var farbindn = new Farbindn();
+            var learnExtractions = farbindn.LearnExtractions(examples, 1000, "specific");
+            var extraction = learnExtractions.First();
+            foreach (var extractionExample in examples)
+            {
+                IEnumerable<PythonNode> output = farbindn.Apply(extraction, extractionExample.Item1);
+                Assert.AreEqual(extractionExample.Item2, output.First());
+            }
+            foreach (var extractionExample in heldout)
+            {
+                IEnumerable<PythonNode> output = farbindn.Apply(extraction, extractionExample.Item1);
+                Assert.AreEqual(extractionExample.Item2, output.First());
+            }
+        }
     }
 }
