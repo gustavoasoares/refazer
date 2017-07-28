@@ -96,6 +96,30 @@ namespace Refazer.Test
         }
 
         [TestMethod]
+        public void TestGeneralizationMultipleExamples4_Extraction()
+        {
+            var examples = new List<Tuple<string, int>>();
+            var heldout = new List<Tuple<string, int>>();
+            var before = @"def product(n, term):
+    def counter(i, total = 0):
+        return total * term(i)";
+            var after = 12;
+            examples.Add(Tuple.Create(before, after));
+            before = @"def product(n, term):
+    def ctr(i, total = 0):
+        return term(i) * total";
+            after = 30;
+            examples.Add(Tuple.Create(before, after));
+            before = @"def product(n, term):
+    def counter(i, total = 0):
+        intermediate_prod = total * term(i)
+        return intermediate_prod";
+            after = 49;
+            heldout.Add(Tuple.Create(before, after));
+            TestUtils.AssertCorrectExtractionGeneralization(examples, heldout);
+        }
+
+        [TestMethod]
         public void TestLearn1()
         {
             var before = "x = 0;";
