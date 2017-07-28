@@ -36,12 +36,17 @@ namespace Tutor
         {
             foreach (var child in Children)
             {
+                System.Diagnostics.Debug.WriteLine(child.Id);
                 if (child.Id == nodeId)
                 {
                     return child;
                 } else
                 {
-                    return child.Find(nodeId);
+                    var recursive_result = child.Find(nodeId);
+                    if (recursive_result != null)
+                    {
+                        return recursive_result;
+                    }
                 }
             }
             return null;
