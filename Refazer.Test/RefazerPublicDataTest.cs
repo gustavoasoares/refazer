@@ -115,6 +115,13 @@ namespace Refazer.Test
         intermediate_prod = total * term(i)
         return intermediate_prod";
             after = 49;
+            examples.Add(Tuple.Create(before, after));
+            before = @"def product(n, term):
+    def counter(i, total = 0):
+        unnecessary_computation = 1
+        intermediate_prod = total * term(i)
+        return intermediate_prod";
+            after = 73;
             heldout.Add(Tuple.Create(before, after));
             TestUtils.AssertCorrectExtractionGeneralization(examples, heldout);
         }
