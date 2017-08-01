@@ -29,7 +29,7 @@ namespace Refazer.WebAPI.Controllers
     [RoutePrefix("api/refazer")]
     public class RefazerController : ApiController
     {
-        public static int numberOfJobs = 0; 
+        public static int numberOfJobs = 0;
 
         /// <summary>
         /// Creates refazer
@@ -60,22 +60,15 @@ namespace Refazer.WebAPI.Controllers
                 refazerDb.Submissions.Add(submission);
             }
             refazerDb.SaveChanges();
-            
-            return session.ID;
-        }
 
-        [Route("Sessions"), HttpGet]
-        public IEnumerable<Session> Get()
-        {
-            var refazerDb = new RefazerDbContext();
-            return refazerDb.Sessions;
+            return session.ID;
         }
 
         //POST: api/Refazer/ApplyFixFromExample
         [Route("ApplyFixFromExample"), HttpPost]
         public dynamic ApplyFixFromExample(ApplyFixFromExampleInput exampleInput)
         {
-            
+
             Trace.TraceWarning("ApplyFixFromExample request accepted for submission: {0} on Instance: {1}. Total jobs in this instance: {2}",
                 exampleInput.SubmissionId, "", ++numberOfJobs);
             var exceptions = new List<string>();
@@ -83,7 +76,7 @@ namespace Refazer.WebAPI.Controllers
             {
                 var refazer = BuildRefazer();
                 var example = Tuple.Create(exampleInput.CodeBefore, exampleInput.CodeAfter);
-                var transformations = refazer.LearnTransformations(new List<Tuple<string, string>>() {example},
+                var transformations = refazer.LearnTransformations(new List<Tuple<string, string>>() { example },
                     exampleInput.SynthesizedTransformations, exampleInput.Ranking);
 
                 var refazerDb = new RefazerDbContext();
@@ -99,7 +92,7 @@ namespace Refazer.WebAPI.Controllers
                     {
                         SessionId = exampleInput.SessionId,
                         Program = programNode.ToString(),
-                        Rank = rank++, 
+                        Rank = rank++,
                         RankType = (exampleInput.Ranking.Equals("specific")) ? 1 : 2,
                         Examples = "[{'submission_id': " + exampleInput.SubmissionId
                     + ", 'code_before': " + exampleInput.CodeBefore
@@ -131,8 +124,8 @@ namespace Refazer.WebAPI.Controllers
                     Trace.TraceError("Total of submissions that could not be parsed: {0}", exList.Count);
 
                 if (transformationTuples.Any())
-                    Task.Run(() => TryToFixAsync(transformationTuples, exampleInput.SessionId, 
-                        exampleInput.QuestionId,submissionTuples));
+                    Task.Run(() => TryToFixAsync(transformationTuples, exampleInput.SessionId,
+                        exampleInput.QuestionId, submissionTuples));
             }
             catch (Exception e)
             {
@@ -141,7 +134,7 @@ namespace Refazer.WebAPI.Controllers
                 Trace.TraceWarning(e.Message);
                 exceptions.Add(e.Message);
             }
-            return Json(new {id = 0 , exceptions});
+            return Json(new { id = 0, exceptions });
         }
 
         private IEnumerable<ProgramNode> FilterExistingTransformations(IEnumerable<ProgramNode> newTransformations,
@@ -166,7 +159,7 @@ namespace Refazer.WebAPI.Controllers
         }
 
 
-        static void TryToFixAsync(IEnumerable<Tuple<ProgramNode, Models.Transformation>> transformationTuples, int experiementId, 
+        static void TryToFixAsync(IEnumerable<Tuple<ProgramNode, Models.Transformation>> transformationTuples, int experiementId,
             int questionId, IEnumerable<Tuple<Submission, State>> submissionTuples)
         {
             Trace.TraceWarning(string.Format("Starting TryFix for Session: {0}, Instance: {1}", experiementId, ""));
@@ -188,7 +181,7 @@ namespace Refazer.WebAPI.Controllers
                         Trace.TraceError(ex.Message);
                     }
                 }
-                    Trace.TraceWarning(string.Format("Finising transformation: {0}, Session: {1}, Instance {2} ", transformation.Item2.ID, transformation.Item2.SessionId, ""));
+                Trace.TraceWarning(string.Format("Finising transformation: {0}, Session: {1}, Instance {2} ", transformation.Item2.ID, transformation.Item2.SessionId, ""));
             }
             numberOfJobs -= 1;
             Trace.TraceWarning(string.Format("Finishing TryFix for session: {0}, Instance: {1}", experiementId, ""));
@@ -225,7 +218,7 @@ namespace Refazer.WebAPI.Controllers
                         };
                         refazerDb2.Fixes.Add(fix);
                         refazerDb2.SaveChanges();
-                        Trace.TraceWarning(string.Format("Submission fixed: {0}, Session: {1}, Transformation: {2}, Time: {3}", 
+                        Trace.TraceWarning(string.Format("Submission fixed: {0}, Session: {1}, Transformation: {2}, Time: {3}",
                             submission.Item1.SubmissionId, transformationTuple.Item2.SessionId, transformationTuple.Item2.ID, DateTime.Now));
                     }
                 }
@@ -246,10 +239,10 @@ namespace Refazer.WebAPI.Controllers
         [Route("GetFixes"), HttpGet]
         public IEnumerable<Fix> GetFixes(int SessionId, int FixId)
         {
-            Trace.TraceWarning("GetFixes request accepted for session: {0} on Instance: {1}", SessionId, 
+            Trace.TraceWarning("GetFixes request accepted for session: {0} on Instance: {1}", SessionId,
                 "");
             var refazerDb2 = new RefazerDbContext();
-            return refazerDb2.Fixes.Include("Transformation").Where(x => x.SessionId == SessionId && x.ID >= FixId); 
+            return refazerDb2.Fixes.Include("Transformation").Where(x => x.SessionId == SessionId && x.ID >= FixId);
         }
     }
 
@@ -276,7 +269,7 @@ def increment(x):
 ";
             return testSetup;
         }
-        
+
         public Dictionary<string, long> GetTests(int questionId)
         {
             var testSetup = GetTestSetup();
@@ -328,4 +321,3 @@ def increment(x):
         }
     }
 }
-
