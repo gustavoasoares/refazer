@@ -25,6 +25,6 @@ namespace Refazer.WebAPI.Models
         public String EndPoint { get; set; }
 
         [ForeignKey("EndPoint")]
-        public Assignment assignment { get; set; }
+        public Assignment Assignment { get; set; }
     }
 }

@@ -226,6 +226,10 @@
     <Compile Include="Migrations\201707220116025_required-endpoint.Designer.cs">
       <DependentUpon>201707220116025_required-endpoint.cs</DependentUpon>
     </Compile>
+    <Compile Include="Migrations\201708021733549_transformation2.cs" />
+    <Compile Include="Migrations\201708021733549_transformation2.Designer.cs">
+      <DependentUpon>201708021733549_transformation2.cs</DependentUpon>
+    </Compile>
     <Compile Include="Migrations\Configuration.cs" />
     <Compile Include="Models\ApplyFixFromExampleInput.cs" />
     <Compile Include="Models\Assignment.cs" />
@@ -235,6 +239,7 @@
     <Compile Include="Models\Session.cs" />
     <Compile Include="Models\StartInput.cs" />
     <Compile Include="Models\Submission.cs" />
+    <Compile Include="Models\Transformation2 .cs" />
     <Compile Include="Models\Transformation.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
@@ -363,6 +368,9 @@
     </EmbeddedResource>
     <EmbeddedResource Include="Migrations\201707220116025_required-endpoint.resx">
       <DependentUpon>201707220116025_required-endpoint.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Migrations\201708021733549_transformation2.resx">
+      <DependentUpon>201708021733549_transformation2.cs</DependentUpon>
     </EmbeddedResource>
   </ItemGroup>
   <ItemGroup>

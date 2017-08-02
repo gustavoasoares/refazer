@@ -19,14 +19,14 @@ namespace Refazer.WebAPI.Controllers
     {
         private RefazerDbContext db = new RefazerDbContext();
 
-        // GET: api/Examples
+        // GET: api/Example
         [Route("")]
         public IQueryable<Example> GetExamples()
         {
             return db.Examples;
         }
 
-        // GET: api/Examples/5
+        // GET: api/Example/5
         [Route("{id:int}")]
         [ResponseType(typeof(Example))]
         public IHttpActionResult GetExample(int id)
@@ -40,7 +40,7 @@ namespace Refazer.WebAPI.Controllers
             return Ok(example);
         }
 
-        // PUT: api/Examples/5
+        // PUT: api/Example/5
         [Route("{id:int}"), HttpPut]
         [ResponseType(typeof(void))]
         public IHttpActionResult PutExample(int id, Example example)
@@ -76,7 +76,7 @@ namespace Refazer.WebAPI.Controllers
             return StatusCode(HttpStatusCode.NoContent);
         }
 
-        // POST: api/Examples
+        // POST: api/Example
         [Route(""), HttpPost]
         [ResponseType(typeof(Example))]
         public IHttpActionResult PostExample(Example example)
@@ -89,12 +89,12 @@ namespace Refazer.WebAPI.Controllers
             db.Examples.Add(example);
             db.SaveChanges();
 
-            LearnTransformation(example);
+            LearnTransformationFromExample(example);
 
             return CreatedAtRoute("", new { id = example.Id }, example);
         }
 
-        // DELETE: api/Examples/5
+        // DELETE: api/Example/5
         [Route("{id:int}"), HttpDelete]
         [ResponseType(typeof(Example))]
         public IHttpActionResult DeleteExample(int id)
@@ -111,14 +111,16 @@ namespace Refazer.WebAPI.Controllers
             return Ok(example);
         }
 
-        private void LearnTransformation(Example exampleInput)
+        private void LearnTransformationFromExample(Example example)
         {
-            var refazer = BuildRefazer();
-            var example = Tuple.Create(exampleInput.IncorrectCode, exampleInput.CorrectCode);
-            var transformation = refazer.LearnTransformations(new List<Tuple<string, string>>() { example }).First();
+            Core.Refazer refazer = BuildRefazer();
+            Tuple<String, String> exampleAsTuple = Tuple.Create(example.IncorrectCode, example.CorrectCode);
+
+            var transformations = refazer.LearnTransformations(new List<Tuple<string,
+                string>>() { exampleAsTuple });
 
             //Fixing
-            var output = refazer.Apply(transformation, exampleInput.IncorrectCode);
+            var output = refazer.Apply(transformations.First(), example.IncorrectCode);
             foreach (var newCode in output)
             {
                 Debug.WriteLine("\n Código Corrigido \n");
