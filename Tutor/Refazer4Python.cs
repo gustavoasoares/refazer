@@ -40,16 +40,10 @@ namespace Refazer.Core
 
         public Refazer4Python(string pathToGrammar = @"..\..\..\Tutor\synthesis\", string pathToDslLib = @"..\..\..\Tutor\bin\debug")
         {
-
             _pathToGrammar = pathToGrammar;
             _pathToDslLib = pathToDslLib;
             Grammar = DSLCompiler.ParseGrammarFromFile(pathToGrammar + @"Transformation.grammar",
                     libraryPaths: new[] { pathToDslLib });
-
-            Debug.WriteLine("Debugging");
-            Debug.WriteLine(Grammar.HasErrors);
-            Debug.WriteLine(Grammar.Exception);
-
         }
 
         public IEnumerable<Transformation> LearnTransformations(List<Tuple<string, string>> examples,
