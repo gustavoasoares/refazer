@@ -125,7 +125,9 @@ namespace Refazer.WebAPI.Controllers
                     EndPoint = example.EndPoint,
                     IncorrectCode = example.IncorrectCode,
                     CorrectCode = example.CorrectCode,
-                    Program = programNode.ToString(), //ToString não funciona - precisa serializar.
+                    // Program = programNode.ToString(),
+                    // É necessário serializar programNode para salvar no banco de dados.
+                    Program = programNode.GetSynthesizedProgram().ToString(),
                     Rank = rank++,
                     RankType = 1
                 };
