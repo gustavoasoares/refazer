@@ -4,13 +4,10 @@ using System;
 using System.Collections.Generic;
 using System.Data.Entity;
 using System.Data.Entity.Infrastructure;
-using System.Diagnostics;
 using System.Linq;
 using System.Net;
-using System.Net.Http;
 using System.Web.Http;
 using System.Web.Http.Description;
-using Tutor;
 
 namespace Refazer.WebAPI.Controllers
 {
@@ -119,13 +116,32 @@ namespace Refazer.WebAPI.Controllers
             var transformations = refazer.LearnTransformations(new List<Tuple<string,
                 string>>() { exampleAsTuple });
 
-            //Fixing
-            var output = refazer.Apply(transformations.First(), example.IncorrectCode);
-            foreach (var newCode in output)
+            int rank = 1;
+
+            foreach (var programNode in transformations)
             {
-                Debug.WriteLine("\n Código Corrigido \n");
-                Debug.WriteLine(newCode);
+                Transformation2 newTransformation = new Transformation2()
+                {
+                    EndPoint = example.EndPoint,
+                    IncorrectCode = example.IncorrectCode,
+                    CorrectCode = example.CorrectCode,
+                    Program = programNode.ToString(), //ToString não funciona - precisa serializar.
+                    Rank = rank++,
+                    RankType = 1
+                };
+
+                db.Transformations2.Add(newTransformation);
             }
+
+            db.SaveChanges();
+
+            //Fixing
+            //var output = refazer.Apply(transformations.First(), example.IncorrectCode);
+            //foreach (var newCode in output)
+            //{
+            //Debug.WriteLine("\n Código Corrigido \n");
+            //Debug.WriteLine(newCode);
+            //}
         }
 
         private Core.Refazer BuildRefazer()

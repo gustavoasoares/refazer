@@ -16,9 +16,6 @@ namespace Refazer.WebAPI.Models
         [Key, DatabaseGenerated(DatabaseGeneratedOption.Identity)]
         public int ID { set; get; }
 
-        [Required, DatabaseGenerated(DatabaseGeneratedOption.Computed)]
-        public DateTime Time { set; get; }
-
         [Required]
         public String EndPoint { get; set; }
 
