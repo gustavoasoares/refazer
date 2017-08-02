@@ -17,8 +17,8 @@ namespace Refazer.Core
         /// <param name="numberOfPrograms">Max number of learned programs</param>
         /// <param name="ranking">Ranking strategic. So far: "general" or "specific"</param>
         /// <returns>List of learned transformations</returns>
-        IEnumerable<Transformation> LearnTransformations(List<Tuple<string, string>> examples, int numberOfPrograms,
-            string ranking);
+        IEnumerable<Transformation> LearnTransformations(List<Tuple<string, string>> examples, 
+            int numberOfPrograms = 1, string ranking = "specific");
 
         /// <summary>
         /// Create an input state that contains the input program to be transformed. 

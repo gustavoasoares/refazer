@@ -1,13 +1,16 @@
-﻿using Refazer.WebAPI.Models;
+﻿using Refazer.Core;
+using Refazer.WebAPI.Models;
 using System;
 using System.Collections.Generic;
 using System.Data.Entity;
 using System.Data.Entity.Infrastructure;
+using System.Diagnostics;
 using System.Linq;
 using System.Net;
 using System.Net.Http;
 using System.Web.Http;
 using System.Web.Http.Description;
+using Tutor;
 
 namespace Refazer.WebAPI.Controllers
 {
@@ -86,6 +89,8 @@ namespace Refazer.WebAPI.Controllers
             db.Examples.Add(example);
             db.SaveChanges();
 
+            LearnTransformation(example);
+
             return CreatedAtRoute("", new { id = example.Id }, example);
         }
 
@@ -104,6 +109,29 @@ namespace Refazer.WebAPI.Controllers
             db.SaveChanges();
 
             return Ok(example);
+        }
+
+        private void LearnTransformation(Example exampleInput)
+        {
+            var refazer = BuildRefazer();
+            var example = Tuple.Create(exampleInput.IncorrectCode, exampleInput.CorrectCode);
+            var transformation = refazer.LearnTransformations(new List<Tuple<string, string>>() { example }).First();
+
+            //Fixing
+            var output = refazer.Apply(transformation, exampleInput.IncorrectCode);
+            foreach (var newCode in output)
+            {
+                Debug.WriteLine("\n Código Corrigido \n");
+                Debug.WriteLine(newCode);
+            }
+        }
+
+        private Core.Refazer BuildRefazer()
+        {
+            var pathToGrammar = System.Web.Hosting.HostingEnvironment.MapPath(@"~/Content/");
+            var pathToDslLib = System.Web.Hosting.HostingEnvironment.MapPath(@"~/bin");
+            var refazer = new Refazer4Python(pathToGrammar, pathToDslLib);
+            return refazer;
         }
 
         protected override void Dispose(bool disposing)

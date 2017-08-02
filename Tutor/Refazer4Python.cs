@@ -12,6 +12,7 @@ using Microsoft.ProgramSynthesis.Learning.Strategies;
 using Microsoft.ProgramSynthesis.Specifications;
 using Tutor;
 using Tutor.Transformation;
+using System.Diagnostics;
 
 namespace Refazer.Core
 {
@@ -44,6 +45,10 @@ namespace Refazer.Core
             _pathToDslLib = pathToDslLib;
             Grammar = DSLCompiler.ParseGrammarFromFile(pathToGrammar + @"Transformation.grammar",
                     libraryPaths: new[] { pathToDslLib });
+
+            Debug.WriteLine("Debugging");
+            Debug.WriteLine(Grammar.HasErrors);
+            Debug.WriteLine(Grammar.Exception);
 
         }
 
