@@ -1,9 +1,11 @@
 ﻿using Refazer.Core;
+using Refazer.Web.Utils;
 using Refazer.WebAPI.Models;
 using System;
 using System.Collections.Generic;
 using System.Data.Entity;
 using System.Data.Entity.Infrastructure;
+using System.Diagnostics;
 using System.Linq;
 using System.Net;
 using System.Web.Http;
@@ -78,6 +80,12 @@ namespace Refazer.WebAPI.Controllers
         [ResponseType(typeof(Example))]
         public IHttpActionResult PostExample(Example example)
         {
+            example.CorrectCode = FunctionExtractor.ExtractPythonFunction(
+                example.CorrectCode, example.Question);
+
+            example.IncorrectCode = FunctionExtractor.ExtractPythonFunction(
+                example.IncorrectCode, example.Question);
+
             if (!ModelState.IsValid)
             {
                 return BadRequest(ModelState);
@@ -138,12 +146,12 @@ namespace Refazer.WebAPI.Controllers
             db.SaveChanges();
 
             //Fixing
-            //var output = refazer.Apply(transformations.First(), example.IncorrectCode);
-            //foreach (var newCode in output)
-            //{
-            //Debug.WriteLine("\n Código Corrigido \n");
-            //Debug.WriteLine(newCode);
-            //}
+            var output = refazer.Apply(transformations.First(), example.IncorrectCode);
+            foreach (var newCode in output)
+            {
+                Debug.WriteLine("\n Código Corrigido \n");
+                Debug.WriteLine(newCode);
+            }
         }
 
         private Core.Refazer BuildRefazer()
