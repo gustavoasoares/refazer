@@ -200,7 +200,7 @@
     <Compile Include="Controllers\ExampleController.cs" />
     <Compile Include="Controllers\HomeController.cs" />
     <Compile Include="Controllers\RefazerController.cs" />
-    <Compile Include="Controllers\TransformationController.cs" />
+    <Compile Include="Controllers\FixerSubmissionController.cs" />
     <Compile Include="Global.asax.cs">
       <DependentUpon>Global.asax</DependentUpon>
     </Compile>
@@ -236,6 +236,10 @@
     <Compile Include="Migrations\201708021831423_transformation2-drop-time.Designer.cs">
       <DependentUpon>201708021831423_transformation2-drop-time.cs</DependentUpon>
     </Compile>
+    <Compile Include="Migrations\201708072335136_delete-transformation2.cs" />
+    <Compile Include="Migrations\201708072335136_delete-transformation2.Designer.cs">
+      <DependentUpon>201708072335136_delete-transformation2.cs</DependentUpon>
+    </Compile>
     <Compile Include="Migrations\Configuration.cs" />
     <Compile Include="Models\ApplyFixFromExampleInput.cs" />
     <Compile Include="Models\Assignment.cs" />
@@ -245,7 +249,6 @@
     <Compile Include="Models\Session.cs" />
     <Compile Include="Models\StartInput.cs" />
     <Compile Include="Models\Submission.cs" />
-    <Compile Include="Models\Transformation2 .cs" />
     <Compile Include="Models\Transformation.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Utils\FunctionExtractor.cs" />
@@ -384,6 +387,9 @@
     </EmbeddedResource>
     <EmbeddedResource Include="Migrations\201708021831423_transformation2-drop-time.resx">
       <DependentUpon>201708021831423_transformation2-drop-time.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Migrations\201708072335136_delete-transformation2.resx">
+      <DependentUpon>201708072335136_delete-transformation2.cs</DependentUpon>
     </EmbeddedResource>
   </ItemGroup>
   <ItemGroup>

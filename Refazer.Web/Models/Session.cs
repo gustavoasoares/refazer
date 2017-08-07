@@ -41,8 +41,6 @@ namespace Refazer.WebAPI.Models
 
         public DbSet<Transformation> Transformations { set; get; }
 
-        public DbSet<Transformation2> Transformations2 { set; get; }
-
         public DbSet<Assignment> Assignments { set; get; }
 
         public DbSet<Example> Examples { set; get; }
