@@ -94,8 +94,6 @@ namespace Refazer.WebAPI.Controllers
             db.Examples.Add(example);
             db.SaveChanges();
 
-            LearnTransformationFromExample(example);
-
             return CreatedAtRoute("", new { id = example.Id }, example);
         }
 
@@ -116,6 +114,16 @@ namespace Refazer.WebAPI.Controllers
             return Ok(example);
         }
 
+        // DELETE: api/Example/5
+        [Route("clear"), HttpDelete]
+        public IHttpActionResult DeleteAllExample()
+        {
+            db.Examples.RemoveRange(db.Examples);
+            db.SaveChanges();
+
+            return Ok();
+        }
+
         private void LearnTransformationFromExample(Example example)
         {
             Core.Refazer refazer = BuildRefazer();
@@ -123,27 +131,6 @@ namespace Refazer.WebAPI.Controllers
 
             var transformations = refazer.LearnTransformations(new List<Tuple<string,
                 string>>() { exampleAsTuple });
-
-            int rank = 1;
-
-            foreach (var programNode in transformations)
-            {
-                Transformation2 newTransformation = new Transformation2()
-                {
-                    EndPoint = example.EndPoint,
-                    IncorrectCode = example.IncorrectCode,
-                    CorrectCode = example.CorrectCode,
-                    // Program = programNode.ToString(),
-                    // É necessário serializar programNode para salvar no banco de dados.
-                    Program = programNode.GetSynthesizedProgram().ToString(),
-                    Rank = rank++,
-                    RankType = 1
-                };
-
-                db.Transformations2.Add(newTransformation);
-            }
-
-            db.SaveChanges();
 
             //Fixing
             var output = refazer.Apply(transformations.First(), example.IncorrectCode);
