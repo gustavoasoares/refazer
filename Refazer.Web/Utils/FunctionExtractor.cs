@@ -8,7 +8,7 @@ namespace Refazer.Web.Utils
     {
         public static string ExtractPythonFunction(string code, string functionName)
         {
-            string signature = "def " + functionName + "(";
+            string signature = @"^def( )+" + functionName + "\\(";
             string pyFunction = "";
             int pyFunctionLevel = 0;
             bool collectLines = false;
@@ -30,7 +30,9 @@ namespace Refazer.Web.Utils
                     }
                 }
 
-                if (codeLine.Item1.Contains(signature))
+                var match = Regex.Match(codeLine.Item1, signature);
+
+                if (match.Success)
                 {
                     collectLines = true;
                     pyFunctionLevel = codeLine.Item2;
