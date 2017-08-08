@@ -8,7 +8,7 @@ namespace Refazer.Web.Utils
     {
         public static string ExtractPythonFunction(string code, string functionName)
         {
-            string signature = @"^def( )+" + functionName + "\\(";
+            string signature = @"^def( )+" + functionName + "( )*\\(";
             string pyFunction = "";
             int pyFunctionLevel = 0;
             bool collectLines = false;

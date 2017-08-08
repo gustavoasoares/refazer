@@ -121,7 +121,7 @@ namespace Refazer.WebAPI.Controllers
             db.Examples.RemoveRange(db.Examples);
             db.SaveChanges();
 
-            return Ok();
+            return Ok("All examples were deleted!");
         }
 
         protected override void Dispose(bool disposing)
