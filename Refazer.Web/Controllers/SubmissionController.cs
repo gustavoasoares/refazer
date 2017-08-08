@@ -17,34 +17,49 @@ namespace Refazer.Web.Controllers
         private RefazerDbContext db = new RefazerDbContext();
 
         // GET api/<controller>
-        //[Route("")]
-        //public IQueryable<Example> GetTransformations()
-        //{
-        //   return db.Examples;
-        //}
+        [Route("Fix"), HttpPost]
+        public IEnumerable<string> FixSubmission(Submission2 submission)
+        {
+            Core.Refazer refazer = BuildRefazer();
+            List<string> result = new List<string>();
 
-        //private void LearnTransformationFromExample(Example example)
-        //{
-        //    Core.Refazer refazer = BuildRefazer();
-        //Tuple<String, String> exampleAsTuple = Tuple.Create(example.IncorrectCode, example.CorrectCode);
+            IEnumerable<Example> exampleList = db.Examples.Where(e =>
+                e.EndPoint.Equals(submission.EndPoint) &&
+                e.Question.Equals(submission.Question));
 
-        //var transformations = refazer.LearnTransformations(new List<Tuple<string,
-        //string>>() { exampleAsTuple });
+            List<Tuple<string, string>> examplesAsTuples = ExamplesAsTupleList(exampleList);
 
-        //Fixing
-        //var output = refazer.Apply(transformations.First(), example.IncorrectCode);
-        //  foreach (var newCode in output)
-        // {
-        //Debug.WriteLine("\n Código Corrigido \n");
-        //Debug.WriteLine(newCode);
-        //}
+            foreach (var transformation in refazer.LearnTransformations(examplesAsTuples))
+            {
+                var output = refazer.Apply(transformation, submission.IncorrectCode);
 
-        //private Core.Refazer BuildRefazer()
-        //{
-        //    var pathToGrammar = System.Web.Hosting.HostingEnvironment.MapPath(@"~/Content/");
-        //   var pathToDslLib = System.Web.Hosting.HostingEnvironment.MapPath(@"~/bin");
-        //  var refazer = new Refazer4Python(pathToGrammar, pathToDslLib);
-        // return refazer;
-        //}
+                foreach (var newCode in output)
+                {
+                    result.Add(newCode);
+                }
+            }
+
+            return result;
+        }
+
+        private List<Tuple<string, string>> ExamplesAsTupleList(IEnumerable<Example> exampleList)
+        {
+            List<Tuple<string, string>> tuplesList = new List<Tuple<string, string>>();
+
+            foreach (var example in exampleList)
+            {
+                tuplesList.Add(Tuple.Create(example.IncorrectCode, example.CorrectCode));
+            }
+
+            return tuplesList;
+        }
+
+        private Core.Refazer BuildRefazer()
+        {
+            var pathToGrammar = System.Web.Hosting.HostingEnvironment.MapPath(@"~/Content/");
+            var pathToDslLib = System.Web.Hosting.HostingEnvironment.MapPath(@"~/bin");
+            var refazer = new Refazer4Python(pathToGrammar, pathToDslLib);
+            return refazer;
+        }
     }
 }
