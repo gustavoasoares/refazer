@@ -13,7 +13,7 @@ namespace Refazer.WebAPI.Models
         public String Question { get; set; }
 
         [Required]
-        public String IncorrectCode { get; set; }
+        public String Code { get; set; }
 
         [Required]
         public String EndPoint { get; set; }

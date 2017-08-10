@@ -1,13 +1,11 @@
-﻿using Microsoft.ProgramSynthesis.AST;
-using Refazer.Core;
+﻿using Refazer.Core;
 using Refazer.WebAPI.Models;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
-using System.Net;
-using System.Net.Http;
 using System.Web.Http;
+using System.Web.Http.Description;
 
 namespace Refazer.Web.Controllers
 {
@@ -17,12 +15,18 @@ namespace Refazer.Web.Controllers
 
         private RefazerDbContext db = new RefazerDbContext();
 
-        // GET api/<controller>
+        // POST api/submissions/fix
         [Route("Fix"), HttpPost]
-        public IEnumerable<string> FixSubmission(Submission2 submission)
+        [ResponseType(typeof(List<String>))]
+        public IHttpActionResult FixSubmission(Submission2 submission)
         {
+            if (!ModelState.IsValid)
+            {
+                return BadRequest(ModelState);
+            }
+
             Core.Refazer refazer = refazer = BuildRefazer();
-            List<string> result = new List<string>();
+            List<String> result = new List<String>();
             List<Core.Transformation> transformationList = new List<Core.Transformation>();
 
             IEnumerable<Example> exampleList = db.Examples.Where(e =>
@@ -31,28 +35,32 @@ namespace Refazer.Web.Controllers
 
             foreach (var example in exampleList)
             {
-                var newTransformation = refazer.LearnTransformations(ExampleAsTupleList(example));
-                transformationList.AddRange(newTransformation);
+                var newTransformationList = refazer.LearnTransformations(
+                    ExampleAsTupleList(example));
+
+                foreach (var newTransformation in newTransformationList)
+                {
+                    if (!transformationList.Contains(newTransformation))
+                    {
+                        transformationList.Add(newTransformation);
+                    }
+                }
             }
 
             foreach (var transformation in transformationList)
             {
                 try
                 {
-                    var output = refazer.Apply(transformation, submission.IncorrectCode);
-                    foreach (var newCode in output)
-                    {
-                        result.Add(newCode);
-                    }
+                    result.AddRange(refazer.Apply(transformation, submission.Code));
                 }
                 catch (Exception ex)
                 {
-                    Trace.TraceError(string.Format("Exception:"));
+                    Trace.TraceError("Exception:");
                     Trace.TraceError(ex.Message);
                 }
             }
 
-            return result;
+            return Ok(result);
         }
 
         private List<Tuple<string, string>> ExampleAsTupleList(Example exampleInput)
