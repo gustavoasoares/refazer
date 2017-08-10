@@ -1,4 +1,5 @@
-﻿using Refazer.Core;
+﻿using Microsoft.ProgramSynthesis.AST;
+using Refazer.Core;
 using Refazer.WebAPI.Models;
 using System;
 using System.Collections.Generic;
@@ -22,36 +23,45 @@ namespace Refazer.Web.Controllers
         {
             Core.Refazer refazer = BuildRefazer();
             List<string> result = new List<string>();
+            List<Core.Transformation> transformationList = new List<Core.Transformation>();
 
             IEnumerable<Example> exampleList = db.Examples.Where(e =>
                 e.EndPoint.Equals(submission.EndPoint) &&
                 e.Question.Equals(submission.Question));
 
-            List<Tuple<string, string>> examplesAsTuples = ExamplesAsTupleList(exampleList);
-
-            foreach (var transformation in refazer.LearnTransformations(examplesAsTuples))
+            foreach (var example in exampleList)
             {
-                var output = refazer.Apply(transformation, submission.IncorrectCode);
+                var newTransformation = refazer.LearnTransformations(ExampleAsTupleList(example));
+                transformationList.AddRange(newTransformation);
+            }
 
-                foreach (var newCode in output)
+            foreach (var transformation in transformationList)
+            {
+                try
                 {
-                    result.Add(newCode);
+                    var output = refazer.Apply(transformation, submission.IncorrectCode);
+                    foreach (var newCode in output)
+                    {
+                        result.Add(newCode);
+                    }
+                }
+                catch (Exception ex)
+                {
+                    Trace.TraceError(string.Format("Exception"));
+                    Trace.TraceError(ex.Message);
                 }
             }
 
             return result;
         }
 
-        private List<Tuple<string, string>> ExamplesAsTupleList(IEnumerable<Example> exampleList)
+        private List<Tuple<string, string>> ExampleAsTupleList(Example exampleInput)
         {
-            List<Tuple<string, string>> tuplesList = new List<Tuple<string, string>>();
+            String incorrectCode = exampleInput.IncorrectCode;
+            String correctCode = exampleInput.CorrectCode;
+            var exampleTuple = Tuple.Create(incorrectCode, correctCode);
 
-            foreach (var example in exampleList)
-            {
-                tuplesList.Add(Tuple.Create(example.IncorrectCode, example.CorrectCode));
-            }
-
-            return tuplesList;
+            return new List<Tuple<string, string>>() { exampleTuple };
         }
 
         private Core.Refazer BuildRefazer()
