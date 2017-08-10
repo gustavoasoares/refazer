@@ -21,7 +21,7 @@ namespace Refazer.Web.Controllers
         [Route("Fix"), HttpPost]
         public IEnumerable<string> FixSubmission(Submission2 submission)
         {
-            Core.Refazer refazer = BuildRefazer();
+            Core.Refazer refazer = refazer = BuildRefazer();
             List<string> result = new List<string>();
             List<Core.Transformation> transformationList = new List<Core.Transformation>();
 
@@ -47,7 +47,7 @@ namespace Refazer.Web.Controllers
                 }
                 catch (Exception ex)
                 {
-                    Trace.TraceError(string.Format("Exception"));
+                    Trace.TraceError(string.Format("Exception:"));
                     Trace.TraceError(ex.Message);
                 }
             }
