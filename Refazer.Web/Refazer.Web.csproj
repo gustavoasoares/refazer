@@ -240,6 +240,14 @@
     <Compile Include="Migrations\201708072335136_delete-transformation2.Designer.cs">
       <DependentUpon>201708072335136_delete-transformation2.cs</DependentUpon>
     </Compile>
+    <Compile Include="Migrations\201708150003445_TestCasesAsList.cs" />
+    <Compile Include="Migrations\201708150003445_TestCasesAsList.Designer.cs">
+      <DependentUpon>201708150003445_TestCasesAsList.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Migrations\201708150026306_TestCasesRequired.cs" />
+    <Compile Include="Migrations\201708150026306_TestCasesRequired.Designer.cs">
+      <DependentUpon>201708150026306_TestCasesRequired.cs</DependentUpon>
+    </Compile>
     <Compile Include="Migrations\Configuration.cs" />
     <Compile Include="Models\ApplyFixFromExampleInput.cs" />
     <Compile Include="Models\Assignment.cs" />
@@ -253,6 +261,7 @@
     <Compile Include="Models\Transformation.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Utils\FunctionExtractor.cs" />
+    <Compile Include="Utils\RunPythonTest.cs" />
   </ItemGroup>
   <ItemGroup>
     <Content Include="Areas\HelpPage\HelpPage.css" />
@@ -391,6 +400,12 @@
     </EmbeddedResource>
     <EmbeddedResource Include="Migrations\201708072335136_delete-transformation2.resx">
       <DependentUpon>201708072335136_delete-transformation2.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Migrations\201708150003445_TestCasesAsList.resx">
+      <DependentUpon>201708150003445_TestCasesAsList.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Migrations\201708150026306_TestCasesRequired.resx">
+      <DependentUpon>201708150026306_TestCasesRequired.cs</DependentUpon>
     </EmbeddedResource>
   </ItemGroup>
   <ItemGroup>

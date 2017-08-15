@@ -11,7 +11,7 @@ namespace Refazer.WebAPI.Models
     {
         [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
         public int Id { get; set; }
-        
+
         [Key]
         public String EndPoint { get; set; }
 
@@ -19,6 +19,12 @@ namespace Refazer.WebAPI.Models
 
         public string Description { get; set; }
 
-        public string TestCase { get; set; }
+        [Required]
+        public string TestCases { get; set; }
+
+        public List<string> getTestCasesAsList()
+        {
+            return TestCases.Split(';').ToList();
+        }
     }
 }
