@@ -1,4 +1,6 @@
-﻿using Refazer.Core;
+﻿using Microsoft.CSharp.RuntimeBinder;
+using Refazer.Core;
+using Refazer.Web.Utils;
 using Refazer.WebAPI.Models;
 using System;
 using System.Collections.Generic;
@@ -6,6 +8,7 @@ using System.Diagnostics;
 using System.Linq;
 using System.Web.Http;
 using System.Web.Http.Description;
+using Tutor;
 
 namespace Refazer.Web.Controllers
 {
@@ -26,8 +29,12 @@ namespace Refazer.Web.Controllers
             }
 
             Core.Refazer refazer = refazer = BuildRefazer();
-            List<String> result = new List<String>();
+            List<String> newCodes = new List<String>();
+            List<String> fixedCodes = new List<String>();
             List<Core.Transformation> transformationList = new List<Core.Transformation>();
+
+            List<String> testCasesList = db.Assignments.Find(
+                submission.EndPoint).getTestCasesAsList();
 
             IEnumerable<Example> exampleList = db.Examples.Where(e =>
                 e.EndPoint.Equals(submission.EndPoint) &&
@@ -51,16 +58,24 @@ namespace Refazer.Web.Controllers
             {
                 try
                 {
-                    result.AddRange(refazer.Apply(transformation, submission.Code));
+                    newCodes.AddRange(refazer.Apply(transformation, submission.Code));
                 }
                 catch (Exception ex)
                 {
-                    Trace.TraceError("Exception:");
+                    Trace.TraceError("Exception was thrown when trying to apply transformations");
                     Trace.TraceError(ex.Message);
                 }
             }
 
-            return Ok(result);
+            foreach (var code in newCodes)
+            {
+                if (RunPythonTest.Execute(testCasesList, code))
+                {
+                    fixedCodes.Add(code);
+                }
+            }
+
+            return Ok(fixedCodes);
         }
 
         private List<Tuple<string, string>> ExampleAsTupleList(Example exampleInput)
