@@ -58,14 +58,14 @@ namespace Refazer.Web.Models
             var newTransformationsList = refazer.LearnTransformations(
                 new List<Tuple<string, string>>() { exampleAsTuple });
 
-            SaveTransformation(example.KeyPoint(), newTransformationsList);
+            SaveTransformation(example.KeyPoint(), newTransformationsList.ToList());
         }
 
-        public void LearnClusteredTransformations(List<Example> exampleList)
+        public void LearnClusteredTransformations(String keyPoint, List<Example> exampleList)
         {
             while (!exampleList.IsEmpty())
             {
-                IEnumerable<Core.Transformation> transformationList;
+                List<Core.Transformation> transformationList = null;
 
                 List<Example> combinedExamples = new List<Example>();
 
@@ -81,7 +81,7 @@ namespace Refazer.Web.Models
                     }
                     else
                     {
-                        transformationList = newTransformations;
+                        transformationList = newTransformations.ToList();
                     }
                 }
 
@@ -90,7 +90,10 @@ namespace Refazer.Web.Models
                     exampleList.Remove(example);
                 }
 
-                //SaveTransformation(transformationList);
+                if (transformationList != null)
+                {
+                    SaveTransformation(keyPoint, transformationList);
+                }
             }
         }
 
@@ -115,7 +118,7 @@ namespace Refazer.Web.Models
             return generatedCodeList;
         }
 
-        private void SaveTransformation(String keyPoint, IEnumerable<Core.Transformation> newTransformations)
+        private void SaveTransformation(String keyPoint, List<Core.Transformation> newTransformations)
         {
 
             if (!transformationStorage.ContainsKey(keyPoint))
