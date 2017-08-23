@@ -20,5 +20,10 @@ namespace Refazer.WebAPI.Models
 
         [ForeignKey("EndPoint")]
         public Assignment Assignment { get; set; }
+
+        public String KeyPoint()
+        {
+            return EndPoint + "/" + Question + "/";
+        }
     }
 }
