@@ -1,11 +1,8 @@
-﻿using Refazer.Core;
+﻿using Refazer.Web.Models;
 using Refazer.Web.Utils;
 using Refazer.WebAPI.Models;
-using System;
-using System.Collections.Generic;
 using System.Data.Entity;
 using System.Data.Entity.Infrastructure;
-using System.Diagnostics;
 using System.Linq;
 using System.Net;
 using System.Web.Http;
@@ -94,6 +91,10 @@ namespace Refazer.WebAPI.Controllers
             db.Examples.Add(example);
             db.SaveChanges();
 
+            //saving in memory
+            RefazerOnline refazerOnline = RefazerOnline.Instance;
+            refazerOnline.LearnTransformationsFromExample(example);
+
             return CreatedAtRoute("", new { id = example.Id }, example);
         }
 
@@ -115,7 +116,7 @@ namespace Refazer.WebAPI.Controllers
         }
 
         // DELETE: api/Example/Clear
-        [Route("Clear"), HttpDelete]
+        [Route("clear"), HttpDelete]
         public IHttpActionResult DeleteAllExample()
         {
             db.Examples.RemoveRange(db.Examples);
