@@ -25,6 +25,11 @@ namespace Refazer.Web.Controllers
 
             RefazerOnline refazerOnline = RefazerOnline.Instance;
 
+            if (!refazerOnline.IsAvailable())
+            {
+                ReloadTransformationsFromExamples();
+            }
+
             List<String> generatedCodeList = refazerOnline.
                 ApplyTransformationsForSubmission(submission);
 
@@ -43,6 +48,16 @@ namespace Refazer.Web.Controllers
             }
 
             return Ok(fixedCodeList);
+        }
+
+        private void ReloadTransformationsFromExamples()
+        {
+            RefazerOnline refazerOnline = RefazerOnline.Instance;
+
+            foreach (var example in db.Examples)
+            {
+                refazerOnline.LearnTransformationsFromExample(example);
+            }
         }
     }
 }

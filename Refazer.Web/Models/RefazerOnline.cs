@@ -162,5 +162,10 @@ namespace Refazer.Web.Models
 
             return result;
         }
+
+        public bool IsAvailable()
+        {
+            return !transformationStorage.IsEmpty();
+        }
     }
 }
