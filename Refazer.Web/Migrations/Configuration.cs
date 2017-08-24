@@ -5,14 +5,14 @@ namespace Refazer.Web.Migrations
     using System.Data.Entity.Migrations;
     using System.Linq;
 
-    internal sealed class Configuration : DbMigrationsConfiguration<Refazer.WebAPI.Models.RefazerDbContext>
+    internal sealed class Configuration : DbMigrationsConfiguration<Refazer.Web.Models.RefazerDbContext>
     {
         public Configuration()
         {
             AutomaticMigrationsEnabled = false;
         }
 
-        protected override void Seed(Refazer.WebAPI.Models.RefazerDbContext context)
+        protected override void Seed(Refazer.Web.Models.RefazerDbContext context)
         {
             //  This method will be called after migrating to the latest version.
 

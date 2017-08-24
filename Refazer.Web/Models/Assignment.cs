@@ -3,9 +3,8 @@ using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 using System.Linq;
-using System.Web;
 
-namespace Refazer.WebAPI.Models
+namespace Refazer.Web.Models
 {
     public class Assignment
     {

@@ -1,6 +1,5 @@
 ﻿using Refazer.Web.Models;
 using Refazer.Web.Utils;
-using Refazer.WebAPI.Models;
 using System.Data.Entity;
 using System.Data.Entity.Infrastructure;
 using System.Linq;
@@ -8,7 +7,7 @@ using System.Net;
 using System.Web.Http;
 using System.Web.Http.Description;
 
-namespace Refazer.WebAPI.Controllers
+namespace Refazer.Web.Controllers
 {
     [RoutePrefix("api/examples")]
     public class ExampleController : ApiController
