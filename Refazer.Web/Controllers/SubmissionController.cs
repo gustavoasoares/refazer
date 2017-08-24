@@ -1,6 +1,5 @@
 ﻿using Refazer.Web.Models;
 using Refazer.Web.Utils;
-using Refazer.WebAPI.Models;
 using System;
 using System.Collections.Generic;
 using System.Web.Http;

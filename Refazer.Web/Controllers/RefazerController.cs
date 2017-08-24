@@ -1,27 +1,16 @@
 ﻿using System;
-using System.Collections.Concurrent;
 using System.Collections.Generic;
-using System.Data.Entity;
 using System.Diagnostics;
-using System.IO;
 using System.Linq;
-using System.Net;
-using System.Net.Http;
-using System.Threading;
 using System.Threading.Tasks;
-using System.Web;
 using System.Web.Http;
-using System.Web.WebSockets;
-using Microsoft.ApplicationInsights.WindowsServer;
 using Microsoft.ProgramSynthesis;
 using Microsoft.ProgramSynthesis.AST;
-using Newtonsoft.Json;
 using Refazer.Core;
-using Refazer.WebAPI.Models;
 using Tutor;
-using Tutor.Transformation;
+using Refazer.Web.Models;
 
-namespace Refazer.WebAPI.Controllers
+namespace Refazer.Web.Controllers
 {
     /// <summary>
     /// Refazer API for grading submissions in Refazer4Education
@@ -88,7 +77,7 @@ namespace Refazer.WebAPI.Controllers
                 var rank = 1;
                 foreach (var programNode in newTransformations)
                 {
-                    var transformation = new Models.Transformation()
+                    var transformation = new Web.Models.Transformation()
                     {
                         SessionId = exampleInput.SessionId,
                         Program = programNode.ToString(),

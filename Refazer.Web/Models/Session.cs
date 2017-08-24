@@ -1,12 +1,9 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 using System.Data.Entity;
-using System.Linq;
-using System.Web;
 
-namespace Refazer.WebAPI.Models
+namespace Refazer.Web.Models
 {
     /// <summary>
     /// This class represents an experiement session in a user study for evaluation
@@ -21,29 +18,4 @@ namespace Refazer.WebAPI.Models
         [Required, DatabaseGenerated(DatabaseGeneratedOption.Computed)]
         public DateTime Time { set; get; }
     }
-
-
-
-
-
-    //public class SessionDbContext : DbContext
-    //{
-    //    public DbSet<Session> Sessions { set; get; }
-    //}
-
-    public class RefazerDbContext : DbContext
-    {
-        public DbSet<Session> Sessions { set; get; }
-
-        public DbSet<Submission> Submissions { get; set; }
-
-        public DbSet<Fix> Fixes { set; get; }
-
-        public DbSet<Transformation> Transformations { set; get; }
-
-        public DbSet<Assignment> Assignments { set; get; }
-
-        public DbSet<Example> Examples { set; get; }
-    }
-
 }

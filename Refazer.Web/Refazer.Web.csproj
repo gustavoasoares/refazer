@@ -250,6 +250,7 @@
     <Compile Include="Migrations\Configuration.cs" />
     <Compile Include="Models\ApplyFixFromExampleInput.cs" />
     <Compile Include="Models\Assignment.cs" />
+    <Compile Include="Models\RefazerDbContext.cs" />
     <Compile Include="Models\RefazerOnline.cs" />
     <Compile Include="Models\Submission2.cs" />
     <Compile Include="Models\Example.cs" />

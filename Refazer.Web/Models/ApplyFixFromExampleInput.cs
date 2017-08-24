@@ -1,9 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Web;
-
-namespace Refazer.WebAPI.Models
+﻿namespace Refazer.Web.Models
 {
     /// <summary>
     /// This class represents an input json for the post request to the controller
