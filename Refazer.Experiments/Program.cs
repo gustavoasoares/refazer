@@ -526,10 +526,10 @@ namespace Refazer.Experiments
             if (problem != null)
             {
                 Console.Out.WriteLine("Problem: " + problem.Id);
-                int i = 1;
+                //int i = 1;
                 var tests = GetTests("product");
-                var isfixed = 0;
-                var notfixed = 0;
+                //var isfixed = 0;
+                //var notfixed = 0;
                 var subFixer = new SubmissionFixer();
                 foreach (var mistake in problem.Mistakes)
                 {
@@ -767,7 +767,7 @@ namespace Refazer.Experiments
             var submissions = numberOfSumissions == 0 ? problem.Mistakes.ToList()
                 : problem.Mistakes.ToList().GetRange(0, numberOfSumissions);
 
-            var notImplementedYet = 0;
+            //var notImplementedYet = 0;
             var transformationNotImplemented = 0;
 
             var classification = new ConcurrentQueue<Tuple<List<Mistake>, ProgramNode>>();

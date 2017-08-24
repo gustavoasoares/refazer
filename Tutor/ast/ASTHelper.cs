@@ -67,7 +67,7 @@ namespace Tutor
             
         //}
 
-        private static bool _timeout = false;
+        //private static bool _timeout = false;
         private static readonly Uri ServiceUri = new Uri("net.pipe://localhost/Pipe");
         private const string PipeName = "TutorGradeService";
         private static readonly EndpointAddress ServiceAddress = 

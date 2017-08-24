@@ -21,14 +21,14 @@ namespace Refazer.Core
         /// <summary>
         /// path to _prose grammar
         /// </summary>
-        private string _pathToGrammar;
+       // private string _pathToGrammar;
 
         /// <summary>
         /// path to Prose dependences 
         /// </summary>
-        private string _pathToDslLib;
+        //private string _pathToDslLib;
 
-        private SynthesisEngine _prose;
+        //private SynthesisEngine _prose;
 
         /// <summary>
         /// Prose grammar 

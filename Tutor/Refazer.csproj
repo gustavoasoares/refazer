@@ -48,18 +48,6 @@
       <Version>2.7.7</Version>
     </PackageReference>
     <PackageReference Include="Microsoft.ProgramSynthesis" Version="2.3.0" />
-    <Reference Include="Microsoft.Scripting, Version=1.1.0.20, Culture=neutral, PublicKeyToken=7f709c5b713576e1, processorArchitecture=MSIL">
-      <HintPath>..\packages\IronPython.2.7.5\lib\Net45\Microsoft.Scripting.dll</HintPath>
-      <Private>True</Private>
-    </Reference>
-    <Reference Include="Microsoft.Scripting.AspNet, Version=1.0.0.0, Culture=neutral, PublicKeyToken=7f709c5b713576e1, processorArchitecture=MSIL">
-      <HintPath>..\packages\IronPython.2.7.5\lib\Net45\Microsoft.Scripting.AspNet.dll</HintPath>
-      <Private>True</Private>
-    </Reference>
-    <Reference Include="Microsoft.Scripting.Metadata, Version=1.1.0.20, Culture=neutral, PublicKeyToken=7f709c5b713576e1, processorArchitecture=MSIL">
-      <HintPath>..\packages\IronPython.2.7.5\lib\Net45\Microsoft.Scripting.Metadata.dll</HintPath>
-      <Private>True</Private>
-    </Reference>
     <Reference Include="Microsoft.Z3, Version=4.4.2.5831, Culture=neutral, PublicKeyToken=9c8d792caae602a2, processorArchitecture=MSIL">
       <HintPath>..\packages\Microsoft.ProgramSynthesis.2.3.0\lib\net45\lib\x64\osx\Microsoft.Z3.dll</HintPath>
     </Reference>
