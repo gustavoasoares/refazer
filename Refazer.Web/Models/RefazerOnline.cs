@@ -85,7 +85,19 @@ namespace Refazer.Web.Models
                 {
                     combinedExamples.Add(example);
                     var examplesAsTuples = ExampleAsTupleList(combinedExamples);
-                    var newTransformations = refazer.LearnTransformations(examplesAsTuples);
+                    IEnumerable<Core.Transformation> newTransformations = null;
+
+                    try
+                    {
+                        newTransformations = refazer.LearnTransformations(examplesAsTuples);
+                    }
+                    catch (Exception ex)
+                    {
+                        newTransformations = new List<Core.Transformation>();
+                        Trace.TraceError("Exception when trying to learn transformations");
+                        Trace.TraceError("Example: " + example.Id);
+                        Trace.TraceError(ex.Message);
+                    }
 
                     if (newTransformations.IsEmpty())
                     {
