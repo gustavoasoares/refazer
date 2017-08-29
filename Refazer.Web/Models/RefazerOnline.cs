@@ -60,6 +60,17 @@ namespace Refazer.Web.Models
             SaveTransformation(example.KeyPoint(), newTransformationsList.ToList());
         }
 
+        public void LearnTransformationsFromExample(List<Example> examplesList)
+        {
+            var examplesAsTuple = ExampleAsTupleList(examplesList);
+
+            var newTransformationsList = refazer.LearnTransformations(examplesAsTuple);
+
+            string keypoint = examplesList[0].KeyPoint();
+
+            SaveTransformation(keypoint, newTransformationsList.ToList());
+        }
+
         public List<Cluster> LearnClusteredTransformations(String keyPoint, List<Example> exampleList)
         {
             List<Cluster> clustersList = new List<Cluster>();

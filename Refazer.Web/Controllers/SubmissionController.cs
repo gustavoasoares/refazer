@@ -2,6 +2,7 @@
 using Refazer.Web.Utils;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Web.Http;
 using System.Web.Http.Description;
 
@@ -26,7 +27,7 @@ namespace Refazer.Web.Controllers
 
             if (!refazerOnline.IsAvailable())
             {
-                //ReloadTransformationsFromExamples(refazerOnline);
+                WakeUpRefazer(refazerOnline);
             }
 
             List<String> generatedCodeList = refazerOnline.
@@ -47,6 +48,19 @@ namespace Refazer.Web.Controllers
             }
 
             return Ok(fixedCodeList);
+        }
+
+        private void WakeUpRefazer(RefazerOnline refazerOnline)
+        {
+            foreach (var cluster in db.Clusters)
+            {
+                List<int> examplesIds = cluster.GetExamplesReferenceList();
+
+                List<Example> examplesByCluster = db.Examples.Where(
+                    e => examplesIds.Contains(e.Id)).ToList();
+
+                refazerOnline.LearnTransformationsFromExample(examplesByCluster);
+            }
         }
     }
 }
