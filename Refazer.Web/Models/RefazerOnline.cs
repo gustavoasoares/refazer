@@ -60,8 +60,10 @@ namespace Refazer.Web.Models
             SaveTransformation(example.KeyPoint(), newTransformationsList.ToList());
         }
 
-        public void LearnClusteredTransformations(String keyPoint, List<Example> exampleList)
+        public List<Cluster> LearnClusteredTransformations(String keyPoint, List<Example> exampleList)
         {
+            List<Cluster> clustersList = new List<Cluster>();
+
             while (!exampleList.IsEmpty())
             {
                 List<Core.Transformation> transformationList = null;
@@ -84,16 +86,29 @@ namespace Refazer.Web.Models
                     }
                 }
 
+                if (combinedExamples.IsEmpty())
+                {
+                    break;
+                }
+
+                Cluster newCluster = new Cluster();
+                newCluster.KeyPoint = keyPoint;
+
                 foreach (var example in combinedExamples)
                 {
                     exampleList.Remove(example);
+                    newCluster.AddExampleReference(example.Id);
                 }
+
+                clustersList.Add(newCluster);
 
                 if (transformationList != null)
                 {
                     SaveTransformation(keyPoint, transformationList);
                 }
             }
+
+            return clustersList;
         }
 
         public List<String> ApplyTransformationsForSubmission(Submission2 submission)
