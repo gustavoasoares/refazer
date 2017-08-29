@@ -116,7 +116,7 @@ namespace Refazer.Web.Controllers
 
         // DELETE: api/Example/Clear
         [Route("clear"), HttpDelete]
-        public IHttpActionResult DeleteAllExample()
+        public IHttpActionResult DeleteAllExamples()
         {
             db.Examples.RemoveRange(db.Examples);
             db.SaveChanges();

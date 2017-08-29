@@ -173,9 +173,14 @@
     <Compile Include="Migrations\201708150026306_TestCasesRequired.Designer.cs">
       <DependentUpon>201708150026306_TestCasesRequired.cs</DependentUpon>
     </Compile>
+    <Compile Include="Migrations\201708290041338_Adding-Cluster.cs" />
+    <Compile Include="Migrations\201708290041338_Adding-Cluster.Designer.cs">
+      <DependentUpon>201708290041338_Adding-Cluster.cs</DependentUpon>
+    </Compile>
     <Compile Include="Migrations\Configuration.cs" />
     <Compile Include="Models\ApplyFixFromExampleInput.cs" />
     <Compile Include="Models\Assignment.cs" />
+    <Compile Include="Models\Cluster.cs" />
     <Compile Include="Models\RefazerDbContext.cs" />
     <Compile Include="Models\RefazerOnline.cs" />
     <Compile Include="Models\Submission2.cs" />
@@ -330,6 +335,9 @@
     </EmbeddedResource>
     <EmbeddedResource Include="Migrations\201708150026306_TestCasesRequired.resx">
       <DependentUpon>201708150026306_TestCasesRequired.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Migrations\201708290041338_Adding-Cluster.resx">
+      <DependentUpon>201708290041338_Adding-Cluster.cs</DependentUpon>
     </EmbeddedResource>
   </ItemGroup>
   <ItemGroup>

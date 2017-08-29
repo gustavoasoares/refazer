@@ -15,5 +15,7 @@ namespace Refazer.Web.Models
         public DbSet<Assignment> Assignments { set; get; }
 
         public DbSet<Example> Examples { set; get; }
+
+        public DbSet<Cluster> Clusters { set; get; }
     }
 }

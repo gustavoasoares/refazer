@@ -26,7 +26,7 @@ namespace Refazer.Web.Controllers
 
             if (!refazerOnline.IsAvailable())
             {
-                ReloadTransformationsFromExamples();
+                //ReloadTransformationsFromExamples(refazerOnline);
             }
 
             List<String> generatedCodeList = refazerOnline.
@@ -47,16 +47,6 @@ namespace Refazer.Web.Controllers
             }
 
             return Ok(fixedCodeList);
-        }
-
-        private void ReloadTransformationsFromExamples()
-        {
-            RefazerOnline refazerOnline = RefazerOnline.Instance;
-
-            foreach (var example in db.Examples)
-            {
-                refazerOnline.LearnTransformationsFromExample(example);
-            }
         }
     }
 }
