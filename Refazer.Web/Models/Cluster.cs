@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 using System.Linq;
-using System.Web;
 
 namespace Refazer.Web.Models
 {
@@ -18,7 +17,7 @@ namespace Refazer.Web.Models
         [Required]
         public String ExamplesReferenceStr { get; set; }
 
-        public List<int> ExamplesReferenceList;
+        private List<int> ExamplesReferenceList;
 
         public void AddExampleReference(int exampleId)
         {
@@ -29,6 +28,11 @@ namespace Refazer.Web.Models
 
             ExamplesReferenceList.Add(exampleId);
             ExamplesReferenceStr = string.Join(",", ExamplesReferenceList);
+        }
+
+        public List<int> GetExamplesReferenceList()
+        {
+            return ExamplesReferenceStr.Split(',').Select(Int32.Parse).ToList();
         }
     }
 }
