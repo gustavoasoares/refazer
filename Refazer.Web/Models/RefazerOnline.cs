@@ -3,6 +3,7 @@ using Refazer.Core;
 using System;
 using System.Diagnostics;
 using System.Linq;
+using Refazer.Web.Utils;
 
 namespace Refazer.Web.Models
 {
@@ -60,7 +61,7 @@ namespace Refazer.Web.Models
             SaveTransformation(example.KeyPoint(), newTransformationsList.ToList());
         }
 
-        public void LearnTransformationsFromExample(List<Example> examplesList)
+        public IEnumerable<Core.Transformation> LearnTransformationsFromExample(List<Example> examplesList)
         {
             var examplesAsTuple = ExampleAsTupleList(examplesList);
 
@@ -69,6 +70,8 @@ namespace Refazer.Web.Models
             string keypoint = examplesList[0].KeyPoint();
 
             SaveTransformation(keypoint, newTransformationsList.ToList());
+
+            return newTransformationsList;
         }
 
         public List<Cluster> LearnClusteredTransformations(String keyPoint, List<Example> exampleList)
@@ -91,12 +94,11 @@ namespace Refazer.Web.Models
                     {
                         newTransformations = refazer.LearnTransformations(examplesAsTuples);
                     }
-                    catch (Exception ex)
+                    catch (Exception e)
                     {
                         newTransformations = new List<Core.Transformation>();
-                        Trace.TraceError("Exception when trying to learn transformations");
-                        Trace.TraceError("Example: " + example.Id);
-                        Trace.TraceError(ex.Message);
+                        Trace.TraceError("Could not learn transformations from the example "
+                            + example.Id + " because " + e.Message);
                     }
 
                     if (newTransformations.IsEmpty())
@@ -134,25 +136,43 @@ namespace Refazer.Web.Models
             return clustersList;
         }
 
-        public List<String> ApplyTransformationsForSubmission(Submission2 submission)
+        public List<String> TryToFixSubmission(Submission2 submission, List<String> testCasesList)
         {
-            List<String> generatedCodeList = new List<String>();
+            return TryToFixSubmission(submission, testCasesList, SearchTransformation(submission));
+        }
 
-            foreach (var transformation in SearchTransformation(submission))
+        public List<String> TryToFixSubmission(Submission2 submission, List<String> testCasesList,
+             List<Core.Transformation> transformationsList)
+        {
+            List<String> fixedCodesList = new List<String>();
+
+            foreach (var transformation in transformationsList)
             {
                 try
                 {
-                    generatedCodeList.AddRange(refazer.Apply(
-                        transformation, submission.Code));
+                    var generatedCodesList = refazer.Apply(transformation, submission.Code);
+
+                    foreach (var code in generatedCodesList)
+                    {
+                        if (RunPythonTest.Execute(testCasesList, code))
+                        {
+                            fixedCodesList.Add(code);
+                            break;
+                        }
+                    }
+
+                    if (!fixedCodesList.IsEmpty())
+                    {
+                        break;
+                    }
                 }
-                catch (Exception ex)
+                catch (Exception e)
                 {
-                    Trace.TraceError("Exception when trying to apply transformations");
-                    Trace.TraceError(ex.Message);
+                    Trace.TraceError("Could not apply transformations because " + e.Message);
                 }
             }
 
-            return generatedCodeList;
+            return fixedCodesList;
         }
 
         private void SaveTransformation(String keyPoint, List<Core.Transformation> newTransformations)
