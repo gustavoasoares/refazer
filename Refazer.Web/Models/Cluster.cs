@@ -6,7 +6,7 @@ using System.Linq;
 
 namespace Refazer.Web.Models
 {
-    public class Cluster
+    public class Cluster : IComparable<Cluster>
     {
         [Key, DatabaseGenerated(DatabaseGeneratedOption.Identity)]
         public int Id { get; set; }
@@ -33,6 +33,12 @@ namespace Refazer.Web.Models
         public List<int> GetExamplesReferenceList()
         {
             return ExamplesReferenceStr.Split(',').Select(Int32.Parse).ToList();
+        }
+
+        public int CompareTo(Cluster other)
+        {
+            return other.GetExamplesReferenceList().Count
+                - GetExamplesReferenceList().Count;
         }
     }
 }
