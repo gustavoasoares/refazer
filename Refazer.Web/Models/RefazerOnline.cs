@@ -146,10 +146,11 @@ namespace Refazer.Web.Models
         {
             List<String> fixedCodesList = new List<String>();
 
-            foreach (var transformation in transformationsList)
+            for (int i = 0; i < transformationsList.Count; i++)
             {
                 try
                 {
+                    var transformation = transformationsList[i];
                     var generatedCodesList = refazer.Apply(transformation, submission.Code);
 
                     foreach (var code in generatedCodesList)
