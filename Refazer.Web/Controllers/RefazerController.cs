@@ -21,12 +21,12 @@ namespace Refazer.Web.Controllers
         private RefazerDbContext db = new RefazerDbContext();
 
         // GET: api/refazer/reload
-        [Route("reload"), HttpGet]
-        public IHttpActionResult LearnInBatchMode()
+        [Route("prepare"), HttpGet]
+        public IHttpActionResult FindClustersByTransformation()
         {
-            DeleteAllClusters();
+            db.Clusters.RemoveRange(db.Clusters);
             RefazerOnline refazerOnline = RefazerOnline.Instance;
-            Dictionary<String, List<Example>> allExamples = RetrieveClusteredExamples();
+            Dictionary<String, List<Example>> allExamples = GetExamplesByKeyPoint();
 
             foreach (var keypoint in allExamples.Keys)
             {
@@ -41,7 +41,7 @@ namespace Refazer.Web.Controllers
             return Ok("Refazer is ready!");
         }
 
-        private Dictionary<String, List<Example>> RetrieveClusteredExamples()
+        private Dictionary<String, List<Example>> GetExamplesByKeyPoint()
         {
             Dictionary<String, List<Example>> result = new Dictionary<string, List<Example>>();
 
@@ -53,43 +53,15 @@ namespace Refazer.Web.Controllers
                 }
                 else
                 {
-                    List<Example> existingExamples = result[example.KeyPoint()];
-                    existingExamples.Add(example);
-                    result[example.KeyPoint()] = existingExamples;
+                    List<Example> readedExamples = result[example.KeyPoint()];
+                    readedExamples.Add(example);
+                    result[example.KeyPoint()] = readedExamples;
                 }
             }
 
             return result;
         }
 
-        // GET: api/refazer/clusters
-        [Route("clusters")]
-        public IQueryable<Models.Cluster> GetClusters()
-        {
-            return db.Clusters;
-        }
-
-        private void DeleteAllClusters()
-        {
-            db.Clusters.RemoveRange(db.Clusters);
-            db.SaveChanges();
-        }
-
-        /**
-         * 
-         * 
-         * 
-         * 
-         * 
-         * 
-         * 
-         * Controller by Gustavo
-         * 
-         * 
-         * 
-         * 
-         * 
-         * */
         public static int numberOfJobs = 0;
 
         /// <summary>
