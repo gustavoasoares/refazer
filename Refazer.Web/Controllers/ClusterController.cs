@@ -87,7 +87,7 @@ namespace Refazer.Web.Controllers
             db.Clusters.Add(cluster);
             db.SaveChanges();
 
-            return CreatedAtRoute("DefaultApi", new { id = cluster.Id }, cluster);
+            return CreatedAtRoute("", new { id = cluster.Id }, cluster);
         }
 
         // DELETE: api/Clusters/5
