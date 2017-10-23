@@ -77,7 +77,7 @@ namespace Refazer.Web.Controllers
             return new List<String>();
         }
 
-        public void KeepLearningTransformations(RefazerOnline refazerOnline, List<Cluster> clustersList)
+        private void KeepLearningTransformations(RefazerOnline refazerOnline, List<Cluster> clustersList)
         {
             foreach (var cluster in clustersList)
             {

@@ -90,10 +90,6 @@ namespace Refazer.Web.Controllers
             db.Examples.Add(example);
             db.SaveChanges();
 
-            //saving in memory
-            //RefazerOnline refazerOnline = RefazerOnline.Instance;
-            //refazerOnline.LearnTransformationsFromExample(example);
-
             return CreatedAtRoute("", new { id = example.Id }, example);
         }
 

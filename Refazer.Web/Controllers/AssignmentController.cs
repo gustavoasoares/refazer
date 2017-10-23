@@ -104,6 +104,16 @@ namespace Refazer.Web.Controllers
             return Ok(assignment);
         }
 
+        // DELETE: api/Assignment/clear
+        [Route("clear"), HttpDelete]
+        public IHttpActionResult DeleteAllAssignments()
+        {
+            db.Assignments.RemoveRange(db.Assignments);
+            db.SaveChanges();
+
+            return Ok("All assignments were deleted!");
+        }
+
         protected override void Dispose(bool disposing)
         {
             if (disposing)
