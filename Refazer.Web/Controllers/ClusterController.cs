@@ -10,7 +10,7 @@ using System.Collections.Generic;
 namespace Refazer.Web.Controllers
 {
     [RoutePrefix("api/clusters")]
-    public class ClustersController : ApiController
+    public class ClusterController : ApiController
     {
         private RefazerDbContext db = new RefazerDbContext();
 
