@@ -28,7 +28,7 @@ namespace Refazer.Web.Controllers
 
             RefazerOnline refazerOnline = RefazerOnline.Instance;
 
-            if (!refazerOnline.IsAvailable())
+            if (!refazerOnline.IsAvailableFor(submission.KeyPoint()))
             {
                 return Ok(WakeUpRefazerOnDemand(refazerOnline, submission, testCasesList));
             }
@@ -42,7 +42,11 @@ namespace Refazer.Web.Controllers
         private List<String> WakeUpRefazerOnDemand(RefazerOnline refazerOnline, Submission2 submission,
             List<String> testCasesList)
         {
-            List<Cluster> clustersList = db.Clusters.ToList();
+            String keyPoint = submission.KeyPoint();
+
+            List<Cluster> clustersList = db.Clusters.Where(
+                c => c.KeyPoint.Equals(keyPoint)).ToList();
+
             clustersList.Sort();
 
             for (int i = 0; i < clustersList.Count; i++)

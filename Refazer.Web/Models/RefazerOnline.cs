@@ -225,5 +225,10 @@ namespace Refazer.Web.Models
         {
             return !transformationStorage.IsEmpty();
         }
+
+        public bool IsAvailableFor(String keyPoint)
+        {
+            return transformationStorage.ContainsKey(keyPoint);
+        }
     }
 }
