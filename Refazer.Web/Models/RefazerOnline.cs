@@ -151,7 +151,12 @@ namespace Refazer.Web.Models
                 try
                 {
                     var transformation = transformationsList[i];
-                    var generatedCodesList = refazer.Apply(transformation, submission.Code);
+                    var generatedCodesList = refazer.Apply(transformation, submission.Code).ToList();
+
+                    if (generatedCodesList.Count > 15)
+                    {
+                        generatedCodesList = generatedCodesList.GetRange(0, 20);
+                    }
 
                     foreach (var code in generatedCodesList)
                     {
@@ -181,7 +186,7 @@ namespace Refazer.Web.Models
 
             if (!transformationStorage.ContainsKey(keyPoint))
             {
-                transformationStorage.Add(keyPoint, newTransformations.ToList());
+                transformationStorage.Add(keyPoint, newTransformations);
             }
             else
             {
