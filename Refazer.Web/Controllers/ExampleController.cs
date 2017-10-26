@@ -76,11 +76,11 @@ namespace Refazer.Web.Controllers
         [ResponseType(typeof(Example))]
         public IHttpActionResult PostExample(Example example)
         {
-            example.CorrectCode = FunctionExtractor.ExtractPythonFunction(
-                example.CorrectCode, example.Question);
+            //example.CorrectCode = FunctionExtractor.ExtractPythonFunction(
+            //    example.CorrectCode, example.Question);
 
-            example.IncorrectCode = FunctionExtractor.ExtractPythonFunction(
-                example.IncorrectCode, example.Question);
+            //example.IncorrectCode = FunctionExtractor.ExtractPythonFunction(
+            //    example.IncorrectCode, example.Question);
 
             if (!ModelState.IsValid)
             {
