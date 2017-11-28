@@ -31,10 +31,10 @@ namespace Refazer.Web.Controllers
             List<String> testCasesList = db.Assignments.Find(
                 submission.EndPoint).getTestCasesAsList();
 
-            Tuple<bool, String> testResult = RunPythonTest.
+            Tuple<bool, List<String>> testResult = RunPythonTest.
                 Execute(testCasesList, submission.Code);
 
-            attempt.Logs = testResult.Item2;
+            attempt.LogsList = testResult.Item2;
             attempt.PassedTests = testResult.Item1;
 
             RefazerOnline refazerOnline = RefazerOnline.Instance;
