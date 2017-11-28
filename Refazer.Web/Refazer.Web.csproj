@@ -185,6 +185,7 @@
     <Compile Include="Models\Cluster.cs" />
     <Compile Include="Models\RefazerDbContext.cs" />
     <Compile Include="Models\RefazerOnline.cs" />
+    <Compile Include="Models\Attempt.cs" />
     <Compile Include="Models\Submission2.cs" />
     <Compile Include="Models\Example.cs" />
     <Compile Include="Models\Fix.cs" />

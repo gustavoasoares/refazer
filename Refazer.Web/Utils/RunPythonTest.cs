@@ -8,7 +8,7 @@ namespace Refazer.Web.Utils
 {
     public class RunPythonTest
     {
-        public static bool Execute(List<string> testList, string code)
+        public static Tuple<bool, String> Execute(List<string> testList, string code)
         {
             String script = code;
 
@@ -23,6 +23,9 @@ namespace Refazer.Web.Utils
                     "python.exe", "-c \"" + script + "\"")
                 {
                     CreateNoWindow = true,
+                    RedirectStandardOutput = true,
+                    RedirectStandardError = true,
+                    UseShellExecute = false,
                     WindowStyle = ProcessWindowStyle.Hidden
                 };
 
@@ -30,28 +33,29 @@ namespace Refazer.Web.Utils
 
                 if (process == null)
                 {
-                    return false;
+                    return Tuple.Create(false, "");
                 }
                 
                 if (!CheckProcessFinished(process))
                 {
                     process.Kill();
-                    return false;
+                    return Tuple.Create(false, "");
                 }
-                
+
                 bool succeed = process.ExitCode == 0;
+                String output = process.StandardError.ReadToEnd();
                 process.Close();
-                return succeed;
+                return Tuple.Create(succeed, output);
             }
             catch (TestCaseException e)
             {
                 ShowTraceError(e);
-                return false;
+                return Tuple.Create(false, "");
             }
             catch (RuntimeBinderException e)
             {
                 ShowTraceError(e);
-                return false;
+                return Tuple.Create(false, "");
             }
         }
 
