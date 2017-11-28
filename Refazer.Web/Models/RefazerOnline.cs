@@ -160,7 +160,7 @@ namespace Refazer.Web.Models
 
                     foreach (var code in generatedCodesList)
                     {
-                        Tuple<bool, String> testResult = RunPythonTest.
+                        Tuple<bool, List<String>> testResult = RunPythonTest.
                             Execute(testCasesList, code);
 
                         if (testResult.Item1)
