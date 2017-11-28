@@ -1,4 +1,5 @@
 ﻿using Refazer.Web.Models;
+using Refazer.Web.Utils;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -15,7 +16,7 @@ namespace Refazer.Web.Controllers
 
         // POST api/submissions/fix
         [Route("fix"), HttpPost]
-        [ResponseType(typeof(List<String>))]
+        [ResponseType(typeof(Attempt))]
         public IHttpActionResult FixSubmission(Submission2 submission)
         {
             if (!ModelState.IsValid)
@@ -23,20 +24,32 @@ namespace Refazer.Web.Controllers
                 return BadRequest(ModelState);
             }
 
+            Attempt attempt = new Attempt();
+            attempt.EndPoint = submission.EndPoint;
+            attempt.SubmittedCode = submission.Code;
+
             List<String> testCasesList = db.Assignments.Find(
                 submission.EndPoint).getTestCasesAsList();
+
+            Tuple<bool, String> testResult = RunPythonTest.
+                Execute(testCasesList, submission.Code);
+
+            attempt.Logs = testResult.Item2;
+            attempt.PassedTests = testResult.Item1;
 
             RefazerOnline refazerOnline = RefazerOnline.Instance;
 
             if (!refazerOnline.IsAvailableFor(submission.KeyPoint()))
             {
-                return Ok(WakeUpRefazerOnDemand(refazerOnline, submission, testCasesList));
+                attempt.FixedCodeList = WakeUpRefazerOnDemand(
+                    refazerOnline, submission, testCasesList);
+                return Ok(attempt);
             }
 
-            List<String> fixedCodesList = refazerOnline.
+            attempt.FixedCodeList = refazerOnline.
                 TryToFixSubmission(submission, testCasesList);
 
-            return Ok(fixedCodesList);
+            return Ok(attempt);
         }
 
         private List<String> WakeUpRefazerOnDemand(RefazerOnline refazerOnline, Submission2 submission,
