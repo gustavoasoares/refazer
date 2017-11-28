@@ -15,7 +15,7 @@ namespace Refazer.Web.Controllers
         private RefazerDbContext db = new RefazerDbContext();
 
         // POST api/submissions/fix
-        [Route("fix"), HttpPost]
+        [Route(""), HttpPost]
         [ResponseType(typeof(Attempt))]
         public IHttpActionResult FixSubmission(Submission2 submission)
         {
