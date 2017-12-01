@@ -106,7 +106,7 @@ namespace Refazer.Core
         public State CreateInputState(string program)
         {
             var astBefore = NodeWrapper.Wrap(ASTHelper.ParseContent(program));
-            var input = State.Create(Grammar.Value.InputSymbol, astBefore);
+            var input = State.CreateForExecution(Grammar.Value.InputSymbol, astBefore);
             return input;
         }
 

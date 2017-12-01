@@ -1,10 +1,8 @@
 ﻿using System;
 using System.Diagnostics.CodeAnalysis;
-using System.Text.RegularExpressions;
 using Microsoft.ProgramSynthesis;
 using Microsoft.ProgramSynthesis.AST;
-using Microsoft.ProgramSynthesis.Extraction.Text.Semantics;
-using Tutor.synthesis;
+using Microsoft.ProgramSynthesis.Features;
 
 namespace Tutor
 {

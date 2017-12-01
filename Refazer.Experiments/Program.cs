@@ -365,7 +365,7 @@ namespace Refazer.Experiments
                                         //if (program == null) throw new Exception();
                                         PythonAst ast = null;
                                         ast = ASTHelper.ParseContent(mistake.before);
-                                        var input = State.Create(fixer.grammar.Value.InputSymbol, NodeWrapper.Wrap(ast));
+                                        var input = State.CreateForExecution(fixer.grammar.Value.InputSymbol, NodeWrapper.Wrap(ast));
                                         var unparser = new Unparser();
                                         //var fixedCode = fixer.TryFix(tests, program, input, unparser);
                                         //if (fixedCode == null)
