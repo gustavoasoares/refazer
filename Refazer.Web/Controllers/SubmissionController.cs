@@ -37,6 +37,10 @@ namespace Refazer.Web.Controllers
             attempt.LogsList = testResult.Item2;
             attempt.PassedTests = testResult.Item1;
 
+            if (attempt.PassedTests) {
+                return Ok(attempt);
+            }
+
             RefazerOnline refazerOnline = RefazerOnline.Instance;
 
             if (!refazerOnline.IsAvailableFor(submission.KeyPoint()))
