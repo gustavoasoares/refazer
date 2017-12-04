@@ -30,28 +30,28 @@ namespace Refazer.Web.Utils
                 };
 
                 Process process = Process.Start(processStartInfo);
-                List<String> logsList = new List<String>();
-
-                while (!process.StandardError.EndOfStream)
-                {
-                    String line = process.StandardError.ReadLine();
-                    logsList.Add(line);
-                }
 
                 if (process == null)
                 {
                     return Tuple.Create(false, new List<String>());
                 }
-                
+
                 if (!CheckProcessFinished(process))
                 {
                     process.Kill();
                     return Tuple.Create(false, new List<String>());
                 }
 
+                List<String> logsErrorList = new List<String>();
+                while (!process.StandardError.EndOfStream)
+                {
+                    String line = process.StandardError.ReadLine();
+                    logsErrorList.Add(line);
+                }
+
                 bool succeed = process.ExitCode == 0;
                 process.Close();
-                return Tuple.Create(succeed, logsList);
+                return Tuple.Create(succeed, logsErrorList);
             }
             catch (TestCaseException e)
             {
@@ -81,10 +81,11 @@ namespace Refazer.Web.Utils
             Trace.TraceError(e.Message);
         }
 
-        private static String GetLogGenerateFunction() {
+        private static String GetLogGenerateFunction()
+        {
             String logGenerateFunction = @"
 def logs_generate(description, expected, result):
-    logs = '''
+  logs = '''
     Doctests for assignment
 
     >>> {0}
@@ -95,10 +96,9 @@ def logs_generate(description, expected, result):
     #     {2}
 
     '''
-    return logs.format(description, expected, result)
+  return logs.format(description, expected, result)
 ";
-
             return logGenerateFunction;
-        } 
+        }
     }
 }
