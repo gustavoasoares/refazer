@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.ComponentModel.Design.Serialization;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
-using System.ServiceModel.Configuration;
 using IronPython.Modules;
 using Microsoft.ProgramSynthesis;
 using Microsoft.ProgramSynthesis.Learning;

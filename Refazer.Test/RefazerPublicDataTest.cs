@@ -8,28 +8,10 @@ namespace Refazer.Test
     public class RefazerPublicDataTest
     {
         [TestMethod]
-        public void TestLearn1_JS()
+        public void TestLearn1()
         {
-            var before = "x = 0;";
-            var after = @"x = 1;";
-            TestUtils.AssertCorrectTransformation(before, after);
-        }
-
-        [TestMethod]
-        public void TestLearn2_JS()
-        {
-            var before = @"function product(n, term) {
-    total = 0;
-    k = 1;
-    return total;
-}";
-
-
-            var after = @"function product(n, term) {
-    total = 1;
-    k = 1;
-    return total;
-}";
+            var before = "x = 0";
+            var after = "x = 1";
             TestUtils.AssertCorrectTransformation(before, after);
         }
 

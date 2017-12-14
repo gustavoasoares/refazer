@@ -37,13 +37,11 @@ namespace Refazer.Core
         /// </summary>  
         public Result<Grammar> Grammar { get; }
 
-        public Refazer4Python(string pathToGrammar = @"..\..\..\Tutor\synthesis\", string pathToDslLib = @"..\..\..\Tutor\bin\debug")
+        public Refazer4Python(string pathToGrammar = @"..\..\..\..\Tutor\synthesis\")
         {
             
             _pathToGrammar = pathToGrammar;
-            _pathToDslLib = pathToDslLib;
-            Grammar = DSLCompiler.ParseGrammarFromFile(pathToGrammar + @"Transformation.grammar",
-                    libraryPaths: new[] { pathToDslLib });
+            Grammar = DSLCompiler.ParseGrammarFromFile(pathToGrammar + @"Transformation.grammar");
            
         }
 

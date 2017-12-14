@@ -39,7 +39,7 @@ namespace Refazer.Experiments
         private static readonly List<long> TimeToFix = new List<long>();
         private static readonly TraceSource Source = new TraceSource("experiment");
 
-        private const string LogFolder = "../../benchmark/";
+        private const string LogFolder = "benchmark/";
         private const string TimeFile = LogFolder + "time.txt";
 
         static void Main(string[] args)

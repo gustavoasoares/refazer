@@ -21,7 +21,7 @@ namespace Refazer.Experiments
 
         internal void CreateProblems()
         {
-            var dir = new DirectoryInfo("../../benchmark/");
+            var dir = new DirectoryInfo("benchmark/");
             foreach (var file in dir.GetFiles())
             {
                 var problemName = (ProblemNames) Enum.Parse(typeof (ProblemNames), file.Name.Split('.')[0]);
@@ -71,7 +71,7 @@ namespace Refazer.Experiments
 
         private void AddIncorrectAttempts()
         {
-            var dir = new DirectoryInfo("../../benchmark_incorrect/");
+            var dir = new DirectoryInfo("benchmark_incorrect/");
             foreach (var file in dir.GetFiles())
             {
                 var problemName = (ProblemNames) Enum.Parse(typeof (ProblemNames), file.Name.Split('.')[0]);
