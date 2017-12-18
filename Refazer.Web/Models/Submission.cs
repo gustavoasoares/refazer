@@ -1,12 +1,7 @@
-﻿using System;
-using System.Collections.Generic;
-using System.ComponentModel.DataAnnotations;
+﻿using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
-using System.Linq;
-using System.Web;
-using System.Data.Entity;
 
-namespace Refazer.WebAPI.Models
+namespace Refazer.Web.Models
 {
     /// <summary>
     /// This class represents a student submission 

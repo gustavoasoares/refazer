@@ -54,7 +54,7 @@ namespace Tutor
                     ASTHelper.ParseContent(code);
                     results.Add(newAst);
                 }
-                catch (TransformationNotApplicableExpection e)
+                catch (TransformationNotApplicableExpection)
                 {
                     //does not add program
                 }

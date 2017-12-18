@@ -19,7 +19,7 @@ namespace Tutor.Transformation
     {
         public WitnessFunctions(Grammar grammar) : base(grammar) { }
 
-        [WitnessFunction("Apply",1)]
+        [WitnessFunction("Apply", 1)]
         public ExampleSpec WitnessPatch(GrammarRule rule, ExampleSpec spec)
         {
             var examples = new Dictionary<State, object>();
@@ -226,7 +226,7 @@ namespace Tutor.Transformation
         }
 
         [WitnessFunction("Patch", 0)]
-        public SubsequenceSpec WitnessSingleEditSet(GrammarRule rule, 
+        public SubsequenceSpec WitnessSingleEditSet(GrammarRule rule,
             ExampleSpec spec)
         {
             var examples = new Dictionary<State, IEnumerable<object>>();
@@ -241,7 +241,7 @@ namespace Tutor.Transformation
         }
 
         [WitnessFunction("CPatch", 0)]
-        public SubsequenceSpec WitnessHeadPatch(GrammarRule rule, 
+        public SubsequenceSpec WitnessHeadPatch(GrammarRule rule,
             ExampleSpec spec)
         {
             var examples = new Dictionary<State, IEnumerable<object>>();
@@ -256,7 +256,7 @@ namespace Tutor.Transformation
         }
 
         [WitnessFunction("CPatch", 1)]
-        public ExampleSpec WitnessTailPatch(GrammarRule rule, 
+        public ExampleSpec WitnessTailPatch(GrammarRule rule,
             ExampleSpec spec)
         {
             var examples = new Dictionary<State, object>();
@@ -275,7 +275,7 @@ namespace Tutor.Transformation
 
 
         [WitnessFunction("EditMap", 1)]
-        public SubsequenceSpec WitnessSelectedNodes(GrammarRule rule, 
+        public SubsequenceSpec WitnessSelectedNodes(GrammarRule rule,
                                                  SubsequenceSpec spec)
         {
             var examples = new Dictionary<State, IEnumerable<object>>();
@@ -290,7 +290,7 @@ namespace Tutor.Transformation
 
 
         [WitnessFunction("Match", 1)]
-        public DisjunctiveExamplesSpec WitnessMatchTemplate(GrammarRule rule, 
+        public DisjunctiveExamplesSpec WitnessMatchTemplate(GrammarRule rule,
             ExampleSpec spec)
         {
             var examples = new Dictionary<State, IEnumerable<object>>();
@@ -309,7 +309,7 @@ namespace Tutor.Transformation
         }
 
         [WitnessFunction("Update", 1)]
-        public ExampleSpec WitnessN2(GrammarRule rule,  ExampleSpec spec)
+        public ExampleSpec WitnessN2(GrammarRule rule, ExampleSpec spec)
         {
             var contextExamples = new Dictionary<State, object>();
             foreach (State input in spec.ProvidedInputs)
@@ -323,7 +323,7 @@ namespace Tutor.Transformation
         }
 
         [WitnessFunction("Insert", 1)]
-        public ExampleSpec WitnessInsertN(GrammarRule rule,  ExampleSpec spec)
+        public ExampleSpec WitnessInsertN(GrammarRule rule, ExampleSpec spec)
         {
             var contextExamples = new Dictionary<State, object>();
             foreach (State input in spec.ProvidedInputs)
@@ -337,7 +337,7 @@ namespace Tutor.Transformation
         }
 
         [WitnessFunction("Insert", 2)]
-        public DisjunctiveExamplesSpec WitnessInsertK(GrammarRule rule,  ExampleSpec spec)
+        public DisjunctiveExamplesSpec WitnessInsertK(GrammarRule rule, ExampleSpec spec)
         {
             var contextExamples = new Dictionary<State, IEnumerable<object>>();
             foreach (State input in spec.ProvidedInputs)
@@ -355,7 +355,7 @@ namespace Tutor.Transformation
         }
 
         [WitnessFunction("Move", 1)]
-        public ExampleSpec WitnessMoveN(GrammarRule rule,  ExampleSpec spec)
+        public ExampleSpec WitnessMoveN(GrammarRule rule, ExampleSpec spec)
         {
             var contextExamples = new Dictionary<State, object>();
             foreach (State input in spec.ProvidedInputs)
@@ -369,7 +369,7 @@ namespace Tutor.Transformation
         }
 
         [WitnessFunction("Move", 2)]
-        public DisjunctiveExamplesSpec WitnessMoveK(GrammarRule rule,  ExampleSpec spec)
+        public DisjunctiveExamplesSpec WitnessMoveK(GrammarRule rule, ExampleSpec spec)
         {
             var contextExamples = new Dictionary<State, IEnumerable<object>>();
             foreach (State input in spec.ProvidedInputs)
@@ -387,7 +387,7 @@ namespace Tutor.Transformation
         }
 
         [WitnessFunction("Delete", 1)]
-        public ExampleSpec WitnessDeleteK(GrammarRule rule,  ExampleSpec spec)
+        public ExampleSpec WitnessDeleteK(GrammarRule rule, ExampleSpec spec)
         {
             var contextExamples = new Dictionary<State, object>();
             foreach (State input in spec.ProvidedInputs)
@@ -402,7 +402,7 @@ namespace Tutor.Transformation
 
 
         [WitnessFunction("LeafConstNode", 0)]
-        public ExampleSpec WitnessInfo(GrammarRule rule,  ExampleSpec spec)
+        public ExampleSpec WitnessInfo(GrammarRule rule, ExampleSpec spec)
         {
             var contextExamples = new Dictionary<State, object>();
             foreach (State input in spec.ProvidedInputs)
@@ -419,7 +419,7 @@ namespace Tutor.Transformation
         }
 
         [WitnessFunction("ConstNode", 0)]
-        public ExampleSpec WitnessInfo2(GrammarRule rule,  ExampleSpec spec)
+        public ExampleSpec WitnessInfo2(GrammarRule rule, ExampleSpec spec)
         {
             var contextExamples = new Dictionary<State, object>();
             foreach (State input in spec.ProvidedInputs)
@@ -436,7 +436,7 @@ namespace Tutor.Transformation
         }
 
         [WitnessFunction("ConstNode", 1)]
-        public ExampleSpec WitnessChildren(GrammarRule rule,  ExampleSpec spec)
+        public ExampleSpec WitnessChildren(GrammarRule rule, ExampleSpec spec)
         {
             var contextExamples = new Dictionary<State, object>();
             foreach (State input in spec.ProvidedInputs)
@@ -469,7 +469,7 @@ namespace Tutor.Transformation
         }
 
         [WitnessFunction("Context", 0)]
-        public DisjunctiveExamplesSpec WitnessContextK(GrammarRule rule, 
+        public DisjunctiveExamplesSpec WitnessContextK(GrammarRule rule,
             DisjunctiveExamplesSpec spec)
         {
             var result = new Dictionary<State, IEnumerable<object>>();
@@ -491,7 +491,7 @@ namespace Tutor.Transformation
         }
 
         [WitnessFunction("Context", 1, DependsOnParameters = new[] { 0 })]
-        public ExampleSpec WitnessContextTemplate(GrammarRule rule, 
+        public ExampleSpec WitnessContextTemplate(GrammarRule rule,
           DisjunctiveExamplesSpec spec, ExampleSpec dSpec)
         {
             var result = new Dictionary<State, object>();
@@ -514,7 +514,7 @@ namespace Tutor.Transformation
         }
 
         [WitnessFunction("Context", 2, DependsOnParameters = new[] { 0 })]
-        public ExampleSpec WitnessContextPath(GrammarRule rule, 
+        public ExampleSpec WitnessContextPath(GrammarRule rule,
             DisjunctiveExamplesSpec spec, ExampleSpec dSpec)
         {
             var result = new Dictionary<State, object>();
@@ -541,7 +541,7 @@ namespace Tutor.Transformation
         }
 
         [WitnessFunction("Relative", 0)]
-        public DisjunctiveExamplesSpec WitnessRelativeToken(GrammarRule rule,  ExampleSpec spec)
+        public DisjunctiveExamplesSpec WitnessRelativeToken(GrammarRule rule, ExampleSpec spec)
         {
             var result = new Dictionary<State, IEnumerable<object>>();
             foreach (var input in spec.ProvidedInputs)
@@ -573,22 +573,15 @@ namespace Tutor.Transformation
         }
 
         [WitnessFunction("Path", 0)]
-        public ExampleSpec WitnessPath(GrammarRule rule,  ExampleSpec spec)
+        public ExampleSpec WitnessPath(GrammarRule rule, ExampleSpec spec)
         {
             var result = new Dictionary<State, object>();
             foreach (var input in spec.ProvidedInputs)
             {
                 var outerSpec = (int)spec.Examples[input];
-                if (outerSpec != null)
-                {
-                    //var innerSpec = outerSpec.Select(e => GetAncestor(e.Item2, e.Item1).Equals(e.Item2) ? 0 
-                    //: GetAncestor(e.Item2, e.Item1).Children.IndexOf(e.Item2)).ToList();
-                    result[input] = outerSpec;
-                }
-                else
-                {
-                    return null;
-                }
+                //var innerSpec = outerSpec.Select(e => GetAncestor(e.Item2, e.Item1).Equals(e.Item2) ? 0 
+                //: GetAncestor(e.Item2, e.Item1).Children.IndexOf(e.Item2)).ToList();
+                result[input] = outerSpec;
             }
             return new ExampleSpec(result);
         }
@@ -681,7 +674,7 @@ namespace Tutor.Transformation
 
 
         [WitnessFunction("LeafPattern", 0)]
-        public ExampleSpec WitnessLeafPatternToken(GrammarRule rule,  ExampleSpec spec)
+        public ExampleSpec WitnessLeafPatternToken(GrammarRule rule, ExampleSpec spec)
         {
             var result = new Dictionary<State, object>();
             foreach (State input in spec.ProvidedInputs)
@@ -696,7 +689,7 @@ namespace Tutor.Transformation
         }
 
         [WitnessFunction("Pattern", 0)]
-        public ExampleSpec WitnessPatternToken(GrammarRule rule,  ExampleSpec spec)
+        public ExampleSpec WitnessPatternToken(GrammarRule rule, ExampleSpec spec)
         {
             var result = new Dictionary<State, object>();
             foreach (State input in spec.ProvidedInputs)
@@ -713,7 +706,7 @@ namespace Tutor.Transformation
         }
 
         [WitnessFunction("Pattern", 1)]
-        public ExampleSpec WitnessPatternChildren(GrammarRule rule,  ExampleSpec spec)
+        public ExampleSpec WitnessPatternChildren(GrammarRule rule, ExampleSpec spec)
         {
             var result = new Dictionary<State, object>();
             foreach (State input in spec.ProvidedInputs)
@@ -750,7 +743,7 @@ namespace Tutor.Transformation
         //}
 
         [WitnessFunction("Type", 0)]
-        public ExampleSpec WitnessType(GrammarRule rule,  ExampleSpec spec)
+        public ExampleSpec WitnessType(GrammarRule rule, ExampleSpec spec)
         {
             var result = new Dictionary<State, object>();
             foreach (State input in spec.ProvidedInputs)
@@ -780,7 +773,7 @@ namespace Tutor.Transformation
         }
 
         [WitnessFunction("TChild", 0)]
-        public ExampleSpec WitnessTemplateChild(GrammarRule rule,  ExampleSpec spec)
+        public ExampleSpec WitnessTemplateChild(GrammarRule rule, ExampleSpec spec)
         {
             var result = new Dictionary<State, object>();
             foreach (var input in spec.ProvidedInputs)
@@ -795,7 +788,7 @@ namespace Tutor.Transformation
         }
 
         [WitnessFunction("TChildren", 0)]
-        public ExampleSpec WitnessTemplateChildrenHead(GrammarRule rule,  ExampleSpec spec)
+        public ExampleSpec WitnessTemplateChildrenHead(GrammarRule rule, ExampleSpec spec)
         {
             var result = new Dictionary<State, object>();
             foreach (var input in spec.ProvidedInputs)
@@ -809,7 +802,7 @@ namespace Tutor.Transformation
         }
 
         [WitnessFunction("TChildren", 1)]
-        public ExampleSpec WitnessTemplateChildrenTail(GrammarRule rule,  ExampleSpec spec)
+        public ExampleSpec WitnessTemplateChildrenTail(GrammarRule rule, ExampleSpec spec)
         {
             var result = new Dictionary<State, object>();
             foreach (var input in spec.ProvidedInputs)
@@ -826,7 +819,7 @@ namespace Tutor.Transformation
         }
 
         [WitnessFunction("ReferenceNode", 1)]
-        public DisjunctiveExamplesSpec WitnessContext(GrammarRule rule,  ExampleSpec spec)
+        public DisjunctiveExamplesSpec WitnessContext(GrammarRule rule, ExampleSpec spec)
         {
             var templateExamples = new Dictionary<State, IEnumerable<object>>();
             foreach (var input in spec.ProvidedInputs)
@@ -849,8 +842,8 @@ namespace Tutor.Transformation
             return new DisjunctiveExamplesSpec(templateExamples);
         }
 
-        [WitnessFunction("ReferenceNode", 2, DependsOnParameters = new []{1})]
-        public ExampleSpec WitnessK(GrammarRule rule,  ExampleSpec spec, ExampleSpec patternSpec)
+        [WitnessFunction("ReferenceNode", 2, DependsOnParameters = new[] { 1 })]
+        public ExampleSpec WitnessK(GrammarRule rule, ExampleSpec spec, ExampleSpec patternSpec)
         {
             var result = new Dictionary<State, object>();
 
@@ -874,7 +867,7 @@ namespace Tutor.Transformation
         }
 
         [WitnessFunction("SingleChild", 0)]
-        public ExampleSpec WitnessSingleChild(GrammarRule rule,  ExampleSpec spec)
+        public ExampleSpec WitnessSingleChild(GrammarRule rule, ExampleSpec spec)
         {
             var childrenExamples = new Dictionary<State, object>();
             foreach (var input in spec.ProvidedInputs)
@@ -889,7 +882,7 @@ namespace Tutor.Transformation
         }
 
         [WitnessFunction("Children", 0)]
-        public ExampleSpec WitnessHead(GrammarRule rule,  ExampleSpec spec)
+        public ExampleSpec WitnessHead(GrammarRule rule, ExampleSpec spec)
         {
             var headExamples = new Dictionary<State, object>();
             foreach (var input in spec.ProvidedInputs)
@@ -904,7 +897,7 @@ namespace Tutor.Transformation
         }
 
         [WitnessFunction("Children", 1)]
-        public ExampleSpec WitnessTail(GrammarRule rule,  ExampleSpec spec)
+        public ExampleSpec WitnessTail(GrammarRule rule, ExampleSpec spec)
         {
             var headExamples = new Dictionary<State, object>();
             foreach (var input in spec.ProvidedInputs)

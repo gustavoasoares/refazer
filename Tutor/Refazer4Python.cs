@@ -12,6 +12,7 @@ using Microsoft.ProgramSynthesis.Learning.Strategies;
 using Microsoft.ProgramSynthesis.Specifications;
 using Tutor;
 using Tutor.Transformation;
+using System.Diagnostics;
 
 namespace Refazer.Core
 {
@@ -39,12 +40,10 @@ namespace Refazer.Core
 
         public Refazer4Python(string pathToGrammar = @"..\..\..\Tutor\synthesis\", string pathToDslLib = @"..\..\..\Tutor\bin\debug")
         {
-            
             _pathToGrammar = pathToGrammar;
             _pathToDslLib = pathToDslLib;
             Grammar = DSLCompiler.ParseGrammarFromFile(pathToGrammar + @"Transformation.grammar",
                     libraryPaths: new[] { pathToDslLib });
-           
         }
 
         public IEnumerable<Transformation> LearnTransformations(List<Tuple<string, string>> examples,
@@ -72,7 +71,7 @@ namespace Refazer.Core
             //filter repetitive transformations 
             foreach (var programNode in learned)
             {
-                var exists = false; 
+                var exists = false;
                 foreach (var uniqueTransformation in uniqueTransformations)
                 {
                     if (programNode.ToString().Equals(uniqueTransformation.ToString()))
@@ -114,7 +113,7 @@ namespace Refazer.Core
         {
             var unparser = new Unparser();
             var result = transformation.GetSynthesizedProgram().Invoke(CreateInputState(program)) as IEnumerable<PythonNode>;
-            return result == null ?  new List<string>() : result.Select(x => unparser.Unparse(x)); 
+            return result == null ? new List<string>() : result.Select(x => unparser.Unparse(x));
         }
     }
 }

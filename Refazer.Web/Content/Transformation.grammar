@@ -1,0 +1,39 @@
+﻿#reference 'file:Tutor.dll';
+#reference 'file:IronPython.dll';
+
+using Tutor;
+using Tutor.synthesis;
+using Tutor.Transformation;
+using IronPython.Compiler.Ast;
+
+using semantics Tutor.Transformation.Semantics;
+using learners Tutor.Transformation.WitnessFunctions;
+
+language Transformation;	
+
+@complete feature double Score = RankingScore;
+
+@start IEnumerable<PythonNode> transformation := Apply(ast, patch);
+Patch patch := Patch(edits) | CPatch(edits, patch);
+IEnumerable<Edit> edits := EditMap(edit, selectednodes) = Map(\node : PythonNode => edit, selectednodes);
+IEnumerable<PythonNode> selectednodes := Selected(match, nodes) = Filter(\x : PythonNode => match,nodes); 
+bool match := Match(x, pattern);
+Pattern pattern := Context(k, patternExp, path);
+TreeTemplate patternExp := Pattern(token, tchildren) | LeafPattern(token); 
+TreeTemplate token := Type(type) | Node(info); 
+Path path := Path(k);
+IEnumerable<TreeTemplate> tchildren := TChild(patternExp) | TChildren(patternExp, tchildren);
+Edit edit := Update(node, c) | Insert(node, n, k) | Delete(node, r) | Move(node, r, k);
+PythonNode r := ReferenceNode(node, pattern, k); 
+PythonNode n := c | r;
+PythonNode c := LeafConstNode(info) | ConstNode(info, children);
+IEnumerable<PythonNode> children := SingleChild(n) | Children(n, children);
+IEnumerable<PythonNode> nodes := InOrderSort(ast);
+
+@input PythonNode ast;
+NodeInfo info; 
+int k;
+string type;
+dynamic value;
+
+

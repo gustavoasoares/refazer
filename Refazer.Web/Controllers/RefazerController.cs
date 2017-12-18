@@ -1,27 +1,16 @@
 ﻿using System;
-using System.Collections.Concurrent;
 using System.Collections.Generic;
-using System.Data.Entity;
 using System.Diagnostics;
-using System.IO;
 using System.Linq;
-using System.Net;
-using System.Net.Http;
-using System.Threading;
 using System.Threading.Tasks;
-using System.Web;
 using System.Web.Http;
-using System.Web.WebSockets;
-using Microsoft.ApplicationInsights.WindowsServer;
 using Microsoft.ProgramSynthesis;
 using Microsoft.ProgramSynthesis.AST;
-using Newtonsoft.Json;
 using Refazer.Core;
-using Refazer.WebAPI.Models;
 using Tutor;
-using Tutor.Transformation;
+using Refazer.Web.Models;
 
-namespace Refazer.WebAPI.Controllers
+namespace Refazer.Web.Controllers
 {
     /// <summary>
     /// Refazer API for grading submissions in Refazer4Education
@@ -29,7 +18,51 @@ namespace Refazer.WebAPI.Controllers
     [RoutePrefix("api/refazer")]
     public class RefazerController : ApiController
     {
-        public static int numberOfJobs = 0; 
+        private RefazerDbContext db = new RefazerDbContext();
+
+        // GET: api/refazer/reload
+        [Route("prepare"), HttpGet]
+        public IHttpActionResult FindClustersByTransformation()
+        {
+            db.Clusters.RemoveRange(db.Clusters);
+            RefazerOnline refazerOnline = RefazerOnline.Instance;
+            Dictionary<String, List<Example>> allExamples = GetExamplesByKeyPoint();
+
+            foreach (var keypoint in allExamples.Keys)
+            {
+                List<Models.Cluster> clustersList = refazerOnline.
+                    LearnClusteredTransformations(keypoint, allExamples[keypoint]);
+
+                db.Clusters.AddRange(clustersList);
+            }
+
+            db.SaveChanges();
+
+            return Ok("Refazer is ready!");
+        }
+
+        private Dictionary<String, List<Example>> GetExamplesByKeyPoint()
+        {
+            Dictionary<String, List<Example>> result = new Dictionary<string, List<Example>>();
+
+            foreach (var example in db.Examples.ToList())
+            {
+                if (!result.ContainsKey(example.KeyPoint()))
+                {
+                    result.Add(example.KeyPoint(), new List<Example> { example });
+                }
+                else
+                {
+                    List<Example> readedExamples = result[example.KeyPoint()];
+                    readedExamples.Add(example);
+                    result[example.KeyPoint()] = readedExamples;
+                }
+            }
+
+            return result;
+        }
+
+        public static int numberOfJobs = 0;
 
         /// <summary>
         /// Creates refazer
@@ -60,7 +93,7 @@ namespace Refazer.WebAPI.Controllers
                 refazerDb.Submissions.Add(submission);
             }
             refazerDb.SaveChanges();
-            
+
             return session.ID;
         }
 
@@ -68,7 +101,7 @@ namespace Refazer.WebAPI.Controllers
         [Route("ApplyFixFromExample"), HttpPost]
         public dynamic ApplyFixFromExample(ApplyFixFromExampleInput exampleInput)
         {
-            
+
             Trace.TraceWarning("ApplyFixFromExample request accepted for submission: {0} on Instance: {1}. Total jobs in this instance: {2}",
                 exampleInput.SubmissionId, "", ++numberOfJobs);
             var exceptions = new List<string>();
@@ -76,7 +109,7 @@ namespace Refazer.WebAPI.Controllers
             {
                 var refazer = BuildRefazer();
                 var example = Tuple.Create(exampleInput.CodeBefore, exampleInput.CodeAfter);
-                var transformations = refazer.LearnTransformations(new List<Tuple<string, string>>() {example},
+                var transformations = refazer.LearnTransformations(new List<Tuple<string, string>>() { example },
                     exampleInput.SynthesizedTransformations, exampleInput.Ranking);
 
                 var refazerDb = new RefazerDbContext();
@@ -88,11 +121,11 @@ namespace Refazer.WebAPI.Controllers
                 var rank = 1;
                 foreach (var programNode in newTransformations)
                 {
-                    var transformation = new Models.Transformation()
+                    var transformation = new Web.Models.Transformation()
                     {
                         SessionId = exampleInput.SessionId,
                         Program = programNode.ToString(),
-                        Rank = rank++, 
+                        Rank = rank++,
                         RankType = (exampleInput.Ranking.Equals("specific")) ? 1 : 2,
                         Examples = "[{'submission_id': " + exampleInput.SubmissionId
                     + ", 'code_before': " + exampleInput.CodeBefore
@@ -124,8 +157,8 @@ namespace Refazer.WebAPI.Controllers
                     Trace.TraceError("Total of submissions that could not be parsed: {0}", exList.Count);
 
                 if (transformationTuples.Any())
-                    Task.Run(() => TryToFixAsync(transformationTuples, exampleInput.SessionId, 
-                        exampleInput.QuestionId,submissionTuples));
+                    Task.Run(() => TryToFixAsync(transformationTuples, exampleInput.SessionId,
+                        exampleInput.QuestionId, submissionTuples));
             }
             catch (Exception e)
             {
@@ -134,7 +167,7 @@ namespace Refazer.WebAPI.Controllers
                 Trace.TraceWarning(e.Message);
                 exceptions.Add(e.Message);
             }
-            return Json(new {id = 0 , exceptions});
+            return Json(new { id = 0, exceptions });
         }
 
         private IEnumerable<ProgramNode> FilterExistingTransformations(IEnumerable<ProgramNode> newTransformations,
@@ -159,7 +192,7 @@ namespace Refazer.WebAPI.Controllers
         }
 
 
-        static void TryToFixAsync(IEnumerable<Tuple<ProgramNode, Models.Transformation>> transformationTuples, int experiementId, 
+        static void TryToFixAsync(IEnumerable<Tuple<ProgramNode, Models.Transformation>> transformationTuples, int experiementId,
             int questionId, IEnumerable<Tuple<Submission, State>> submissionTuples)
         {
             Trace.TraceWarning(string.Format("Starting TryFix for Session: {0}, Instance: {1}", experiementId, ""));
@@ -181,7 +214,7 @@ namespace Refazer.WebAPI.Controllers
                         Trace.TraceError(ex.Message);
                     }
                 }
-                    Trace.TraceWarning(string.Format("Finising transformation: {0}, Session: {1}, Instance {2} ", transformation.Item2.ID, transformation.Item2.SessionId, ""));
+                Trace.TraceWarning(string.Format("Finising transformation: {0}, Session: {1}, Instance {2} ", transformation.Item2.ID, transformation.Item2.SessionId, ""));
             }
             numberOfJobs -= 1;
             Trace.TraceWarning(string.Format("Finishing TryFix for session: {0}, Instance: {1}", experiementId, ""));
@@ -218,7 +251,7 @@ namespace Refazer.WebAPI.Controllers
                         };
                         refazerDb2.Fixes.Add(fix);
                         refazerDb2.SaveChanges();
-                        Trace.TraceWarning(string.Format("Submission fixed: {0}, Session: {1}, Transformation: {2}, Time: {3}", 
+                        Trace.TraceWarning(string.Format("Submission fixed: {0}, Session: {1}, Transformation: {2}, Time: {3}",
                             submission.Item1.SubmissionId, transformationTuple.Item2.SessionId, transformationTuple.Item2.ID, DateTime.Now));
                     }
                 }
@@ -239,10 +272,10 @@ namespace Refazer.WebAPI.Controllers
         [Route("GetFixes"), HttpGet]
         public IEnumerable<Fix> GetFixes(int SessionId, int FixId)
         {
-            Trace.TraceWarning("GetFixes request accepted for session: {0} on Instance: {1}", SessionId, 
+            Trace.TraceWarning("GetFixes request accepted for session: {0} on Instance: {1}", SessionId,
                 "");
             var refazerDb2 = new RefazerDbContext();
-            return refazerDb2.Fixes.Include("Transformation").Where(x => x.SessionId == SessionId && x.ID >= FixId); 
+            return refazerDb2.Fixes.Include("Transformation").Where(x => x.SessionId == SessionId && x.ID >= FixId);
         }
     }
 
@@ -269,7 +302,7 @@ def increment(x):
 ";
             return testSetup;
         }
-        
+
         public Dictionary<string, long> GetTests(int questionId)
         {
             var testSetup = GetTestSetup();
@@ -321,4 +354,3 @@ def increment(x):
         }
     }
 }
-

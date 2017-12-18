@@ -1,9 +1,6 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Web;
+﻿using System.Collections.Generic;
 
-namespace Refazer.WebAPI.Models
+namespace Refazer.Web.Models
 {
     /// <summary>
     /// THis class represents the input json for the controller api/Refazer/Start
