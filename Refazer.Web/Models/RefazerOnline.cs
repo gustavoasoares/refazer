@@ -145,12 +145,12 @@ namespace Refazer.Web.Models
             return clustersList;
         }
 
-        public List<String> TryToFixSubmission(Submission2 submission, List<String> testCasesList)
+        public Fix2 TryToFixSubmission(Submission2 submission, List<String> testCasesList)
         {
             return TryToFixSubmission(submission, testCasesList, SearchTransformation(submission));
         }
 
-        public List<String> TryToFixSubmission(Submission2 submission, List<String> testCasesList,
+        public Fix2 TryToFixSubmission(Submission2 submission, List<String> testCasesList,
             TransformationSet transformationSet)
         {
             List<TransformationSet> transformationSetList = new List<TransformationSet>();
@@ -160,14 +160,16 @@ namespace Refazer.Web.Models
             return TryToFixSubmission(submission, testCasesList, transformationSetList);
         }
 
-        public List<String> TryToFixSubmission(Submission2 submission, List<String> testCasesList,
+        public Fix2 TryToFixSubmission(Submission2 submission, List<String> testCasesList,
              List<TransformationSet> transformationSetList)
         {
+            Cluster cluster = new Cluster();
+
             List<String> result = new List<String>();
 
             foreach (var transformationSet in transformationSetList)
             {
-                Cluster cluster = transformationSet.Cluster;
+                cluster = transformationSet.Cluster;
 
                 result = ApplyCodeTransformation(submission, testCasesList,
                                 transformationSet.TransformationList);
@@ -178,7 +180,7 @@ namespace Refazer.Web.Models
                 }
             }
 
-            return result;
+            return new Fix2(cluster, result);
         }
 
         public List<String> ApplyCodeTransformation(Submission2 submission, List<String> testCasesList,

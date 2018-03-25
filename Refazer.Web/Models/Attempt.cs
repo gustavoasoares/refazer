@@ -7,6 +7,8 @@ namespace Refazer.Web.Models
     {
         public String EndPoint { get; set; }
 
+        public Cluster Cluster { get; set; }
+
         public Boolean PassedTests { get; set; }
 
         public String SubmittedCode { get; set; }

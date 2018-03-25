@@ -44,22 +44,35 @@ namespace Refazer.Web.Controllers
 
             RefazerOnline refazerOnline = RefazerOnline.Instance;
 
+            Fix2 refazerFixes = new Fix2();
+
             if (!refazerOnline.IsAvailableFor(submission.KeyPoint()))
             {
-                attempt.FixedCodeList = WakeUpRefazerOnDemand(
+
+                refazerFixes = WakeUpRefazerOnDemand(
                     refazerOnline, submission, testCasesList);
+
+                attempt.Cluster = refazerFixes.Cluster;
+                attempt.FixedCodeList = refazerFixes.FixedCodeList;
+
                 return Ok(attempt);
             }
 
-            attempt.FixedCodeList = refazerOnline.
-                TryToFixSubmission(submission, testCasesList);
+            refazerFixes = refazerOnline.TryToFixSubmission(
+                submission, testCasesList);
+
+            attempt.Cluster = refazerFixes.Cluster;
+            attempt.FixedCodeList = refazerFixes.FixedCodeList;
 
             return Ok(attempt);
         }
 
-        private List<String> WakeUpRefazerOnDemand(RefazerOnline refazerOnline, Submission2 submission,
+        private Fix2 WakeUpRefazerOnDemand(RefazerOnline refazerOnline, Submission2 submission,
             List<String> testCasesList)
         {
+
+            Fix2 refazerFixes = new Fix2();
+
             String keyPoint = submission.KeyPoint();
 
             List<Cluster> clustersList = db.Clusters.Where(
@@ -79,10 +92,10 @@ namespace Refazer.Web.Controllers
                 TransformationSet transformationSet = refazerOnline.
                     LearnTransformationsFromExample(cluster, examplesByCluster);
 
-                List<String> fixedCodesList = refazerOnline.TryToFixSubmission(
+                refazerFixes = refazerOnline.TryToFixSubmission(
                     submission, testCasesList, transformationSet);
 
-                if (!fixedCodesList.IsEmpty())
+                if (!refazerFixes.FixedCodeList.IsEmpty())
                 {
                     int index = i + 1;
                     int count = clustersList.Count - index;
@@ -93,10 +106,10 @@ namespace Refazer.Web.Controllers
 
                     thread.Start();
 
-                    return fixedCodesList;
+                    return refazerFixes;
                 }
             }
-            return new List<String>();
+            return refazerFixes;
         }
 
         private void KeepLearningTransformations(RefazerOnline refazerOnline, List<Cluster> clustersList)

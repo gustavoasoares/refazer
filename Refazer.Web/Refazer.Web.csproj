@@ -183,6 +183,7 @@
     <Compile Include="Models\ApplyFixFromExampleInput.cs" />
     <Compile Include="Models\Assignment.cs" />
     <Compile Include="Models\Cluster.cs" />
+    <Compile Include="Models\Fix2.cs" />
     <Compile Include="Models\RefazerDbContext.cs" />
     <Compile Include="Models\RefazerOnline.cs" />
     <Compile Include="Models\Attempt.cs" />
