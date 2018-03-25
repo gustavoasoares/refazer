@@ -15,12 +15,12 @@ namespace Refazer.Web.Models
 
         private static volatile RefazerOnline instance;
 
-        private Dictionary<String, List<Core.Transformation>> transformationStorage;
+        private Dictionary<String, List<TransformationSet>> transformationStorage;
 
         private RefazerOnline()
         {
             refazer = BuildRefazer();
-            transformationStorage = new Dictionary<String, List<Core.Transformation>>();
+            transformationStorage = new Dictionary<String, List<TransformationSet>>();
         }
 
         public static RefazerOnline Instance
@@ -58,10 +58,13 @@ namespace Refazer.Web.Models
             var newTransformationsList = refazer.LearnTransformations(
                 new List<Tuple<string, string>>() { exampleAsTuple });
 
-            SaveTransformation(example.KeyPoint(), newTransformationsList.ToList());
+            TransformationSet transformationSet = new TransformationSet();
+            transformationSet.TransformationList = newTransformationsList.ToList();
+
+            SaveTransformation(example.KeyPoint(), transformationSet);
         }
 
-        public IEnumerable<Core.Transformation> LearnTransformationsFromExample(List<Example> examplesList)
+        public TransformationSet LearnTransformationsFromExample(Cluster cluster, List<Example> examplesList)
         {
             var examplesAsTuple = ExampleAsTupleList(examplesList);
 
@@ -69,9 +72,13 @@ namespace Refazer.Web.Models
 
             string keypoint = examplesList[0].KeyPoint();
 
-            SaveTransformation(keypoint, newTransformationsList.ToList());
+            TransformationSet transformationSet = new TransformationSet();
+            transformationSet.Cluster = cluster;
+            transformationSet.TransformationList = newTransformationsList.ToList();
 
-            return newTransformationsList;
+            SaveTransformation(keypoint, transformationSet);
+
+            return transformationSet;
         }
 
         public List<Cluster> LearnClusteredTransformations(String keyPoint, List<Example> exampleList)
@@ -127,10 +134,12 @@ namespace Refazer.Web.Models
 
                 clustersList.Add(newCluster);
 
+                /**
                 if (transformationList != null)
                 {
                     SaveTransformation(keyPoint, transformationList);
                 }
+                */
             }
 
             return clustersList;
@@ -142,9 +151,40 @@ namespace Refazer.Web.Models
         }
 
         public List<String> TryToFixSubmission(Submission2 submission, List<String> testCasesList,
-             List<Core.Transformation> transformationsList)
+            TransformationSet transformationSet)
         {
-            List<String> fixedCodesList = new List<String>();
+            List<TransformationSet> transformationSetList = new List<TransformationSet>();
+
+            transformationSetList.Add(transformationSet);
+
+            return TryToFixSubmission(submission, testCasesList, transformationSetList);
+        }
+
+        public List<String> TryToFixSubmission(Submission2 submission, List<String> testCasesList,
+             List<TransformationSet> transformationSetList)
+        {
+            List<String> result = new List<String>();
+
+            foreach (var transformationSet in transformationSetList)
+            {
+                Cluster cluster = transformationSet.Cluster;
+
+                result = ApplyCodeTransformation(submission, testCasesList,
+                                transformationSet.TransformationList);
+
+                if (!result.IsEmpty())
+                {
+                    break;
+                }
+            }
+
+            return result;
+        }
+
+        public List<String> ApplyCodeTransformation(Submission2 submission, List<String> testCasesList,
+            List<Core.Transformation> transformationsList)
+        {
+            List<String> fixedCodeList = new List<String>();
 
             for (int i = 0; i < transformationsList.Count; i++)
             {
@@ -165,12 +205,12 @@ namespace Refazer.Web.Models
 
                         if (testResult.Item1)
                         {
-                            fixedCodesList.Add(code);
+                            fixedCodeList.Add(code);
                             break;
                         }
                     }
 
-                    if (!fixedCodesList.IsEmpty())
+                    if (!fixedCodeList.IsEmpty())
                     {
                         break;
                     }
@@ -181,37 +221,34 @@ namespace Refazer.Web.Models
                 }
             }
 
-            return fixedCodesList;
+            return fixedCodeList;
         }
 
-        private void SaveTransformation(String keyPoint, List<Core.Transformation> newTransformations)
+        private void SaveTransformation(String keyPoint, TransformationSet newTransformationSet)
         {
-
             if (!transformationStorage.ContainsKey(keyPoint))
             {
-                transformationStorage.Add(keyPoint, newTransformations);
+                List<TransformationSet> transformationSetList = new List<TransformationSet>();
+
+                transformationSetList.Add(newTransformationSet);
+
+                transformationStorage.Add(keyPoint, transformationSetList);
             }
             else
             {
-                List<Core.Transformation> existingTransformation = transformationStorage[keyPoint];
+                List<TransformationSet> transformationSetList = transformationStorage[keyPoint];
 
-                foreach (var transformation in newTransformations)
-                {
-                    if (!existingTransformation.Contains(transformation))
-                    {
-                        existingTransformation.Add(transformation);
-                    }
-                }
+                transformationSetList.Add(newTransformationSet);
 
-                transformationStorage[keyPoint] = existingTransformation;
+                transformationStorage[keyPoint] = transformationSetList;
             }
         }
 
-        private List<Core.Transformation> SearchTransformation(Submission2 submission)
+        private List<TransformationSet> SearchTransformation(Submission2 submission)
         {
             if (!transformationStorage.ContainsKey(submission.KeyPoint()))
             {
-                return new List<Core.Transformation>();
+                return new List<TransformationSet>();
             }
 
             return transformationStorage[submission.KeyPoint()];

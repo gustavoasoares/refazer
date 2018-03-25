@@ -37,7 +37,8 @@ namespace Refazer.Web.Controllers
             attempt.LogsList = testResult.Item2;
             attempt.PassedTests = testResult.Item1;
 
-            if (attempt.PassedTests) {
+            if (attempt.PassedTests)
+            {
                 return Ok(attempt);
             }
 
@@ -75,11 +76,11 @@ namespace Refazer.Web.Controllers
                 List<Example> examplesByCluster = db.Examples.Where(
                     e => examplesIds.Contains(e.Id)).ToList();
 
-                var transformationsList = refazerOnline.
-                    LearnTransformationsFromExample(examplesByCluster);
+                TransformationSet transformationSet = refazerOnline.
+                    LearnTransformationsFromExample(cluster, examplesByCluster);
 
                 List<String> fixedCodesList = refazerOnline.TryToFixSubmission(
-                    submission, testCasesList, transformationsList.ToList());
+                    submission, testCasesList, transformationSet);
 
                 if (!fixedCodesList.IsEmpty())
                 {
@@ -107,7 +108,7 @@ namespace Refazer.Web.Controllers
                 List<Example> examplesByCluster = db.Examples.Where(
                     e => examplesIds.Contains(e.Id)).ToList();
 
-                refazerOnline.LearnTransformationsFromExample(examplesByCluster);
+                refazerOnline.LearnTransformationsFromExample(cluster, examplesByCluster);
             }
         }
     }

@@ -194,6 +194,7 @@
     <Compile Include="Models\StartInput.cs" />
     <Compile Include="Models\Submission.cs" />
     <Compile Include="Models\Transformation.cs" />
+    <Compile Include="Models\TransformationSet.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Utils\FunctionExtractor.cs" />
     <Compile Include="Utils\RunPythonTest.cs" />
@@ -346,7 +347,7 @@
     </EmbeddedResource>
   </ItemGroup>
   <ItemGroup>
-    <Analyzer Include="..\..\..\..\..\.nuget\packages\system.reflection.metadata\1.3.0\lib\portable-net45+win8\System.Reflection.Metadata.dll" />
+    <Analyzer Include="..\..\..\.nuget\packages\system.reflection.metadata\1.3.0\lib\portable-net45+win8\System.Reflection.Metadata.dll" />
   </ItemGroup>
   <PropertyGroup>
     <VisualStudioVersion Condition="'$(VisualStudioVersion)' == ''">10.0</VisualStudioVersion>
@@ -362,7 +363,7 @@
     <VisualStudio>
       <FlavorProperties GUID="{349c5851-65df-11da-9384-00065b846f21}">
         <WebProjectProperties>
-          <UseIIS>True</UseIIS>
+          <UseIIS>False</UseIIS>
           <AutoAssignPort>True</AutoAssignPort>
           <DevelopmentServerPort>64150</DevelopmentServerPort>
           <DevelopmentServerVPath>/</DevelopmentServerVPath>
